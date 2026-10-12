@@ -113,7 +113,7 @@ These ran on the laptop and cost about $0.02 of Polly. No repo files were edited
 **Change**
 - Run the bill's 900 ms "selection settled" warm-up on the cut sheet too, once the debrief has arrived. Today, OK on the cut sheet (A:404-407) always asks at OK.
   - By then the venue already follows `next` and the records include the finished set, so the intro's cache key matches at OK.
-- Re-warm every 75 s while the user rests (the cache lasts 90 s, S:81), and immediately if a warm-up fails.
+- Re-warm every 75 s while the user rests (the cache lasts 90 s, S:81), and immediately if a warm-up fails. *(2026-10-12: now every 7 minutes, used for 8, inside the voice URL's 600 s; the 75 s renewal made most of the QA's 38 intro calls for 8 sets.)*
 - Load the warm intro's audio paused in item 2's preload slot. The 600 s URL expiry outlives the 90 s cache.
 - `stop()` (S:399-404) clears the pending intro.
 

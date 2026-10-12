@@ -10,6 +10,8 @@ const HEIGHT = 90;
 /** A dot per sample, sp(4) square, placed by pitch: the centre note sits mid-band, ±6 semitones span the 90 px. */
 const DOT = 4;
 const RANGE_SEMITONES = 12;
+/** The scrim starts this far above the legend, so it is already dark where the legend's words sit. */
+const LEAD = 70;
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 export function noteName(midi: number): string {
@@ -65,7 +67,8 @@ export function PitchTrace({ samples, now, measured }: { samples: PitchSample[];
 
   return (
     <View style={styles.root} pointerEvents="none">
-      <Gradient style={styles.band} stops={[{ at: 0, alpha: 0 }, { at: 0.35, alpha: 0.55 }, { at: 0.75, alpha: 0.55 }, { at: 1, alpha: 0 }]} />
+      {/* Starts above the legend and holds dark behind it and the trace: at 0.55 the legend ran across the crowd (QA 2026-10-12). */}
+      <Gradient style={styles.band} stops={[{ at: 0, alpha: 0 }, { at: 0.3, alpha: 0.72 }, { at: 0.85, alpha: 0.72 }, { at: 1, alpha: 0.35 }]} />
       <Text style={styles.lab}>
         your pitch · last 12 seconds · gold within 25 cents · grey where the phone couldn't tell{measured ? ` · ${measured}` : ''}
       </Text>
@@ -76,9 +79,9 @@ export function PitchTrace({ samples, now, measured }: { samples: PitchSample[];
 }
 
 const styles = StyleSheet.create({
-  root: { position: 'absolute', left: 0, right: 0, bottom: sp(210 - 30), height: sp(HEIGHT + 60 + 30) },
+  root: { position: 'absolute', left: 0, right: 0, bottom: sp(210 - 30), height: sp(LEAD + HEIGHT + 60 + 30) },
   band: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
-  lab: { position: 'absolute', left: edge.x, top: sp(24), fontFamily: text.regular, fontSize: sp(24), color: colors.goldDim, ...textShadow },
-  now: { position: 'absolute', right: edge.x, top: sp(22), ...dsp(30, display.medium, 0.1, colors.gold), ...textShadow },
-  trace: { position: 'absolute', left: edge.x, top: sp(60), width: sp(WIDTH), height: sp(HEIGHT) },
+  lab: { position: 'absolute', left: edge.x, top: sp(LEAD + 24), fontFamily: text.regular, fontSize: sp(24), color: colors.goldDim, ...textShadow },
+  now: { position: 'absolute', right: edge.x, top: sp(LEAD + 22), ...dsp(30, display.medium, 0.1, colors.gold), ...textShadow },
+  trace: { position: 'absolute', left: edge.x, top: sp(LEAD + 60), width: sp(WIDTH), height: sp(HEIGHT) },
 });

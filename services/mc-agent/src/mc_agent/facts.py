@@ -11,9 +11,9 @@ import math
 from typing import Literal
 
 from .models import Line, McLineRequest, MomentFacts, NextVenue, Reaction, Scorecard, SetRecord, VenueId
-from .personas import ACTS, house, tier, venue_above
+from .personas import ACTS, house, tier, venue_above, venue_below
 
-Problem = Literal["dead_air", "pace", "fillers", "landing", "tune", "none"]
+Problem = Literal["dead_air", "pace", "fillers", "landing", "tune", "no_pitch", "none"]
 
 DEAD_AIR_S = 4.0
 PEAK_WPM = 185
@@ -25,8 +25,15 @@ DOWN_LPM = 1.0
 POSITIVE = {"laugh", "snap", "applause", "cheer"}
 
 
+def no_pitch(sc: Scorecard) -> bool:
+    """A singing set whose phone sent no usable pitch: its phrases, holds and range were not measured (rule 3)."""
+    return sc.act == "singing" and sc.in_tune_pct is None
+
+
 def diagnose(sc: Scorecard) -> Problem:
     """The biggest measured problem, in the order the product ranks them."""
+    if no_pitch(sc):
+        return "no_pitch"
     if sc.longest_dead_air_sec >= DEAD_AIR_S:
         return "dead_air"
     if sc.peak_wpm is not None and sc.peak_wpm >= PEAK_WPM:
@@ -41,7 +48,10 @@ def diagnose(sc: Scorecard) -> Problem:
 
 
 def next_venue(sc: Scorecard, venue: VenueId) -> NextVenue:
-    """up: >= 3 landed a minute and no gap of 4 s (nothing above the Arena); down: < 1 a minute above Open Mic."""
+    """up: >= 3 landed a minute and no gap of 4 s (nothing above the Arena); down: < 1 a minute above Open Mic. A
+    singing set with no pitch measured nothing to move on: again."""
+    if no_pitch(sc):
+        return "again"
     if sc.landed_per_min >= UP_LPM and sc.longest_dead_air_sec < DEAD_AIR_S:
         return "up" if venue_above(venue) else "again"
     if sc.landed_per_min < DOWN_LPM and venue != "openmic":
@@ -59,24 +69,32 @@ def clock(t: float | None) -> str:
 # --- numbers said out loud -------------------------------------------------------------------------------
 
 
-def rounds(n: float, x: float, hedge: str) -> bool:
+def rounds(n: float, x: float, hedge: str, close: bool = False) -> bool:
     """Whether `n`, said with a hedge, is an honest spoken rounding of the measured `x`: x rounded to one or two
-    significant figures, or to the nearest whole number or half; "nearly" and "just under" ("below") may also round
-    up and "just over" ("above") down, and each must point the right way. It stays within 15% of x, or half a unit
-    for x of one or more (so 1.2 is "about one"), and nothing is ever rounded to or from zero."""
+    significant figures, or to the nearest whole number or half; "under" / "less than" ("below") may also round up and
+    "over" / "more than" ("above") down, and each must point the right way. It stays within 15% of x, or half a unit
+    for x of one or more (so 1.2 is "about one"), and nothing is ever rounded to or from zero.
+
+    `close` is for the hedges that also claim nearness ("nearly", "almost", "just under", "just over"): x must sit on
+    the named side of n (strictly) and n must be x's nearest rounding at that step, never a bound further off. So 4.1
+    is "just over four", not "nearly four and a half" (which ceilings it to the next half), and 14.7 is "nearly
+    fifteen", not "just over fourteen" (QA 2026-10-12, issue 6)."""
     if x <= 0 or n <= 0:
         return False
     if (hedge == "below" and x > n) or (hedge == "above" and x < n):
+        return False
+    if close and (math.isclose(x, n, rel_tol=1e-9, abs_tol=1e-9) or hedge not in ("below", "above")):
         return False
     if abs(n - x) > max(0.5 if x >= 1 else 0.0, 0.15 * x):
         return False
     e = math.floor(math.log10(x))
     steps = {0.5, 1.0, 10.0**e, 10.0 ** (e - 1)}
     ops = [lambda v: math.floor(v + 0.5)]
-    if hedge == "below":
-        ops.append(math.ceil)
-    elif hedge == "above":
-        ops.append(math.floor)
+    if not close:
+        if hedge == "below":
+            ops.append(math.ceil)
+        elif hedge == "above":
+            ops.append(math.floor)
     return any(math.isclose(op(x / q) * q, n, rel_tol=1e-9, abs_tol=1e-9) for q in steps for op in ops)
 
 
@@ -192,8 +210,25 @@ PROBLEM_WORDS: dict[Problem, str] = {
     "fillers": "fillers (the top filler word)",
     "landing": "lines not landing (no beat left after them)",
     "tune": "holding notes in tune",
-    "none": "nothing: praise it and suggest the next room up",
+    "no_pitch": "nothing could be judged: no pitch reached the TV, so the fix is only to let the phone hear the singing "
+    "(closer, steadier); say nothing about the singing itself",
+    # Not "suggest the next room up": the room move is the house rule's alone (QA 2026-10-12: "try the next room up"
+    # at the Arena, and after sets whose rule said "again").
+    "none": "nothing measured stands out as a problem: praise the strongest measured moment; the room move is the "
+    "house rule's below, nothing else",
 }
+
+
+def next_words(rule: NextVenue, act: str, venue: VenueId) -> str:
+    """The house rule in plain words, with the room it names: what the MC may say about where to go next."""
+    if rule == "up":
+        up = venue_above(venue)
+        return f"go up a room, to {house(act, up)} ({tier(up)})"
+    if rule == "down":
+        down = venue_below(venue)
+        return f"go down a room, to {house(act, down)} ({tier(down)})"
+    top = ", the top room, with nothing above it" if venue == "arena" else ""
+    return f"go again here at {house(act, venue)}{top}; suggest no other room"
 
 
 # How each content pattern is named to the MC (singular, plural); packages/crowd FEATURE_NAMES says the same.
@@ -263,7 +298,7 @@ def content_facts(sc: Scorecard, reactions: list[Reaction] = ()) -> list[str]:
     out = [f"- patterns the room listened for in the {'pitch' if sc.act == 'singing' else 'words'} "
            f"(counted over {c.lines} {unit}): {said}{aloud}"]
     if missing:
-        out.append(f"- not found: {', '.join(missing)}")
+        out.append(f"- not found (so never name these, not even as praise): {', '.join(missing)}")
     if c.rhymed_ends is not None and c.rhymed_ends.of > 0:
         out.append(f"- line ends that rhyme with one of the two before: {c.rhymed_ends.rhymed} of {c.rhymed_ends.of}")
     if c.range_semitones is not None:
@@ -306,6 +341,11 @@ def set_facts(
         + _aloud(say_seconds(sc.longest_dead_air_sec), say_at(sc.longest_dead_air_at)),
         f"- lines too quiet or short to judge: {sc.unsure} (never counted against the performer)",
     ]
+    if no_pitch(sc):
+        out[0] = (
+            "- phrases held: NOT MEASURED (no pitch reached the TV from the phone), so landed counts and rates are not "
+            "a result; never quote them"
+        )
     if sc.act == "singing":
         tune = f"{sc.in_tune_pct:g}% in tune" if sc.in_tune_pct is not None else "in tune: not measured"
         hold = f"longest hold {sc.longest_hold_sec:g} seconds" if sc.longest_hold_sec is not None else "hold: not measured"
@@ -330,10 +370,49 @@ def set_facts(
     if reactions is not None:
         out.append(f"- the room's moments: {reactions}")
     out.append(f"- biggest measured problem (the fix goes here): {PROBLEM_WORDS[diagnose(sc)]}")
-    out.append(f"- house rule for the next venue: {next_venue(sc, venue or sc.venue)!r}")
+    v = venue or sc.venue
+    rule = next_venue(sc, v)
+    out.append(f"- house rule for the next venue: {rule!r} ({next_words(rule, sc.act, v)})")
     parts = history_parts(sc, list(history))
     out.append(f"- from the past sets: {'; '.join(parts)}" if parts else "- past sets: fewer than two; do not mention a past")
     return "\n".join(out)
+
+
+def debrief_checklist(sc: Scorecard, venue: VenueId, reactions: list[Reaction] = ()) -> str:
+    """What this debrief must do to pass the honesty check, stated up front (and again with the retry): the house
+    rule's direction, the "not measured" sentence when words were off, and the only patterns it may name. Facts and
+    instructions for the model, never words for the screen."""
+    rule = next_venue(sc, venue)
+    moves = (
+        'you may send them up a room ("the next room up")'
+        if rule == "up"
+        else 'never write "next room", "room up", "next tier", "move up" or any other move'
+        if rule == "again"
+        else 'send them down a room, never up'
+    )
+    items = [f'`next` is "{rule}": {next_words(rule, sc.act, venue)}. In every field, {moves}.']
+    if no_pitch(sc):
+        items.append("No pitch reached the TV: say the singing was not measured; quote no landed count, hold or range.")
+    elif not sc.words_on and sc.act != "singing":
+        items.append(
+            "Words were off: `line` itself must say that pace and fillers were not measured, with the words \"not "
+            "measured\" (for example \"pace and fillers not measured: words were off\"), in your own voice."
+        )
+    c = sc.content
+    named = {f for f, n in c.features.items() if n > 0} if c is not None else set()
+    named |= {f for r in reactions for f in (r.features or [])}
+    if named:
+        plural = sorted(FEATURE_NAMES.get(f, (f, f))[1] for f in named)
+        others = [x for x in ("wordplay", "rhymes", "triads", "callbacks", "tags") if x not in plural][:2]
+        items.append(
+            f"The only content patterns you may name: {', '.join(plural)}. Never name any other ({' or '.join(others)} "
+            "included: they were not counted), not even as praise."
+        )
+    else:
+        items.append("No content pattern was counted: name none (no callbacks, wordplay, tags, rhymes or triads).")
+    return "Checklist (the honesty check rejects an answer that misses any of these):\n" + "\n".join(
+        f"{i}. {x}" for i, x in enumerate(items, 1)
+    )
 
 
 def moment_facts(req: McLineRequest) -> str:

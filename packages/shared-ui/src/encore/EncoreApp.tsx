@@ -29,12 +29,13 @@ import { EXAMPLE_QUESTIONS, GreenRoomScreen, type RoomMc, type Turn } from './sc
 import { LiveScreen } from './screens/LiveScreen';
 import { CROWD_STAGE_AVAILABLE, CrowdStage } from './world/CrowdStage';
 import { thumbsOf, type CrowdScene } from './world/crowdFeed';
-import { loadRecords, saveRecords } from './storage';
+import { loadRecords, loadSetNumbers, saveRecords, saveSetNumber } from './storage';
 import { reasonInWords, useMc, type ChatStatus, type DebriefRequest, type DebriefStatus } from './useMc';
 import { SupportedKeys, useRemoteKeys } from './useRemoteKeys';
 import { useSetSession, type Phone } from './useSetSession';
 import { McVoice, type VoiceClip } from './world/McVoice';
 import { traceVoice, voiceClip } from './world/sounds';
+import { useStageMount } from './world/useStageMount';
 import { colors } from './world/theme';
 
 type Screen = 'bill' | 'live' | 'cutsheet' | 'greenroom';
@@ -61,8 +62,12 @@ interface Room {
 /** The finale plate holds this long before the cut sheet. */
 const FINALE_MS = 3000;
 const LISTEN_SEC = 8;
-/** The bill's selection must rest this long before the MC's intro for it is written (no request per key press). */
-const WARM_INTRO_AFTER_MS = 900;
+/**
+ * The bill's selection must rest this long before the MC's intro for it is written (no request per key press); OK
+ * writes it at once if it is not ready. 900 ms let every D-pad pause through (QA 2026-10-12: over 30 intro calls for
+ * 8 sets, with the renewal in useSetSession).
+ */
+const WARM_INTRO_AFTER_MS = 1200;
 /** At most this many of the MC's clips play or wait; past it the newest are dropped, never the one playing. */
 const VOICE_QUEUE_MAX = 3;
 /**
@@ -166,6 +171,8 @@ export function EncoreApp({
   const [records, setRecords] = useState<SetRecord[]>(() => (staticDemo ? FIXTURE_RECORDS : loadRecords()));
   const recordsRef = useRef(records);
   recordsRef.current = records;
+  // The cut sheet's set number: a counter that only goes up (the records keep only the last six).
+  const [setNumbers, setSetNumbers] = useState(() => loadSetNumbers(records));
   // The MC's voice: one clip at a time, in the order the words arrived, except that the intro goes first.
   const [voices, setVoices] = useState<VoiceClip[]>([]);
   /** The clip McVoice reports actually sounding: queued is not playing. */
@@ -334,7 +341,9 @@ export function EncoreApp({
     const record = setRecord(state, new Date().toISOString());
     // The MC remembers this performer's own earlier sets only.
     const history = memoryFor(records, state.config.performer, config.memorySets);
-    setRecords(saveRecords([...records, record]));
+    const kept = saveRecords([...records, record]);
+    setRecords(kept);
+    setSetNumbers(saveSetNumber(record.setId, kept));
     askDebrief(state, record, history);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
@@ -527,11 +536,22 @@ export function EncoreApp({
   });
 
   const lastIndex = last ? records.findIndex((r) => r.setId === last.record.setId) : -1;
-  const setNumber = lastIndex >= 0 ? lastIndex + 1 : records.length + 1;
+  const counted = last ? setNumbers.byId[last.record.setId] : undefined;
+  const setNumber = counted !== undefined ? counted : lastIndex >= 0 ? lastIndex + 1 : setNumbers.count + 1;
   const mcSays = last && last.mc.status === 'ready' ? `The MC says ${nextWords(last.mc.note.next)}.` : undefined;
 
-  // The live 3D room, where it runs: one stage under every screen, so the venue never reloads between them.
-  const stage = (crowd3d === undefined ? config.crowd3d : crowd3d) && CROWD_STAGE_AVAILABLE;
+  // The live 3D room, where it runs: one stage under every screen, so the venue never reloads between them. Its WebView
+  // is created only after the bill has painted (useStageMount: creating it on the first frame put Chromium's start-up on
+  // the window's focus path, and a cold disk made that an ANR), and the screens keep their photographic plates until
+  // the page has drawn its first frames, so the wait shows the plate, never black.
+  const stageWanted = (crowd3d === undefined ? config.crowd3d : crowd3d) && CROWD_STAGE_AVAILABLE;
+  const stageMounted = useStageMount(stageWanted);
+  const [stageVisible, setStageVisible] = useState(false);
+  const onStageVisible = useCallback(() => setStageVisible(true), []);
+  useEffect(() => {
+    if (!stageMounted) setStageVisible(false);
+  }, [stageMounted]);
+  const stage = stageMounted && stageVisible;
   const shown = screen === 'live' ? state : last ? last.state : null;
   // The room ducks under the MC while the voice is heard, not while it is only queued or loading.
   const ducked = !!playing;
@@ -556,7 +576,7 @@ export function EncoreApp({
 
   return (
     <View style={styles.root}>
-      {stage ? <CrowdStage scene={scene} onThumb={onThumb} /> : null}
+      {stageMounted ? <CrowdStage scene={scene} onThumb={onThumb} onVisible={onStageVisible} /> : null}
       {screen === 'bill' && (
         <BillScreen
           selection={selection}

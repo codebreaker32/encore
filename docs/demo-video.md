@@ -133,7 +133,8 @@ performer's phone (Chrome, https://<laptop LAN IP>:5173/?room=CODE)
 laptop: yarn dev:companion (:5173) and yarn dev:relay (:8787)     ← light jobs only
    │ ssh -R 8787:localhost:8787   (the box reaches the laptop's relay)
 BOX=android: adb reverse tcp:8787 tcp:8787 and tcp:18080 tcp:8080 → the emulator (Encore release APK)
-             MC service on the box (:8080, instance role: Bedrock and Polly; MC_HUMOR_MODEL_DIR=~/models/humor-int8)
+             MC service on the box (:8080, instance role: Bedrock and Polly; MC_HUMOR_MODEL_DIR=~/models/humor-int8;
+             MC_REGION=us-west-2, the box's own region, which ~/emu/svc.sh sets: from ap-south-1 the judge is never in time)
    │ the emulator's screen and sound: x11grab + the null sink (recorded), plus a live view for the performer
 performer watches and hears the room on the laptop (VNC or a low-latency stream) **[verify]**
 ```
@@ -153,7 +154,8 @@ performer watches and hears the room on the laptop (VNC or a low-latency stream)
 
 **Before each take**
 - [ ] `BOX=android` up (launched from its image in us-west-2 in place of the render box; 8 vCPU per region). `~/emu/emu720.sh up`, then check `wm size` is 1280×720.
-- [ ] Relay and phone page on the laptop; the reverse tunnel; MC on the box with the humour model (the log says "judge: humour model loaded") and warm voices for all four personas ("warm-up: voices warm …").
+- [ ] Relay and phone page on the laptop; the reverse tunnel; MC on the box with the humour model (the log says "judge: humour model loaded"), in the box's region ("warm-up: model connection open (zai.glm-5, us-west-2)"; `~/emu/svc.sh` sets `MC_REGION=us-west-2`) and warm voices for all four personas ("warm-up: voices warm …").
+- [ ] On a box freshly launched from its image, the disk is cold (its blocks load lazily): boot the emulator, launch Encore once and let it settle before the take. Two cold launches were killed by an ANR on 2026-10-12; the app now creates its 3D stage only after the bill has painted, but the first launch on a cold disk is still slow.
 - [ ] Open the app with the 3D stage (it's the default on Android; `com.strumble.tv://stage?crowd=3d` if relaunched).
 - [ ] The phone: Chrome on Android (words need it), volume and notifications off, Do Not Disturb, screen recorder ready for shots C and E.
 - [ ] CAM: focus on the performer, 30 fps, mic on, the phone on the table in frame.

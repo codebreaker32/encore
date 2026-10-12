@@ -18,14 +18,22 @@ export function CrowdStage({
   scene,
   url = config.crowdUrl,
   onThumb,
+  onVisible,
 }: {
   scene: CrowdScene;
   url?: string;
   /** A snapshot of this set's room arrived (see `snap` in crowdFeed.ts). */
   onThumb?: (key: string, uri: string) => void;
+  /**
+   * The page has drawn its first frames (its first `ready`): the room can be shown. Until then the screens keep their
+   * photographic plates, so a slow WebView start shows the plate, never a black frame.
+   */
+  onVisible?: () => void;
 }) {
   const thumbRef = useRef(onThumb);
   thumbRef.current = onThumb;
+  const visibleRef = useRef(onVisible);
+  visibleRef.current = onVisible;
   const frame = useRef<Frame | null>(null);
   const attach = useCallback((el: Frame | null) => {
     frame.current = el;
@@ -43,6 +51,7 @@ export function CrowdStage({
       if (!frame.current || e.source !== frame.current.contentWindow) return;
       const report = parseReport(e.data);
       if (report && report.type === 'ready') {
+        if (visibleRef.current) visibleRef.current();
         setReady(true);
         setEpoch((n) => n + 1);
       } else if (report && report.type === 'thumb' && thumbRef.current) {

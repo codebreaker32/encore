@@ -81,6 +81,7 @@ const V = VENUES[VENUE_ID];
 { const el = document.querySelector('.lower-third .venue'); if (el) el.innerHTML = V.title; }
 const P = { ...PRESETS[PRESET_NAME], ...(V.presets[PRESET_NAME] || {}) };
 const LOOK = applyLook(Q.get('look') || 'stage', V, VENUE_ID, P); // the stage's-eye look (look.js); &look=classic: the old one
+if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows3')) P.rows = 3; // (the arena's old three 3D rows)
 // &ab=types4: at most four avatar types per instanced band (fewer draws: a page-JS diagnostic for the TV)
 if (new Set((Q.get('ab') || '').split(',')).has('types4')) P.inst = P.inst.map((b) => ({ ...b, types: Math.min(b.types, 4) }));
 P.mic = Q.get('mic') === '1'; // the performer's mic stand in the foreground: off (it read as a ball in front of the tables)
@@ -716,7 +717,7 @@ async function buildRoom() {
   // (arena.js: the sprite tiers. tv default since round 4: outline sprites, nearest first, no upper ring: 51 ms p50 vs 81;
   // &ab=quadsprites, &ab=alltiers bring back the quads and the full bowl)
   const tvArena = !!P.fast;
-  P.arenaAB = { sort: ab('spritesort') || (tvArena && !ab('quadsprites')), few: ab('fewtiers') || (tvArena && !ab('alltiers')), shape: ab('spriteshape') || (tvArena && !ab('quadsprites')), imp: !ab('noimpostor') }; // (imp: the far stands as impostor blocks wherever fewtiers leaves them out)
+  P.arenaAB = { sort: ab('spritesort') || (tvArena && !ab('quadsprites')), few: ab('fewtiers') || (tvArena && !ab('alltiers')), shape: ab('spriteshape') || (tvArena && !ab('quadsprites')), imp: !ab('noimpostor'), pills: ab('pillsprites'), pillImp: ab('pillimpostors') }; // (imp: the far stands as impostor blocks wherever fewtiers leaves them out)
   const venue = V.build(scene, rows, P, (s) => visibleFromShots(s, 1.2), depthFor);
   const lookGlows = LOOK && LOOK.extras(rows, { eyesAt, seen: (s) => visibleFromShots(s) });
   if (lookGlows) { Object.assign(lookGlows.material.uniforms, { scale: venue.points.material.uniforms.scale, time: venue.points.material.uniforms.time }); scene.add(lookGlows); }
@@ -1564,6 +1565,25 @@ async function spriteBake() {
       const p = new Person(new Rig(seat, model), new Face(model), { seed: 11 + i * 7 + v, row: 0, x: 0, table: false, seatH: 0.46, idle: 'still', stand: true, standHands: 'rail' });
       p.loco = { stand: 1, walk: 0, phase: 0, coat: 0 };
       for (let k = 0; k < 150; k++) { bakeT += 1 / 30; fake.now = bakeT; p.update(bakeT, fake); } // (5 s settling; time only moves forward)
+      // arms hanging at the sides whatever the standing rules left (some avatars stayed in the bind pose's T): each
+      // upper arm and forearm turned to point down, a little out and forward
+      sc.updateMatrixWorld(true);
+      const bones = {}; model.traverse((o) => { if (o.isBone) bones[o.name] = o; });
+      const aim = (b, child, dir) => {
+        if (!b || !child) return;
+        const a0 = new THREE.Vector3().setFromMatrixPosition(b.matrixWorld), a1 = new THREE.Vector3().setFromMatrixPosition(child.matrixWorld);
+        const q = new THREE.Quaternion().setFromUnitVectors(a1.sub(a0).normalize(), dir.clone().normalize());
+        const wq = b.getWorldQuaternion(new THREE.Quaternion()), pq = b.parent.getWorldQuaternion(new THREE.Quaternion());
+        b.quaternion.copy(pq.invert().multiply(q.multiply(wq)));
+        b.updateMatrixWorld(true);
+      };
+      const nameOf = (re) => Object.keys(bones).find((n) => re.test(n));
+      for (const [side, sx] of [['L', 1], ['R', -1]]) {
+        const ua = bones[nameOf(new RegExp(`[ _]${side}[ _]UpperArm$`))], fa = bones[nameOf(new RegExp(`[ _]${side}[ _]Forearm$`))], hd = bones[nameOf(new RegExp(`[ _]${side}[ _]Hand$`))];
+        const out = new THREE.Vector3(1, 0, 0).applyQuaternion(seat.quaternion).multiplyScalar(sx * 0.12), fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(seat.quaternion);
+        aim(ua, fa, new THREE.Vector3(0, -1, 0).add(out).addScaledVector(fwd, 0.05));
+        aim(fa, hd, new THREE.Vector3(0, -1, 0).add(out.clone().multiplyScalar(0.3)).addScaledVector(fwd, 0.35));
+      }
       sc.updateMatrixWorld(true);
       const col = i % 8, row = (i < 8 ? 0 : 2) + v; // (cells from the top-left)
       const x = col * 64, y = 512 - (row + 1) * 128;

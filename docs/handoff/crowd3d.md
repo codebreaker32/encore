@@ -8,6 +8,18 @@ Updated 2026-10-12, about 10:00 UTC. Nothing is committed. All .js/.mjs files pa
   ~/strumble/prototypes/crowd3d). The box stops itself after 45 idle minutes; `encore-box.sh start`, then `up`.
 
 ## Latest (v7, 2026-10-12)
+- **Arena motion v1 (21:00 UTC):** the user called the crowd's synced sway unreal, so no two sprites or impostor rows
+  share a rhythm now (arena.js shaders, no new draws):
+  - Each sprite is mostly still. It has a rare idle event of its own: a weight shift or lean of about 1 s in every
+    6–14 s, with its own phase, size and direction.
+  - A laugh reaches each person after their own delay, 0–0.4 s, nearer people first, counted from `uLaughT`. Each one
+    then bobs and shakes at their own rate (±40%) and size.
+  - Sung bounces sit near the beat, not on it.
+  - Impostor rows move in their own rare events, with an unsynced flicker while the room reacts.
+  - Not changed: the instanced 3D rows' motion belongs to the motion agent.
+  - Checks: aliveprobe 0.49/0.49/0.45; anatomy (arena) 0. Strips: docs/mockups/arena-motion-v1-{before,after}-{wide,laugh}.png.
+  - Remaining plan: a recorded clip on the emulator to judge the motion (stills can't show it); per-person head turns
+    for the 3D rows (motion agent).
 - **Close-ups rotate** (crowd.js):
   - The setups (CLOSES): three 75 mm pairs (centre, house left, house right, never across the aisle) and two 50 mm
     groups of four.
@@ -163,3 +175,112 @@ Updated 2026-10-12, about 10:00 UTC. Nothing is committed. All .js/.mjs files pa
 - **Theatre:** `depthSlope` 0.2.
 - **Sweep:** round-3 commands are in `tools/render/tv-sweep.md`, sent to the coordinator; waiting for the TV numbers.
 - **Checks:** bindcheck and handcheck pass.
+
+## Motion agent: faces, JS and elbows/knees (2026-10-12 night, checkpoint 21:20 UTC). NOT merged
+None of this round is in the shared tree or the pack. The shared people.js, anatomy.js, instances.js, anim.js,
+traffic.js and the 12 people/*.tv.glb are still at s17 (build k), unchanged. Sheets in docs/mockups/faces-v1-*.png come
+from the box copy (below) and show what is waiting, not what ships.
+
+**Where the work is**
+- Box copy (BOX=build, ap-south-1): `~/m/stage` (shared tree overlaid with my files, served at
+  `http://127.0.0.1:8093/stage/index.html`); a frozen copy of my files only in `~/m/motion-wip-1012/`.
+- Laptop: `~/encore-motion-wip-1012.tgz` (my overlay `stage/`, the base it was cut from `stage-base/`, the probes, and
+  `stage-sync.sh`). Files: people.js, anatomy.js, instances.js, traffic.js, anim.js, tools/render/{anatomy,limbstats,
+  limbsheet,facesheet}.mjs, tools/anim/tv_morphs.mjs, people/*.tv.glb (9 shapes).
+- `stage-base` matched the shared tree at 20:10 UTC (people.js, anatomy.js, instances.js, traffic.js, anim.js,
+  anatomy.mjs, tv_morphs.mjs). Diff the shared files against it again before merging.
+
+**Done and measured (box copy)**
+- JS:
+  - Rig.upd updates a bone subtree without the fingers; they're refreshed once at the end of the update.
+  - Still people pose on a staggered 5 Hz tick of their own and hold in between; a new reaction, heckle or dead bit
+    wakes everyone.
+  - People the last frame's camera didn't see pose at 3 Hz. This is about 45% of the fronts in close shots, through a
+    frustum test on the camera taken from a mesh's onBeforeRender. crowd.js is untouched.
+  - Measured with jsperf at 8×, club tv, box load 0.8–5:
+
+    | build | Person.update p50 / p90 | page JS p50 / p90 |
+    |---|---|---|
+    | s17 | 16.5 / 26.8 ms | 41 / 58 ms |
+    | box copy, before the limb fixes | 10.1 / 20.2 ms | 31 / 47 ms |
+    | a6 (reference) | 9.6 / 13.9 ms | 33 / 44 ms |
+
+  - The new box is about 2× slower than the old one, so 10 ms here is about 6 ms on the old box's scale.
+  - **Not yet re-measured** after the limb fixes. They add the elbow circle search and the leg passes; the reach search
+    is cached for 8 calls.
+- Faces:
+  - Every moment has an expression, by temperament (people.js `moodAt`):
+    - dead air: sceptical, with one brow up and the lips pressed;
+    - a heckle or a dead bit: a wince, then each temperament's own reaction (amused, sympathetic, embarrassed);
+    - chuckles: amused in each temperament's way;
+    - listening: attentive brows.
+  - The TV models have 9 shapes (tools/anim/tv_morphs.mjs). eyeSquint and cheekSquint are merged into `duchenne`
+    (0.8 squint + cheeks); `browOuterUpLeft` and `mouthPress` are new. On the TV, one brow up is always the left brow.
+  - Textures with 9 shapes: club 29.53, theatre 28.56, open mic 29.79 and arena 25.71 MB (all ≤ 30). With 8 shapes the
+    club was 29.34.
+  - The coordinator asked for 9 only if the 8× run shows no cost. **Not yet measured**: `~/m/stage8` on the box is the
+    same code with s17's 8-shape models, ready for that A/B.
+  - Laughers no longer draw the 5% stone face.
+  - Sheets: docs/mockups/faces-v1-<Avatar>.png (11 avatars: Male_Adult_17 didn't finish) and faces-v1-temperaments.png.
+    They were rendered before the last limb fixes, so faces are as they'll ship, but bodies may differ slightly.
+- Elbows and knees:
+  - A validator with numbers (anatomy.js `limbMetrics`/`limbs`, in `window.__anatomy().limbs`, `__limbMetrics()`,
+    the anatomy sweep and the instanced bake audit). The anatomy sweep fails on any limb finding.
+  - What it measures:
+    - elbows, in the chest's frame: out beyond the shoulder (a chicken wing is judged relative to the hand), tucked
+      behind, inside the torso or the other arm, the angle at rest (thighs/knees/thighKnee 80–145°, clasped 70–150°),
+      and symmetry at rest;
+    - knees and legs: knee over ankle, shin tilt, thigh slope (as level as the body allows), feet flat, knee and ankle
+      gaps and crossing, clearance to the neighbours' legs, the club table post and top, the theatre seat in front,
+      occupied chairs in front, and the arena barrier;
+    - standing: knees soft (2–28°, 45° when bouncing), feet 10–50 cm apart, and the weight over the feet.
+  - Fixes:
+    - fixArms and a final `guardElbows` place each elbow at the best point of its circle;
+    - resting reach is equalised (0.78–0.9 of arm length), and the shoulders are squared to the hips at rest;
+    - ankles are uncrossed by hip rotation, knees turn away from the neighbours', and feet come under the knees;
+    - seated and standing legs are kept out of the pelvis and spine lean (the thighs hang from Spine);
+    - standing feet stay under the hips, and the standing laugh lean is clamped;
+    - hands stay behind the arena barrier;
+    - the instanced bake keeps the thighs in its laugh frames.
+  - A real bug fixed on the way: the leg passes read stale pelvis and spine matrices (now `rig.updChain`).
+  - limbstats (all venues, 7 states): 1,884 findings at the start, then 4, then 0 on the targeted re-checks.
+  - The full anatomy sweep, run 2, was stopped at 21:04 for the checkpoint, 89 lines in. **Not at zero.** What it
+    showed:
+    - Female_Adult_13 R own-thigh collision in every club state. This is new with these changes, and the next thing
+      to fix.
+    - Hand floating: Female_Adult_02 (club dead air), Male_Adult_12 and Female_Adult_12 (open mic).
+    - A chair finding (theatre after, a person leaving: check that the z-range rule fix took effect).
+    - One theatre clap with palms 9 mm too close, and one theatre finale with the weight off the feet (0.172).
+    - Open mic listen: Male_Adult_12 R elbow tucked (−0.11).
+  - handsweep run 2: 1 invalid, arena after t=5, Female_Adult_04's fingertips 1 mm too close in a standing clap (19 of
+    20 runs clean).
+  - limbs-v1 sheets: the tool works (tools/render/limbsheet.mjs; a test sheet for Male_Adult_07 only). The 12 sheets
+    are **not rendered yet**.
+- Sprites and impostor blocks have no joints, so the limbs pass excludes them.
+
+**Next steps (in order)**
+1. Fix the regressions above until both are at zero: `node anatomy.mjs <base>` and `bash handsweep.sh <base>`. The
+   own-thigh collision and the floating hands most likely come from the rest-reach equalisation, or from guardElbows on
+   resting arms.
+2. Run bindcheck: `BASE=http://127.0.0.1:8093/stage/index.html node bindcheck.mjs <outdir>`.
+3. Freeze `~/m/s18`. Run jsperf at 8× on s17, s18, s18 with 8 shapes (copy s18 and drop in s17's people/*.tv.glb, as
+   ~/m/stage8 does) and a6. Note the box load. Keep 9 shapes only if they cost nothing.
+4. Render the sheets:
+   - `node limbsheet.mjs <base> <out>` for all 12 (about 1 h; look at every tile, arena tiles included);
+   - `node facesheet.mjs <base> <out>` again on s18.
+   Copy them to docs/mockups.
+5. Merge into the shared tree after checking it against stage-base: people.js, anatomy.js, instances.js and
+   tools/render/*.mjs, plus the 9-shape .tv.glb from `~/m/fx/people` (or stage/people in the tarball) if kept. Then
+   pack (`node tools/pack.mjs ... --tv`) and pack-check.
+
+**Commands to resume**
+- Box: `IP=$(~/.cache/encore-box.sh ip)`, then
+  `ssh -i ~/.ssh/encore-build.pem -o UserKnownHostsFile=~/.ssh/encore-build.known ubuntu@$IP`.
+  The page server is python http.server on 8093 serving ~/m.
+- Restore the laptop overlay: `mkdir -p <scratch> && tar xzf ~/encore-motion-wip-1012.tgz -C <scratch>`. Edit
+  `<scratch>/stage-sync.sh`'s SP path, run it to push the shared tree plus the overlay to `~/m/stage`, and then run
+  `node loadcheck.mjs http://127.0.0.1:8093/stage/index.html "venue=club&preset=tv" …` from ~/m/stage/tools/render.
+- Targeted checks: `ONLY=listen,preview node limbstats.mjs <base> club openmic`, and
+  `node dbg2.mjs <base> <venue> <state> t:Name,...` (per-stage elbow trace).
+- Rebuild the TV shapes: in `~/m/fx` (node_modules is a symlink to ~/m/after/node_modules), run
+  `node tools/anim/tv_morphs.mjs`.

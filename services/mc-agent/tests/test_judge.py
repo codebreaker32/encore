@@ -227,7 +227,7 @@ def test_the_facts_name_the_patterns_and_which_kinds_of_lines_got_the_room():
     facts = "\n".join(content_facts(r.scorecard, r.reactions))
     assert "counted over 9 lines): 3 specific details, 2 callbacks, 1 wordplay" in facts
     assert '(said aloud: "three specific details", "two callbacks", "one wordplay")' in facts
-    assert "- not found: triads, reversals, tags" in facts
+    assert "- not found (so never name these, not even as praise): triads, reversals, tags" in facts
     assert "laughs by the kind of line they came on: callbacks: 2; specific details: 1; no pattern found: 1" in facts
     assert "estimates" in facts and "never quote them" in facts
     assert reaction_features(r.reactions) == {"callback": 2, "specific": 1, "none": 1}

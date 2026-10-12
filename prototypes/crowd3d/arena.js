@@ -30,7 +30,7 @@ function layoutArena(rowCount) {
 // ---------- sprites: the tiers and the back of the floor ----------
 const SPRITE_VS = /* glsl */ `
 attribute vec4 aP; attribute vec4 aC; attribute vec4 aS;
-uniform float uTime, uBeat, uWave, uWaveFront, uArms, uBounce, uFill, uFogNear, uFogFar, uBeamPhase, uFall, uLaugh, uArmsFrac;
+uniform float uTime, uBeat, uWave, uWaveFront, uArms, uBounce, uFill, uFogNear, uFogFar, uBeamPhase, uFall, uLaugh, uArmsFrac, uLaughT;
 uniform vec3 uCam; uniform vec2 uNear;
 varying vec2 vUv; varying vec3 vCloth; varying float vSkin, vArms, vFog, vCount, vBeam, vSide, vH, vSeed, vNear, vFall;
 void main(){
@@ -42,10 +42,18 @@ void main(){
   float yj = (fract(ph * 0.913) - 0.5) * 0.52, cy = cos(yj), sy = sin(yj);
   vec3 fw0 = normalize(toCam), fw = vec3(fw0.x * cy - fw0.z * sy, 0.0, fw0.x * sy + fw0.z * cy); vec3 right = vec3(fw.z, 0.0, -fw.x);
   float h = aS.x * 1.35, w = aS.y * aS.w;
-  float sway = sin(uTime * uBeat * 6.2832 + ph) * 0.06 * step(0.001, uBeat) + sin(uTime * 0.3 + ph * 3.0) * 0.02;
-  // a laugh: a bob and a shoulder shake, each on its own phase, with the room's laugh envelope
-  float bounce = uBounce * abs(sin(uTime * 4.4 + ph * 2.0)) * 0.08 + uLaugh * 0.045 * abs(sin(uTime * (8.0 + fract(ph * 3.7) * 3.0) + ph * 5.0));
-  sway += uLaugh * 0.035 * sin(uTime * 13.0 + ph * 11.0);
+  // (no shared rhythm: the user found the crowd's synced sway unreal.) Each person is mostly still, with a rare idle
+  // event of their own (a weight shift or a lean, about 1 s in every 6-14 s, own phase, own size); a laugh reaches
+  // each person after their own delay (0-0.4 s, the near pit first) and moves them at their own rate and size
+  float r1 = fract(ph * 0.371), r2 = fract(ph * 0.613), r3 = fract(ph * 0.827), r4 = fract(ph * 0.291);
+  float per = 6.0 + 8.0 * r1, tl = mod(uTime + ph * 13.7, per);
+  float ev = smoothstep(0.0, 0.35, tl) * smoothstep(1.3, 0.75, tl);
+  float sway = ev * (0.015 + 0.035 * r2) * (r3 < 0.5 ? -1.0 : 1.0);
+  sway += sin(uTime * uBeat * 6.2832 * (0.96 + 0.08 * r4) + ph) * 0.06 * step(0.001, uBeat); // (sung: near the beat, not on it)
+  float dly = 0.4 * clamp((length(base.xz) - 5.0) / 30.0, 0.0, 1.0) * (0.6 + 0.4 * r2) + 0.08 * r4;
+  float lp = uLaugh * smoothstep(dly, dly + 0.25, uTime - uLaughT) * (0.6 + 0.8 * r3);
+  float bounce = uBounce * abs(sin(uTime * 4.4 * (0.85 + 0.3 * r1) + ph * 2.0)) * 0.08 + lp * 0.045 * abs(sin(uTime * (6.5 + 6.0 * r1) + ph * 5.0));
+  sway += lp * 0.03 * sin(uTime * (9.0 + 8.0 * r2) + ph * 11.0);
   float wave = uWave * smoothstep(0.075, 0.0, abs(aC.w - uWaveFront));
   vArms = clamp(max(wave, uArms * step(fract(ph * 1.37), uArmsFrac)), 0.0, 1.0); // (70% for a cheer, 15% for applause)
   #ifdef SPRITE_SHAPE
@@ -78,7 +86,7 @@ void main(){
 // a head-and-shoulders silhouette in metres: hair cap (some long), a shaded face oval, neck, collar, rounded
 // shoulders, raised arms when the wave or the finale lifts them
 const SPRITE_FS = /* glsl */ `
-uniform vec3 uBeamA, uBeamB, uFogColor, uWarm, uRim; uniform float uDim, uFace, uMaskY, uMaskOut, uGain, uWashK;
+uniform vec3 uBeamA, uBeamB, uFogColor, uWarm, uRim; uniform float uDim, uFace, uMaskY, uMaskOut, uGain, uWashK; uniform sampler2D uAtlas;
 varying vec2 vUv; varying vec3 vCloth; varying float vSkin, vArms, vFog, vCount, vBeam, vSide, vH, vSeed, vNear, vFall;
 float sdSeg(vec2 p, vec2 a, vec2 b){ vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h); }
 float sdRBox(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
@@ -105,10 +113,26 @@ void main(){
   float dLong = longHair ? sdRBox(b - vec2(0.0, hc - 0.1), vec2(0.095, 0.13), 0.05) : 1.0;
   float d = min(min(min(dHead, dNeck), dTorso), min(min(aL, aR), dLong));
   float aa = fwidth(d) * 1.2;
+  #ifdef SPRITE_ATLAS
+  // our own avatars, baked from the tv models (people/arena_sprites.png, ?view=spritebake): one of twelve, from the
+  // front or three-quarters, faces and clothes as rendered; raised arms are drawn over them
+  float av = floor(fract(seed * 12.9898 + 0.137) * 12.0), vw = step(0.5, fract(seed * 7.31));
+  float acol = mod(av, 8.0), arow = (av < 8.0 ? 0.0 : 2.0) + vw;
+  vec2 cuv = vec2(0.5 + b.x / 0.975, b.y / 1.95) * vec2(1.0, 1.7 / H) + vec2(0.0, 0.0);
+  vec4 tex = texture2D(uAtlas, vec2((acol + clamp(cuv.x, 0.0, 1.0)) / 8.0, 1.0 - (arow + 1.0 - clamp(cuv.y, 0.0, 1.0)) / 4.0));
+  bool armUp = up > 0.05 && min(aL, aR) < 0.0 && b.y > topY;
+  float inImg = (armUp ? 1.0 : step(0.5, tex.a)) * step(cuv.y, 1.0);
+  #ifdef SPRITE_SHAPE
+  float outside = 1.0 - inImg;
+  #else
+  if (inImg < 0.5) discard;
+  #endif
+  #else
   #ifdef SPRITE_SHAPE
   float outside = step(0.5, smoothstep(-aa, aa, d)); // no discard: the geometry's margin outside the outline is painted as the dark tier
   #else
   if (1.0 - smoothstep(-aa, aa, d) < 0.5) discard;
+  #endif
   #endif
   vec3 skin = skinFor(vSkin);
   vec3 hair = hairFor(fract(seed * 7.3));
@@ -130,6 +154,16 @@ void main(){
   else if (min(aL, aR) < 0.0 && b.y > H + 0.12) col = skin;       // hands at the top of raised arms
   else if (seed > 0.5 && dTorso < 0.0 && abs(b.x) < (b.y - (topY - 0.13)) * 0.55 && b.y > topY - 0.13) { col = mix(hair * 0.5, skin, vNear); lit *= 0.8; } // open collar
   else lit *= 0.9 + 0.2 * smoothstep(topY - 0.15, topY, b.y);      // the light catches the shoulders
+  #ifdef SPRITE_ATLAS
+  if (armUp) { col = b.y > H + 0.12 ? skin : vCloth; lit = 0.5; }
+  else {
+    // (variety over 24 baked images: each person's brightness 0.7-1.1 and the clothes pulled a little towards the
+    // sprite's own palette colour; the baked light is already in the image, so less of the scene's)
+    vec3 tint = vCloth / max(1e-3, dot(vCloth, vec3(0.333))) ;
+    col = tex.rgb * mix(0.7, 1.1, fract(seed * 5.3)) * mix(vec3(1.0), clamp(tint, 0.4, 2.2), 0.22);
+    lit = 0.34 + 0.18 * vNear;
+  }
+  #endif
   col *= lit * vFall * uDim * uGain; // (uGain: the stage look's wash over the pit)
   col += uWarm * uWashK * uDim * vFall * (0.35 + 0.65 * clamp(b.y / H, 0.0, 1.0)); // the stage's warm spill over the heads (more in the stage look)
   // a thin cool rim from the far floodlights along the top of heads and shoulders
@@ -218,23 +252,35 @@ void main(){
   vFog = clamp((-mv.z - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0);
 }`;
 const IMP_FS = /* glsl */ `
-uniform sampler2D map; uniform float uTime, uLevel, uFill, uDim, uGain, uWashK, uOn, uMaskOut; uniform vec3 uWarm, uFogColor;
+uniform sampler2D map, uAtlas; uniform float uTime, uLevel, uFill, uDim, uGain, uWashK, uOn, uMaskOut; uniform vec3 uWarm, uFogColor;
 varying vec2 vUv; varying float vVar, vPh, vBr, vFog, vFall;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
   vec2 uv = vUv;
   float row = floor(uv.y * ${IMP_ROWS}.0);
   // each row sways a little on the block's own phase, more while the room reacts
-  uv.x += 0.006 * sin(uTime * (1.1 + vPh * 0.9) + row * 1.9 + vPh * 6.2832) * (1.0 + 2.5 * uLevel);
+  // (no shared rhythm: each row of each block moves now and then on its own, more often while the room reacts)
+  float rr = fract(vPh * 7.13 + row * 0.371), per = 5.0 + 9.0 * rr - 3.0 * uLevel, tl = mod(uTime + rr * 40.0 + vPh * 17.0, per);
+  float ev = smoothstep(0.0, 0.3, tl) * smoothstep(1.2, 0.7, tl);
+  uv.x += ev * 0.008 * (rr < 0.5 ? -1.0 : 1.0) + uLevel * 0.004 * sin(uTime * (7.0 + 6.0 * rr) + rr * 30.0);
   uv.x = clamp(uv.x, 0.002, 0.998);
-  vec4 t = texture2D(map, vec2((vVar + uv.x) / ${IMP_V}.0, uv.y));
   vec2 cell = floor(vec2(uv.x * ${IMP_COLS}.0, uv.y * ${IMP_ROWS}.0));
   float h = hash(cell + vec2(vVar * 13.0, vPh * 71.0));
+  #ifdef IMP_ATLAS
+  // each place one of our avatars (the sprites' atlas), head and shoulders over the row in front; some seats empty
+  vec2 lc = vec2(fract(uv.x * ${IMP_COLS}.0), fract(uv.y * ${IMP_ROWS}.0));
+  float av = floor(fract(h * 9.13) * 12.0), vw = step(0.5, fract(h * 7.31));
+  float ac = mod(av, 8.0), ar = (av < 8.0 ? 0.0 : 2.0) + vw;
+  vec4 t = texture2D(uAtlas, vec2((ac + 0.12 + 0.76 * lc.x) / 8.0, 1.0 - (ar + 1.0 - (0.5 + 0.5 * lc.y)) / 4.0));
+  t.a = step(0.5, t.a) * step(0.07, fract(h * 3.7));
+  #else
+  vec4 t = texture2D(map, vec2((vVar + uv.x) / ${IMP_V}.0, uv.y));
+  #endif
   float here = t.a * step(h, uFill); // (the preview fills the stands person by person)
   vec3 seat = vec3(0.0039, 0.0052, 0.0101);
   // brightness: the stage light's falloff, the block's own level, the room's reaction (a shimmer of heads moving)
   // (0.3: the sprites' own light on a far person; the baked colours are unlit)
-  float lift = 0.3 * vBr * (0.8 + 0.5 * uLevel) * (1.0 + 0.18 * uLevel * sin(uTime * 8.0 + h * 40.0));
+  float lift = 0.3 * vBr * (0.8 + 0.5 * uLevel) * (1.0 + 0.18 * uLevel * sin(uTime * (6.0 + 5.0 * fract(h * 3.3)) + h * 40.0));
   vec3 col = mix(seat, t.rgb * lift * vFall * uDim * uGain, here);
   col += uWarm * uWashK * 0.6 * uDim * vFall * here * (0.6 + 0.4 * uLevel);
   // the odd phone screen
@@ -260,7 +306,8 @@ function impostors(blocks, R, palette, spriteU, phoneU) {
     uDim: share('uDim'), uGain: share('uGain'), uWashK: share('uWashK'), uWarm: share('uWarm'), uFogColor: share('uFogColor'),
     uFogNear: share('uFogNear'), uFogFar: share('uFogFar'), uFall: share('uFall'), uMaskOut: share('uMaskOut'), uOn: phoneU.uOn,
   };
-  const mesh = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: u, vertexShader: IMP_VS, fragmentShader: IMP_FS }));
+  u.uAtlas = spriteU.uAtlas;
+  const mesh = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: u, vertexShader: IMP_VS, fragmentShader: IMP_FS, defines: ARENA.ab && ARENA.ab.pillImp ? {} : { IMP_ATLAS: 1 } }));
   mesh.frustumCulled = false;
   mesh.name = 'sprites'; // (drawn with the sprites, and counted as crowd by the coverage check)
   return mesh;
@@ -281,6 +328,13 @@ function impostorBlocks() {
   return out;
 }
 
+// the sprites' and the impostors' atlas of our avatars (one 512² texture); &ab=pillsprites goes back to the drawn shapes
+let atlasTex = null;
+const ATLAS_ON = () => !(ARENA.ab && ARENA.ab.pills);
+function spriteAtlas() {
+  if (!atlasTex) { atlasTex = new THREE.TextureLoader().load('people/arena_sprites.png'); atlasTex.colorSpace = THREE.SRGBColorSpace; atlasTex.anisotropy = 2; }
+  return atlasTex;
+}
 function spriteCrowd(list, cam, shape = 0) {
   const n = list.length;
   const quad = shape ? outlineGeometry(shape) : new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0);
@@ -297,9 +351,9 @@ function spriteCrowd(list, cam, shape = 0) {
     uTime: { value: 0 }, uBeat: { value: 0 }, uWave: { value: 0 }, uWaveFront: { value: -1 }, uArms: { value: 0 }, uBounce: { value: 0 }, uFill: { value: 1 },
     uFogNear: { value: 20 }, uFogFar: { value: 170 }, uBeamPhase: { value: 0 }, uCam: { value: cam.clone() },
     uBeamA: { value: new THREE.Color(0xff2a8a) }, uBeamB: { value: new THREE.Color(0x29c8ff) }, uFogColor: { value: new THREE.Color(0x06070d) }, uWarm: { value: new THREE.Color(0xffc890) }, uDim: { value: 1 },
-    uLaugh: { value: 0 }, uArmsFrac: { value: 0.7 }, uMaskOut: { value: 0 }, uGain: { value: (ARENA.stageLook && ARENA.stageLook.spriteGain) || 1 }, uWashK: { value: (ARENA.stageLook && ARENA.stageLook.spriteWash) || 0.004 }, uFall: { value: 18 }, uNear: { value: new THREE.Vector2(...((ARENA.stageLook && ARENA.stageLook.spriteNear) || [30, 7])) }, uFace: { value: 1 }, uMaskY: { value: 0 }, uRim: { value: new THREE.Color(0xb8c8ff).multiplyScalar(0.035 * (ARENA.stageLook ? ARENA.stageLook.spriteRim : 1)) },
+    uLaugh: { value: 0 }, uLaughT: { value: -100 }, uArmsFrac: { value: 0.7 }, uAtlas: { value: spriteAtlas() }, uMaskOut: { value: 0 }, uGain: { value: (ARENA.stageLook && ARENA.stageLook.spriteGain) || 1 }, uWashK: { value: (ARENA.stageLook && ARENA.stageLook.spriteWash) || 0.004 }, uFall: { value: 18 }, uNear: { value: new THREE.Vector2(...((ARENA.stageLook && ARENA.stageLook.spriteNear) || [30, 7])) }, uFace: { value: 1 }, uMaskY: { value: 0 }, uRim: { value: new THREE.Color(0xb8c8ff).multiplyScalar(0.035 * (ARENA.stageLook ? ARENA.stageLook.spriteRim : 1)) },
   };
-  const m = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SPRITE_VS, fragmentShader: SPRITE_FS, side: THREE.DoubleSide, defines: shape ? { SPRITE_SHAPE: 1 } : {} });
+  const m = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SPRITE_VS, fragmentShader: SPRITE_FS, side: THREE.DoubleSide, defines: { ...(shape ? { SPRITE_SHAPE: 1 } : {}), ...(ATLAS_ON() ? { SPRITE_ATLAS: 1 } : {}) } });
   const mesh = new THREE.Mesh(g, m);
   mesh.frustumCulled = false;
   mesh.name = 'sprites';
@@ -392,7 +446,9 @@ function buildArena(scene, rows, P) {
   C0.add('basic', new THREE.PlaneGeometry(36, 0.04).rotateX(-Math.PI / 2).translate(0, AR.stageH + 0.004, -0.06), 0x1c1c22, { ao: 0 }); // (dark: no grey line along the bottom of the frame)
   for (let x = -16; x <= 16; x += 1.6) glow.push({ x, y: AR.stageH - 0.1, z: 0.02, c: [0.36, 0.2, 0.08], s: 0.22 }); // dim: they sit by the lower third
   C0.add('lambert', box(30, 0.08, 0.08, 0, 1.1, AR.barrierZ), 0x2a2a2e, { ao: 0 });
-  C0.add('lambert', box(30, 0.9, 0.05, 0, 0.5, AR.barrierZ + 0.08), 0x16161a, { ao: 0.4 }); // the panel stops below the top tube
+  // the panel on the stage side of the tube, up to just under it: a rail hand hanging over the top stays behind it
+  // (from the stage a forearm below the tube read as a loose hand with no body)
+  C0.add('lambert', box(30, 1.04, 0.05, 0, 0.54, AR.barrierZ - 0.12), 0x16161a, { ao: 0.4 });
   for (let x = -15; x <= 15; x += 1.5) C0.add('lambert', box(0.06, 1.1, 0.06, x, 0.55, AR.barrierZ), 0x111114, { ao: 0 });
   // tiers: lower around the floor, upper above, a roof edge
   const tiers = [];
@@ -426,6 +482,7 @@ function buildArena(scene, rows, P) {
   const cloth = () => { let x = R() * PAL_SUM; for (const [h, w] of PALETTE) { if ((x -= w) <= 0) return new THREE.Color(h).multiplyScalar(0.45 + R() * 0.2); } return new THREE.Color(0x141416); };
   const list = [];
   const AB = P.arenaAB || {};
+  ARENA.ab = { pills: !!AB.pills, pillImp: !!AB.pillImp };
   // &ab=fewtiers: no upper ring and the lower tiers twelve rows deep (from eighteen): a diagnostic for the tiers' cost
   const push = (x, y, z, az, h, count) => { if (AB.few && (count === 2 || y > 1.4 + 11.5 * 0.42)) return; const c = cloth(); list.push({ x, y, z, az, r: c.r, g: c.g, b: c.b, h: h * (0.92 + R() * 0.16), w: 0.5, skin: R(), count, ph: R() * 1000 }); };
   const step = tv ? 0.62 : 0.55;
@@ -478,6 +535,7 @@ function buildArena(scene, rows, P) {
       else if (ev.kind === 'applause') clap = Math.max(clap, lv);
       else if (!ev.kind || ev.kind === 'laugh') laugh = Math.max(laugh, lv);
     }
+    if (laugh > 0.05 && u.uLaugh.value < 0.03) u.uLaughT.value = now; // (when this laugh began: each person's delay counts from it)
     u.uLaugh.value += (laugh - u.uLaugh.value) * 0.2;
     // the wave only while the room fills (crowds do waves in lulls): 12 m/s round the bowl every 30 s
     const wt = room.mode === 'preview' ? (now % 30) / 10 : 2;
@@ -494,8 +552,10 @@ function buildArena(scene, rows, P) {
     }
     // close-ups are exposed for the barrier: the floor behind falls dark and soft
     const close = room.shot && room.shot !== 'wide';
-    u.uDim.value = close ? 0.25 : 1; u.uFace.value = close ? 0 : 1;
-    u.uMaskY.value = beams.material.uniforms.uMaskY.value = room.maskY || 0; u.uFogNear.value = close ? 2 : 20; u.uFogFar.value = close ? 14 : 170;
+    // (in the stage look's close-up the sprites behind the 3D rows fall darker and into the haze, so they sit back as
+    // a crowd instead of flat cut-outs)
+    u.uDim.value = close ? (ARENA.stageLook ? 0.11 : 0.25) : 1; u.uFace.value = close ? 0 : 1;
+    u.uMaskY.value = beams.material.uniforms.uMaskY.value = room.maskY || 0; u.uFogNear.value = close ? 2 : 20; u.uFogFar.value = close ? (ARENA.stageLook ? 10 : 14) : 170;
     ph.material.uniforms.uOn.value = room.finale ? 0.25 + 0.5 * room.finale.strength : room.act === 'singing' ? 0.25 : room.mode === 'preview' ? 0.12 : 0.04;
     if (ARENA.stageLook) { u.uFall.value = ARENA.stageLook.spriteFall; ph.material.uniforms.uOn.value = Math.max(ph.material.uniforms.uOn.value, ARENA.stageLook.phonesOn); } // &look=stage
     const pulse = 0.75 + 0.25 * Math.sin(now * 0.9);
@@ -527,7 +587,9 @@ export const ARENA = {
     // the wide now sees the whole barrier from 10 m (heads about 20 px tall): xfar for every instanced place; the close-up
     // frames the six skinned people at the rail
     // (the lit rail on the far level: on xfar its heads were pale pins on long necks; the dark rows behind stay xfar)
-    tv: { rows: 3, front: 6, mid: 'inst', inst: [{ from: 0, to: 0, level: 'far', types: 6 }, { from: 1, to: 99, level: 'xfar', types: 6 }] },
+    // (six 3D rows in front of the sprites, so the near pit is people with faces: &ab=rows3 for the old three)
+    // (rows 1-2 on far: in the rail close-up the xfar level's coarse jackets broke into grey shards)
+    tv: { rows: 6, front: 6, mid: 'inst', inst: [{ from: 0, to: 2, level: 'far', types: 6 }, { from: 3, to: 99, level: 'xfar', types: 6 }] },
     low: { rows: 5, front: 10, mid: 'inst', inst: [{ from: 0, to: 1, level: 'sil', types: 6 }, { from: 2, to: 99, level: 'far', types: 6 }] },
     high: { rows: 7, front: 20, mid: 'inst', inst: [{ from: 0, to: 2, level: 'lod', types: 8 }, { from: 3, to: 99, level: 'sil', types: 8 }] },
   },

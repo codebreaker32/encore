@@ -1,0 +1,716 @@
+Encore QA on the 720p Android TV emulator, 2026-10-12 (UTC). Raw lines behind docs/android-emu/qa-2026-10-12/qa-report.md.
+
+
+==== launch 1 and 2: ANR and kill (logcat) ====
+10-12 18:42:54.185  1235  1966 D MediaGrants: Removed 0 media_grants for 0 user for com.strumble.tv. Reason: Package orphaned
+10-12 18:42:59.868   593   693 I WindowManager: ANR in Window{e664a92 u0 com.strumble.tv/com.strumble.tv.MainActivity}. Reason:Input dispatching timed out (e664a92 com.strumble.tv/com.strumble.tv.MainActivity (server) is not respo
+10-12 18:43:01.491   593  3102 E ActivityManager: ANR in com.strumble.tv (com.strumble.tv/.MainActivity)
+10-12 18:43:01.491   593  3102 E ActivityManager: Reason: Input dispatching timed out (e664a92 com.strumble.tv/com.strumble.tv.MainActivity (server) is not responding. Waited 5005ms for FocusEvent(hasFocus=true))
+10-12 18:43:01.491   593  3102 E ActivityManager: some avg10=0.00 avg60=0.00 avg300=0.00 total=28207
+10-12 18:43:01.491   593  3102 E ActivityManager: full avg10=0.00 avg60=0.00 avg300=0.00 total=13971
+10-12 18:43:01.491   593  3102 E ActivityManager: some avg10=18.36 avg60=6.33 avg300=1.52 total=5236166
+10-12 18:43:01.491   593  3102 E ActivityManager: full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+10-12 18:43:01.491   593  3102 E ActivityManager: ----- Output from /proc/pressure/io -----
+10-12 18:43:01.491   593  3102 E ActivityManager: some avg10=57.15 avg60=57.77 avg300=23.27 total=84276646
+10-12 18:43:01.491   593  3102 E ActivityManager: full avg10=40.66 avg60=50.62 avg300=21.41 total=78431314
+10-12 18:43:01.491   593  3102 E ActivityManager: ----- End output from /proc/pressure/io -----
+10-12 18:43:01.492   593   622 W ActivityTaskManager:   Force finishing activity com.strumble.tv/.MainActivity
+10-12 18:43:01.494   593   622 I ActivityManager: Killing 2897:com.strumble.tv/u0a122 (adj 0): user request after error
+10-12 18:44:59.456   593   693 I WindowManager: ANR in Window{979a6ee u0 com.strumble.tv/com.strumble.tv.MainActivity}. Reason:Input dispatching timed out (979a6ee com.strumble.tv/com.strumble.tv.MainActivity (server) is not respo
+10-12 18:45:00.675   593  3324 E ActivityManager: ANR in com.strumble.tv (com.strumble.tv/.MainActivity)
+10-12 18:45:00.675   593  3324 E ActivityManager: Reason: Input dispatching timed out (979a6ee com.strumble.tv/com.strumble.tv.MainActivity (server) is not responding. Waited 5002ms for FocusEvent(hasFocus=true))
+10-12 18:45:00.675   593  3324 E ActivityManager: some avg10=0.00 avg60=0.00 avg300=0.00 total=30412
+10-12 18:45:00.675   593  3324 E ActivityManager: full avg10=0.00 avg60=0.00 avg300=0.00 total=16151
+10-12 18:45:00.675   593  3324 E ActivityManager: some avg10=0.29 avg60=0.99 avg300=1.05 total=5817455
+10-12 18:45:00.675   593  3324 E ActivityManager: full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+10-12 18:45:00.675   593  3324 E ActivityManager: ----- Output from /proc/pressure/io -----
+10-12 18:45:00.675   593  3324 E ActivityManager: some avg10=12.96 avg60=10.86 avg300=16.24 total=87583119
+10-12 18:45:00.675   593  3324 E ActivityManager: full avg10=12.81 avg60=9.80 avg300=14.97 total=81618199
+10-12 18:45:00.675   593  3324 E ActivityManager: ----- End output from /proc/pressure/io -----
+10-12 18:45:00.675   593   622 W ActivityTaskManager:   Force finishing activity com.strumble.tv/.MainActivity
+10-12 18:45:00.684   593   622 I ActivityManager: Killing 3243:com.strumble.tv/u0a122 (adj 0): user request after error
+
+
+==== ANR main thread (dropbox), first frames ====
+"main" prio=5 tid=1 Native
+  | group="main" sCount=1 ucsCount=0 flags=1 obj=0x72398db8 self=0xdf483810
+  | sysTid=2897 nice=-10 cgrp=top-app sched=0/0 handle=0xf08d7474
+  | state=D schedstat=( 162089738 69830873 388 ) utm=12 stm=3 core=1 HZ=100
+  | stack=0xff51c000-0xff51e000 stackSize=8188KB
+  | held mutexes=
+  native: #00 pc 02dbcb4a  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #01 pc 02f63fd3  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #02 pc 02452c4a  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #03 pc 024523e2  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #04 pc 03bd0683  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #05 pc 03b77b79  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #06 pc 0247a70a  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #07 pc 02479dac  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (???) (BuildId: ac20d0012585
+  native: #08 pc 0244e012  /data/app/~~oaHpOHwRKoMpbtw5YPHilQ==/com.google.android.trichromelibrary_567263631-ZPSIflVfhCSV9WHJuXA_1A==/TrichromeLibrary.apk (offset 899000) (Java_J_N_M1Y_1XVCN+124) (Bu
+  native: #09 pc 0015c462  /apex/com.android.art/lib/libart.so (art_quick_generic_jni_trampoline+82) (BuildId: 388e8b51e7d15a1d0c3815a57388fc7f)
+  native: #10 pc 00149574  /apex/com.android.art/lib/libart.so (nterp_helper+124) (BuildId: 388e8b51e7d15a1d0c3815a57388fc7f)
+  native: #11 pc 002b17ce  /data/app/~~35FVoEU2tYgEHdjs8J33Cw==/com.google.android.webview-QTzRcZagCs1113NXgGfyKA==/WebViewGoogle.apk (org.chromium.content.browser.BrowserStartupControllerImpl.a+18)
+  native: #12 pc 00149edd  /apex/com.android.art/lib/libart.so (nterp_helper+2533) (BuildId: 388e8b51e7d15a1d0c3815a57388fc7f)
+  native: #13 pc 002b1b88  /data/app/~~35FVoEU2tYgEHdjs8J33Cw==/com.google.android.webview-QTzRcZagCs1113NXgGfyKA==/WebViewGoogle.apk (org.chromium.content.browser.BrowserStartupControllerImpl.f+132)
+  native: #14 pc 00149edd  /apex/com.android.art/lib/libart.so (nterp_helper+2533) (BuildId: 388e8b51e7d15a1d0c3815a57388fc7f)
+
+
+==== timeline (every key, shot, phone) ====
+18:42:54.463 launch from the launcher intent (no deep link)
+18:43:34.704 shot 00-launch
+18:44:54.386 launch from the launcher intent (no deep link)
+18:45:14.724 focus: mCurrentFocus=Window{979a6ee u0 com.strumble.tv/com.strumble.tv.MainActivity}
+18:45:15.144 shot 01-bill-nophone
+18:46:13.065 launch from the launcher intent (no deep link)
+18:46:33.989 shot 01-bill-nophone
+18:47:06.320 phone A (Aman, scripts/standup-demo.json) joins SVZR
+18:47:13.387 key KEYCODE_BACK
+18:47:15.443 focus: mCurrentFocus=Window{979a6ee u0 com.strumble.tv/com.strumble.tv.MainActivity}
+18:47:16.105 shot 02-bill-after-back
+18:47:16.151 key KEYCODE_DPAD_UP
+18:47:17.724 key KEYCODE_DPAD_RIGHT
+18:47:19.829 shot 03-bill-act-singing
+18:47:19.914 key KEYCODE_DPAD_LEFT
+18:47:21.462 key KEYCODE_DPAD_DOWN
+18:47:23.014 key KEYCODE_DPAD_RIGHT
+18:47:24.774 shot 04-bill-venue-theatre
+18:47:24.810 key KEYCODE_DPAD_LEFT
+18:47:26.354 key KEYCODE_DPAD_DOWN
+18:47:27.895 key KEYCODE_DPAD_RIGHT
+18:47:29.971 shot 05-bill-mc-strict
+18:47:30.073 key KEYCODE_DPAD_LEFT
+18:47:34.663 shot 06-bill-ready
+18:48:18.017 key KEYCODE_DPAD_UP
+18:48:18.373 key KEYCODE_DPAD_UP
+18:48:18.830 key KEYCODE_DPAD_DOWN
+18:48:19.527 key KEYCODE_DPAD_RIGHT
+18:48:20.798 shot 07-venue-theatre-load-1
+18:48:23.382 shot 07-venue-theatre-load-3
+18:48:25.983 shot 07-venue-theatre-load-5
+18:48:28.589 shot 07-venue-theatre-load-8
+18:48:31.188 shot 07-venue-theatre-load-12
+18:49:14.396 key KEYCODE_DPAD_CENTER
+18:49:27.211 shot 08-live-before-back
+18:49:27.270 key KEYCODE_BACK
+18:49:30.330 focus: mCurrentFocus=Window{979a6ee u0 com.strumble.tv/com.strumble.tv.MainActivity}
+18:49:30.962 shot 09-after-live-back
+18:50:08.207 recording s1-standup-theatre
+18:50:10.288 key KEYCODE_DPAD_CENTER
+18:50:27.120 shot s1-live-1
+18:50:42.974 shot s1-live-2
+18:50:58.974 shot s1-live-3
+18:51:14.956 shot s1-live-4
+18:51:30.958 shot s1-live-5
+18:51:46.998 shot s1-live-6
+18:51:55.939 shot s1-live-end
+18:51:56.068 key KEYCODE_DPAD_CENTER
+18:52:09.819 shot s1-cut-12
+18:52:30.423 shot s1-cut-32
+18:52:33.440 recording stopped
+18:53:42.331 key KEYCODE_BACK
+18:53:45.372 focus: mCurrentFocus=Window{979a6ee u0 com.strumble.tv/com.strumble.tv.MainActivity}
+18:53:45.809 shot g1-greenroom
+18:53:45.857 key KEYCODE_DPAD_CENTER
+18:53:49.300 shot g2-listening
+18:53:58.746 shot g3-after-listen
+18:54:07.201 shot g4-after-listen-17
+18:54:07.257 key KEYCODE_BACK
+18:54:10.293 focus: mCurrentFocus=Window{979a6ee u0 com.strumble.tv/com.strumble.tv.MainActivity}
+18:54:10.769 shot g5-back-to-cut
+18:54:10.825 key KEYCODE_BACK
+18:54:13.862 key KEYCODE_DPAD_RIGHT
+18:54:16.905 focus: mCurrentFocus=Window{979a6ee u0 com.strumble.tv/com.strumble.tv.MainActivity}
+18:54:17.554 shot g6-bill
+18:55:00.685 key KEYCODE_DPAD_DOWN
+18:55:02.249 key KEYCODE_DPAD_RIGHT
+18:55:03.834 key KEYCODE_DPAD_RIGHT
+18:55:10.529 shot s2-bill
+18:55:10.546 recording s2-standup-arena
+18:55:12.628 key KEYCODE_DPAD_CENTER
+18:55:28.633 shot s2-live-1
+18:55:43.451 shot s2-live-2
+18:55:58.346 shot s2-live-3
+18:56:13.245 shot s2-live-4
+18:56:13.306 key KEYCODE_DPAD_CENTER
+18:56:45.208 shot s2-cut
+18:56:48.222 recording stopped
+18:57:39.581 key KEYCODE_BACK
+18:57:41.635 key KEYCODE_DPAD_RIGHT
+18:57:44.645 phone A stopped
+18:57:45.188 phone B (Aman, words off) joins SVZR
+18:57:50.903 shot r1-bill-phone-gone
+18:57:53.939 phone C (Aman, words off) joins SVZR
+18:58:00.588 shot r2-bill-rejoined
+18:58:20.370 phone C stopped
+18:58:20.419 key KEYCODE_DPAD_LEFT
+18:58:21.302 key KEYCODE_DPAD_LEFT
+18:58:22.148 key KEYCODE_DPAD_LEFT
+18:58:23.032 key KEYCODE_DPAD_UP
+18:58:23.920 key KEYCODE_DPAD_LEFT
+18:58:24.778 key KEYCODE_DPAD_LEFT
+18:58:25.610 key KEYCODE_DPAD_LEFT
+18:58:33.067 shot s3-bill
+18:58:33.084 recording s3-standup-openmic-wordsoff
+18:58:35.142 key KEYCODE_DPAD_CENTER
+18:58:51.992 shot s3-live-1
+18:59:07.842 shot s3-live-2
+18:59:23.849 shot s3-live-3
+18:59:23.916 key KEYCODE_DPAD_CENTER
+18:59:55.657 shot s3-cut
+18:59:58.676 recording stopped
+19:00:54.807 key KEYCODE_BACK
+19:00:56.853 key KEYCODE_DPAD_RIGHT
+19:00:59.874 phone B stopped
+19:01:03.910 phone D (Aman, scripts/standup-demo.json) joins SVZR
+19:01:06.960 key KEYCODE_DPAD_RIGHT
+19:01:07.875 key KEYCODE_DPAD_DOWN
+19:01:08.734 key KEYCODE_DPAD_RIGHT
+19:01:09.586 key KEYCODE_DPAD_RIGHT
+19:01:16.167 shot s4-bill
+19:01:16.180 recording s4-standup-club
+19:01:18.246 key KEYCODE_DPAD_CENTER
+19:01:33.992 shot s4-live-1
+19:01:48.758 shot s4-live-2
+19:02:03.678 shot s4-live-3
+19:02:18.623 shot s4-live-4
+19:02:18.678 key KEYCODE_DPAD_CENTER
+19:02:50.380 shot s4-cut
+19:02:53.404 recording stopped
+19:03:28.870 key KEYCODE_BACK
+19:03:30.925 key KEYCODE_DPAD_RIGHT
+19:03:33.937 phone D stopped
+19:03:37.976 phone E (Aman, scripts/poetry-demo.json) joins SVZR
+19:03:41.040 key KEYCODE_DPAD_LEFT
+19:03:41.941 key KEYCODE_DPAD_LEFT
+19:03:42.787 key KEYCODE_DPAD_UP
+19:03:43.700 key KEYCODE_DPAD_UP
+19:03:44.560 key KEYCODE_DPAD_RIGHT
+19:03:45.426 key KEYCODE_DPAD_RIGHT
+19:03:52.847 shot p-bill
+19:03:52.873 recording poetry
+19:03:54.957 key KEYCODE_DPAD_CENTER
+19:04:11.965 shot p-live-1
+19:04:27.862 shot p-live-2
+19:04:43.904 shot p-live-3
+19:04:59.844 shot p-live-4
+19:05:07.895 phone E: live: "Monsoon, Mumbai", 11 lines, ends at 68.7 s of a 180 s slot / 1 finished
+19:05:43.587 shot p-cut
+19:05:46.602 recording stopped
+19:07:57.355 key KEYCODE_BACK
+19:07:59.407 key KEYCODE_DPAD_RIGHT
+19:08:02.417 phone E stopped
+19:08:06.456 phone F (Aman, scripts/speech-demo.json) joins SVZR
+19:08:09.520 key KEYCODE_DPAD_UP
+19:08:10.368 key KEYCODE_DPAD_RIGHT
+19:08:18.156 shot sp-bill
+19:08:18.170 recording speech
+19:08:20.251 key KEYCODE_DPAD_CENTER
+19:08:37.275 shot sp-live-1
+19:08:53.446 shot sp-live-2
+19:09:09.474 shot sp-live-3
+19:09:25.504 shot sp-live-4
+19:09:34.572 phone F: live: "The Lake", 11 lines, ends at 69 s of a 240 s slot / 1 finished
+19:10:10.288 shot sp-cut
+19:10:13.307 recording stopped
+19:10:58.707 key KEYCODE_BACK
+19:11:00.749 key KEYCODE_DPAD_RIGHT
+19:11:03.759 phone F stopped
+19:11:07.802 phone G (Aman, words off) joins SVZR
+19:11:10.855 key KEYCODE_DPAD_UP
+19:11:11.703 key KEYCODE_DPAD_RIGHT
+19:11:12.621 key KEYCODE_DPAD_RIGHT
+19:11:20.402 shot sg-bill
+19:11:20.423 recording singing
+19:11:22.481 key KEYCODE_DPAD_CENTER
+19:11:39.389 shot sg-live-1
+19:11:55.301 shot sg-live-2
+19:12:11.235 shot sg-live-3
+19:12:11.311 key KEYCODE_DPAD_CENTER
+19:12:43.069 shot sg-cut
+19:12:46.085 recording stopped
+
+
+==== TV arms seen by the phones ====
+18:49:14.397 [tv] arm standup at theatre, 300 s, persona sarcastic
+18:50:10.269 [tv] arm standup at theatre, 300 s, persona sarcastic
+18:55:12.626 [tv] arm standup at arena, 300 s, persona deadpan
+18:58:35.141 [tv] arm standup at openmic, 300 s, persona warm
+19:01:18.235 [tv] arm standup at club, 300 s, persona strict
+19:03:54.953 [tv] arm poetry at theatre, 180 s, persona warm
+19:08:20.249 [tv] arm speech at arena, 240 s, persona warm
+19:11:22.482 [tv] arm singing at arena, 210 s, persona warm
+
+
+==== rejoin: phone B, C ====
+18:57:46.270 [phone] connecting
+18:57:46.296 [phone] error name-taken: Aman just left; try again in a few seconds
+18:57:46.297 [phone] closed
+18:57:49.800 [phone] connecting
+18:57:49.802 [phone] joined room SVZR as Aman
+18:57:49.803 [phone] ready
+18:57:49.824 [tv] idle
+18:58:35.141 [tv] arm standup at openmic, 300 s, persona warm
+18:58:35.180 [tv] hush for 1.5 s
+18:58:36.212 [tv] hush for 1.5 s
+18:58:37.252 [tv] hush for 1.5 s
+18:58:38.275 [tv] hush for 1.5 s
+18:58:40.032 [phone] live: 43 phrases over 300 s
+18:59:00.021 [tv] hush for 3.3 s
+18:59:08.684 [tv] hush for 3.3 s
+18:59:19.098 [tv] hush for 3.3 s
+18:59:23.913 [tv] stop
+18:57:54.970 [phone] connecting
+18:57:54.991 [phone] error name-taken: Aman is already playing
+18:57:54.992 [phone] closed
+
+
+==== green room listen (phone A) ====
+18:53:45.858 [tv] listen mv5m1q7e: answering with nothing heard
+
+
+==== [mc-voice] and keys (logcat) ====
+10-12 18:47:08.854  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830828181 generative +0ms slot 0 paused
+10-12 18:47:13.102  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 18:47:15.869  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 18:47:17.428  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:47:19.033  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830838347 generative +0ms slot 0 paused
+10-12 18:47:19.630  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:47:21.182  3437  3462 I ReactNativeJS: Key pressed: Down
+10-12 18:47:21.233  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830840547 generative +0ms slot 0 paused
+10-12 18:47:22.732  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:47:24.503  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830843658 generative +0ms slot 0 paused
+10-12 18:47:24.526  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:47:26.071  3437  3462 I ReactNativeJS: Key pressed: Down
+10-12 18:47:26.146  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830845467 generative +0ms slot 0 paused
+10-12 18:47:27.612  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:47:29.224  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830848579 generative +0ms slot 0 paused
+10-12 18:47:29.788  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:47:31.329  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830850725 generative +0ms slot 0 paused
+10-12 18:48:17.734  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 18:48:18.075  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 18:48:18.490  3437  3462 I ReactNativeJS: Key pressed: Down
+10-12 18:48:19.157  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:48:20.783  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830900082 generative +0ms slot 0 paused
+10-12 18:49:14.115  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:49:14.115  3437  3462 I ReactNativeJS: [mc-voice] queued mv5lvwqr:0 generative +0ms
+10-12 18:49:14.159  3437  3462 I ReactNativeJS: [mc-voice] playing mv5lvwqr:0 generative +44ms
+10-12 18:49:18.141  3437  3462 I ReactNativeJS: [mc-voice] ended mv5lvwqr:0 generative +4026ms
+10-12 18:49:26.975  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 18:49:28.586  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791830967913 generative +0ms slot 0 paused
+10-12 18:50:09.977  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:50:09.977  3437  3462 I ReactNativeJS: [mc-voice] queued mv5lx3uh:0 generative +0ms
+10-12 18:50:10.049  3437  3462 I ReactNativeJS: [mc-voice] playing mv5lx3uh:0 generative +72ms
+10-12 18:50:16.238  3437  3462 I ReactNativeJS: [mc-voice] ended mv5lx3uh:0 generative +6261ms
+10-12 18:51:55.745  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:51:58.383  3437  3462 I ReactNativeJS: [mc-voice] queued debrief:mv5lx3uh generative +0ms
+10-12 18:51:58.386  3437  3462 I ReactNativeJS: [mc-voice] loading debrief:mv5lx3uh generative +3ms slot 0 paused
+10-12 18:51:59.548  3437  3462 I ReactNativeJS: [mc-voice] playing debrief:mv5lx3uh generative +1165ms
+10-12 18:52:00.506  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831119709 generative +0ms slot 1 paused
+10-12 18:52:11.612  3437  3462 I ReactNativeJS: [mc-voice] ended debrief:mv5lx3uh generative +13229ms
+10-12 18:53:15.417  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831194712 generative +0ms slot 0 paused
+10-12 18:53:42.049  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 18:53:45.574  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:54:06.967  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 18:54:10.534  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 18:54:13.582  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:54:30.454  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831269735 generative +0ms slot 1 paused
+10-12 18:55:00.385  3437  3462 I ReactNativeJS: Key pressed: Down
+10-12 18:55:01.950  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:55:03.547  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:55:05.178  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831304479 generative +0ms slot 0 paused
+10-12 18:55:12.324  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:55:12.324  3437  3462 I ReactNativeJS: [mc-voice] queued mv5m3l50:0 generative +0ms
+10-12 18:55:12.375  3437  3462 I ReactNativeJS: [mc-voice] playing mv5m3l50:0 generative +51ms
+10-12 18:55:17.066  3437  3462 I ReactNativeJS: [mc-voice] ended mv5m3l50:0 generative +4742ms
+10-12 18:56:13.023  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:56:16.941  3437  3462 I ReactNativeJS: [mc-voice] queued debrief:mv5m3l50 generative +0ms
+10-12 18:56:16.955  3437  3462 I ReactNativeJS: [mc-voice] loading debrief:mv5m3l50 generative +14ms slot 0 now
+10-12 18:56:17.513  3437  3462 I ReactNativeJS: [mc-voice] playing debrief:mv5m3l50 generative +572ms
+10-12 18:56:18.593  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831377847 generative +0ms slot 1 paused
+10-12 18:56:29.063  3437  3462 I ReactNativeJS: [mc-voice] ended debrief:mv5m3l50 generative +12122ms
+10-12 18:57:33.666  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831452862 generative +0ms slot 0 paused
+10-12 18:57:39.291  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 18:57:41.347  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 18:58:20.124  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:58:21.010  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:58:21.868  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:58:22.735  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 18:58:23.530  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831502792 generative +0ms slot 0 paused
+10-12 18:58:23.607  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:58:24.497  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:58:25.330  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 18:58:26.889  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831506245 generative +0ms slot 0 paused
+10-12 18:58:34.843  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:58:34.843  3437  3462 I ReactNativeJS: [mc-voice] queued mv5m7xej:0 generative +0ms
+10-12 18:58:34.889  3437  3462 I ReactNativeJS: [mc-voice] playing mv5m7xej:0 generative +46ms
+10-12 18:58:38.612  3437  3462 I ReactNativeJS: [mc-voice] ended mv5m7xej:0 generative +3769ms
+10-12 18:59:23.630  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 18:59:29.180  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831568525 generative +0ms slot 0 paused
+10-12 19:00:44.308  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831643528 generative +0ms slot 1 paused
+10-12 19:00:54.522  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 19:00:56.564  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:01:06.674  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:01:07.543  3437  3462 I ReactNativeJS: Key pressed: Down
+10-12 19:01:08.270  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831667621 generative +0ms slot 0 paused
+10-12 19:01:08.454  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:01:09.293  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:01:10.856  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831670212 generative +0ms slot 0 paused
+10-12 19:01:17.952  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 19:01:17.953  3437  3462 I ReactNativeJS: [mc-voice] queued mv5mbf9c:0 generative +0ms
+10-12 19:01:18.014  3437  3462 I ReactNativeJS: [mc-voice] playing mv5mbf9c:0 generative +61ms
+10-12 19:01:20.050  3437  3462 I ReactNativeJS: [mc-voice] ended mv5mbf9c:0 generative +2097ms
+10-12 19:02:18.396  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 19:02:20.653  3437  3462 I ReactNativeJS: [mc-voice] queued debrief:mv5mbf9c generative +0ms
+10-12 19:02:20.656  3437  3462 I ReactNativeJS: [mc-voice] loading debrief:mv5mbf9c generative +3ms slot 0 paused
+10-12 19:02:21.486  3437  3462 I ReactNativeJS: [mc-voice] playing debrief:mv5mbf9c generative +833ms
+10-12 19:02:23.053  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831742366 generative +0ms slot 1 paused
+10-12 19:02:29.212  3437  3462 I ReactNativeJS: [mc-voice] ended debrief:mv5mbf9c generative +8559ms
+10-12 19:03:28.589  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 19:03:30.640  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:03:40.391  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831819696 generative +0ms slot 0 paused
+10-12 19:03:40.758  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 19:03:41.635  3437  3462 I ReactNativeJS: Key pressed: Left
+10-12 19:03:42.505  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 19:03:43.248  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831822572 generative +0ms slot 0 paused
+10-12 19:03:43.391  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 19:03:44.274  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:03:45.136  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:03:46.716  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831826048 generative +0ms slot 0 paused
+10-12 19:03:54.671  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 19:03:54.671  3437  3462 I ReactNativeJS: [mc-voice] queued mv5mes6n:0 generative +0ms
+10-12 19:03:54.722  3437  3462 I ReactNativeJS: [mc-voice] playing mv5mes6n:0 generative +51ms
+10-12 19:03:58.222  3437  3462 I ReactNativeJS: [mc-voice] ended mv5mes6n:0 generative +3551ms
+10-12 19:05:09.951  3437  3462 I ReactNativeJS: [mc-voice] queued debrief:mv5mes6n generative +0ms
+10-12 19:05:09.957  3437  3462 I ReactNativeJS: [mc-voice] loading debrief:mv5mes6n generative +6ms slot 0 paused
+10-12 19:05:10.572  3437  3462 I ReactNativeJS: [mc-voice] playing debrief:mv5mes6n generative +621ms
+10-12 19:05:12.114  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831911391 generative +0ms slot 1 paused
+10-12 19:05:18.437  3437  3462 I ReactNativeJS: [mc-voice] ended debrief:mv5mes6n generative +8486ms
+10-12 19:06:27.120  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791831986398 generative +0ms slot 0 paused
+10-12 19:07:41.906  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832061413 generative +0ms slot 1 paused
+10-12 19:07:57.066  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 19:07:59.117  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:08:09.229  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 19:08:10.086  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:08:11.720  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832090999 generative +0ms slot 0 paused
+10-12 19:08:19.954  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 19:08:19.955  3437  3462 I ReactNativeJS: [mc-voice] queued mv5mkgvm:0 generative +0ms
+10-12 19:08:19.994  3437  3462 I ReactNativeJS: [mc-voice] playing mv5mkgvm:0 generative +39ms
+10-12 19:08:23.862  3437  3462 I ReactNativeJS: [mc-voice] ended mv5mkgvm:0 generative +3907ms
+10-12 19:09:37.193  3437  3462 I ReactNativeJS: [mc-voice] queued debrief:mv5mkgvm generative +0ms
+10-12 19:09:37.220  3437  3462 I ReactNativeJS: [mc-voice] loading debrief:mv5mkgvm generative +27ms slot 0 now
+10-12 19:09:37.623  3437  3462 I ReactNativeJS: [mc-voice] playing debrief:mv5mkgvm generative +430ms
+10-12 19:09:42.807  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832182132 generative +0ms slot 1 paused
+10-12 19:09:45.200  3437  3462 I ReactNativeJS: [mc-voice] ended debrief:mv5mkgvm generative +8007ms
+10-12 19:10:57.596  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832257147 generative +0ms slot 0 paused
+10-12 19:10:58.427  3437  3462 I ReactNativeJS: Key pressed: Back
+10-12 19:11:00.459  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:11:10.572  3437  3462 I ReactNativeJS: Key pressed: Up
+10-12 19:11:11.422  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:11:12.307  3437  3462 I ReactNativeJS: Key pressed: Right
+10-12 19:11:13.660  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832273231 generative +0ms slot 0 paused
+10-12 19:11:22.199  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 19:11:22.200  3437  3462 I ReactNativeJS: [mc-voice] queued mv5modi0:0 generative +0ms
+10-12 19:11:22.243  3437  3462 I ReactNativeJS: [mc-voice] playing mv5modi0:0 generative +43ms
+10-12 19:11:26.799  3437  3462 I ReactNativeJS: [mc-voice] ended mv5modi0:0 generative +4599ms
+10-12 19:12:11.010  3437  3462 I ReactNativeJS: Key pressed: Enter
+10-12 19:12:20.682  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832339987 generative +0ms slot 0 paused
+10-12 19:13:35.558  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832414995 generative +0ms slot 1 paused
+10-12 19:14:50.692  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832490011 generative +0ms slot 0 paused
+10-12 19:16:05.646  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832565075 generative +0ms slot 1 paused
+10-12 19:17:25.248  3437  3462 I ReactNativeJS: [mc-voice] loading warm:1791832644095 generative +0ms slot 0 paused
+
+
+==== MC (ap-south-1 model region, until 19:06): lines, debriefs, rejections ====
+2026-10-12 18:34:40,354 WARNING mc_agent.mc: warm-up: the model did not answer (TimeoutError)
+2026-10-12 18:34:41,999 INFO mc_agent.voice: voices: long-form in us-east-1 has 6 voices (12.65 s)
+2026-10-12 18:34:42,432 INFO mc_agent.voice: voices: generative in ap-southeast-1 has 43 voices (13.09 s)
+2026-10-12 18:34:42,665 INFO mc_agent.voice: voices: neural in ap-south-1 has 63 voices (13.31 s)
+2026-10-12 18:34:42,666 INFO mc_agent.mc: warm-up: voices warm Kajal generative+neural, sarcastic Brian generative+neural, strict Stephen generative+neural, deadpan Matthew generative+neural
+2026-10-12 18:37:36,371 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.13s, tokens in=3055 out=147 (running totals)
+2026-10-12 18:37:36,372 INFO mc_agent.mc: debrief answered by the model (sarcastic)
+2026-10-12 18:47:09,114 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.65s, tokens in=1101 out=23 (running totals)
+2026-10-12 18:47:09,115 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:47:09,117 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 59 characters
+2026-10-12 18:47:19,292 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.66s, tokens in=1086 out=28 (running totals)
+2026-10-12 18:47:19,293 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:47:19,294 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 71 characters
+2026-10-12 18:47:21,495 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.66s, tokens in=1101 out=24 (running totals)
+2026-10-12 18:47:21,495 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:47:21,496 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 56 characters
+2026-10-12 18:47:24,768 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.83s, tokens in=1101 out=56 (running totals)
+2026-10-12 18:47:24,769 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:47:24,770 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 82 characters
+2026-10-12 18:47:26,402 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.65s, tokens in=1101 out=22 (running totals)
+2026-10-12 18:47:26,402 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:47:26,404 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 49 characters
+2026-10-12 18:47:29,488 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.62s, tokens in=1092 out=20 (running totals)
+2026-10-12 18:47:29,488 INFO mc_agent.mc: line/intro answered by the model (strict)
+2026-10-12 18:47:29,490 INFO mc_agent.mc: line/intro: voice Stephen on generative with a neural fallback, 19 characters
+2026-10-12 18:47:31,591 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.58s, tokens in=1101 out=19 (running totals)
+2026-10-12 18:47:31,591 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:47:31,593 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 43 characters
+2026-10-12 18:48:21,050 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.68s, tokens in=1101 out=34 (running totals)
+2026-10-12 18:48:21,050 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:48:21,051 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 41 characters
+2026-10-12 18:49:28,847 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.65s, tokens in=1101 out=27 (running totals)
+2026-10-12 18:49:28,848 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:49:28,849 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 65 characters
+2026-10-12 18:50:25,620 INFO mc_agent.judge: judge/standup line 1: 0.51 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:50:30,855 INFO mc_agent.judge: judge/standup line 2: 0.51 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:50:33,034 INFO mc_agent.judge: judge/standup line 3: 0.52 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:50:36,822 INFO mc_agent.judge: judge/standup line 4: 0.50 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:50:39,626 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 1.48s, tokens in=1054 out=40 (running totals)
+2026-10-12 18:50:39,626 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 18:50:47,110 INFO mc_agent.judge: judge/standup line 5: 0.25 in 352 ms (humor-roberta-large-int8)
+2026-10-12 18:50:50,875 INFO mc_agent.judge: judge/standup line 6: 0.55 in 350 ms (humor-roberta-large-int8)
+2026-10-12 18:50:55,838 INFO mc_agent.judge: judge/standup line 7: 0.71 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:01,228 INFO mc_agent.judge: judge/standup line 8: 0.47 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:08,268 INFO mc_agent.judge: judge/standup line 9: 0.54 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:10,979 INFO mc_agent.judge: judge/standup line 10: 0.40 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:15,918 INFO mc_agent.judge: judge/standup line 11: 0.77 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:24,490 INFO mc_agent.judge: judge/standup line 12: 0.31 in 354 ms (humor-roberta-large-int8)
+2026-10-12 18:51:28,450 INFO mc_agent.judge: judge/standup line 13: 0.50 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:32,744 INFO mc_agent.judge: judge/standup line 14: 0.44 in 353 ms (humor-roberta-large-int8)
+2026-10-12 18:51:35,783 INFO mc_agent.judge: judge/standup line 15: 0.63 in 350 ms (humor-roberta-large-int8)
+2026-10-12 18:51:42,260 INFO mc_agent.judge: judge/standup line 17: 0.19 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:44,741 INFO mc_agent.judge: judge/standup line 18: 0.15 in 353 ms (humor-roberta-large-int8)
+2026-10-12 18:51:46,070 INFO mc_agent.judge: judge/standup line 19: 0.15 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:51:49,570 INFO mc_agent.mc: line/heckle model call 1: mantle zai.glm-5 in 1.44s, tokens in=1168 out=36 (running totals)
+2026-10-12 18:51:49,571 INFO mc_agent.mc: line/heckle answered by the model (sarcastic)
+2026-10-12 18:51:54,284 INFO mc_agent.judge: judge/standup line 21: 0.15 in 350 ms (humor-roberta-large-int8)
+2026-10-12 18:51:57,476 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 1.44s, tokens in=1037 out=39 (running totals)
+2026-10-12 18:51:57,477 INFO mc_agent.mc: line/end answered by the model (sarcastic)
+2026-10-12 18:51:58,649 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.59s, tokens in=5290 out=174 (running totals)
+2026-10-12 18:51:58,651 INFO mc_agent.mc: debrief answered by the model (sarcastic)
+2026-10-12 18:51:58,652 INFO mc_agent.mc: debrief: voice Brian on generative with a neural fallback, 154 characters
+2026-10-12 18:52:00,759 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.77s, tokens in=1114 out=31 (running totals)
+2026-10-12 18:52:00,761 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:52:00,762 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 26 characters
+2026-10-12 18:53:15,675 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.68s, tokens in=1114 out=33 (running totals)
+2026-10-12 18:53:15,676 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:53:15,677 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 79 characters
+2026-10-12 18:54:30,705 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.68s, tokens in=1114 out=28 (running totals)
+2026-10-12 18:54:30,706 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 18:54:30,708 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 46 characters
+2026-10-12 18:55:03,897 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.75s, tokens in=1105 out=23 (running totals)
+2026-10-12 18:55:03,898 INFO mc_agent.mc: line/intro answered by the model (strict)
+2026-10-12 18:55:03,899 INFO mc_agent.mc: line/intro: voice Stephen on generative with a neural fallback, 40 characters
+2026-10-12 18:55:05,441 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.68s, tokens in=1124 out=27 (running totals)
+2026-10-12 18:55:05,442 INFO mc_agent.mc: line/intro answered by the model (deadpan)
+2026-10-12 18:55:05,444 INFO mc_agent.mc: line/intro: voice Matthew on generative with a neural fallback, 55 characters
+2026-10-12 18:55:28,554 INFO mc_agent.judge: judge/standup line 1: 0.51 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:55:33,789 INFO mc_agent.judge: judge/standup line 2: 0.51 in 350 ms (humor-roberta-large-int8)
+2026-10-12 18:55:35,970 INFO mc_agent.judge: judge/standup line 3: 0.52 in 350 ms (humor-roberta-large-int8)
+2026-10-12 18:55:39,746 INFO mc_agent.judge: judge/standup line 4: 0.50 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:55:42,427 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 1.34s, tokens in=1056 out=24 (running totals)
+2026-10-12 18:55:42,429 INFO mc_agent.mc: line/between answered by the model (deadpan)
+2026-10-12 18:55:50,037 INFO mc_agent.judge: judge/standup line 5: 0.25 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:55:53,803 INFO mc_agent.judge: judge/standup line 6: 0.55 in 351 ms (humor-roberta-large-int8)
+2026-10-12 18:55:58,776 INFO mc_agent.judge: judge/standup line 7: 0.71 in 354 ms (humor-roberta-large-int8)
+2026-10-12 18:56:04,162 INFO mc_agent.judge: judge/standup line 8: 0.47 in 350 ms (humor-roberta-large-int8)
+2026-10-12 18:56:11,190 INFO mc_agent.judge: judge/standup line 9: 0.54 in 354 ms (humor-roberta-large-int8)
+2026-10-12 18:56:14,803 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 1.49s, tokens in=1041 out=39 (running totals)
+2026-10-12 18:56:14,804 INFO mc_agent.mc: line/end answered by the model (deadpan)
+2026-10-12 18:56:15,630 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.30s, tokens in=5199 out=135 (running totals)
+2026-10-12 18:56:15,631 INFO mc_agent.mc: debrief: answer rejected (next is 'up' but the house rule gives 'again'; use it, or say 'my call' and why in line); asking again with 5.7s left
+2026-10-12 18:56:17,194 INFO mc_agent.mc: debrief model call 2: mantle zai.glm-5 in 1.56s, tokens in=10599 out=270 (running totals)
+2026-10-12 18:56:17,196 INFO mc_agent.mc: debrief answered by the model (deadpan)
+2026-10-12 18:56:17,198 INFO mc_agent.mc: debrief: voice Matthew on generative with a neural fallback, 131 characters
+2026-10-12 18:56:18,839 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.70s, tokens in=1125 out=26 (running totals)
+2026-10-12 18:56:18,841 INFO mc_agent.mc: line/intro answered by the model (deadpan)
+2026-10-12 18:56:18,842 INFO mc_agent.mc: line/intro: voice Matthew on generative with a neural fallback, 51 characters
+2026-10-12 18:57:33,925 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.78s, tokens in=1125 out=44 (running totals)
+2026-10-12 18:57:33,926 INFO mc_agent.mc: line/intro answered by the model (deadpan)
+2026-10-12 18:57:33,927 INFO mc_agent.mc: line/intro: voice Matthew on generative with a neural fallback, 31 characters
+2026-10-12 18:58:23,790 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.68s, tokens in=1117 out=26 (running totals)
+2026-10-12 18:58:23,792 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 18:58:23,793 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 51 characters
+2026-10-12 18:58:27,154 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.63s, tokens in=1117 out=24 (running totals)
+2026-10-12 18:58:27,155 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 18:58:27,156 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 52 characters
+2026-10-12 18:59:02,188 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.66s, tokens in=1071 out=27 (running totals)
+2026-10-12 18:59:02,190 INFO mc_agent.mc: line/between answered by the model (warm)
+2026-10-12 18:59:24,692 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 0.76s, tokens in=1056 out=40 (running totals)
+2026-10-12 18:59:24,694 INFO mc_agent.mc: line/end answered by the model (warm)
+2026-10-12 18:59:26,277 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.33s, tokens in=5166 out=133 (running totals)
+2026-10-12 18:59:26,279 INFO mc_agent.mc: debrief: answer rejected (words were off, and the line must say that pace and fillers were not measured); asking again with 5.7s left
+2026-10-12 18:59:27,840 INFO mc_agent.mc: debrief model call 2: mantle zai.glm-5 in 1.56s, tokens in=10522 out=274 (running totals)
+2026-10-12 18:59:27,843 WARNING mc_agent.mc: debrief: MC unavailable (rejected: next is 'up' but the house rule gives 'again'; use it, or say 'my call' and why in line)
+2026-10-12 18:59:29,441 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.63s, tokens in=1116 out=25 (running totals)
+2026-10-12 18:59:29,443 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 18:59:29,445 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 56 characters
+2026-10-12 19:00:44,568 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.75s, tokens in=1116 out=25 (running totals)
+2026-10-12 19:00:44,570 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:00:44,571 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 54 characters
+2026-10-12 19:01:08,531 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.62s, tokens in=1115 out=24 (running totals)
+2026-10-12 19:01:08,533 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:01:08,534 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 55 characters
+2026-10-12 19:01:11,118 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.62s, tokens in=1104 out=20 (running totals)
+2026-10-12 19:01:11,120 INFO mc_agent.mc: line/intro answered by the model (strict)
+2026-10-12 19:01:11,122 INFO mc_agent.mc: line/intro: voice Stephen on generative with a neural fallback, 19 characters
+2026-10-12 19:01:30,587 INFO mc_agent.judge: judge/standup line 1: 0.51 in 351 ms (humor-roberta-large-int8)
+2026-10-12 19:01:35,815 INFO mc_agent.judge: judge/standup line 2: 0.51 in 352 ms (humor-roberta-large-int8)
+2026-10-12 19:01:38,010 INFO mc_agent.judge: judge/standup line 3: 0.52 in 351 ms (humor-roberta-large-int8)
+2026-10-12 19:01:41,767 INFO mc_agent.judge: judge/standup line 4: 0.50 in 350 ms (humor-roberta-large-int8)
+2026-10-12 19:01:44,495 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 1.38s, tokens in=1058 out=31 (running totals)
+2026-10-12 19:01:44,497 INFO mc_agent.mc: line/between answered by the model (strict)
+2026-10-12 19:01:52,081 INFO mc_agent.judge: judge/standup line 5: 0.25 in 351 ms (humor-roberta-large-int8)
+2026-10-12 19:01:55,833 INFO mc_agent.judge: judge/standup line 6: 0.55 in 351 ms (humor-roberta-large-int8)
+2026-10-12 19:02:00,800 INFO mc_agent.judge: judge/standup line 7: 0.71 in 350 ms (humor-roberta-large-int8)
+2026-10-12 19:02:06,172 INFO mc_agent.judge: judge/standup line 8: 0.47 in 351 ms (humor-roberta-large-int8)
+2026-10-12 19:02:13,238 INFO mc_agent.judge: judge/standup line 9: 0.54 in 350 ms (humor-roberta-large-int8)
+2026-10-12 19:02:15,933 INFO mc_agent.judge: judge/standup line 10: 0.40 in 351 ms (humor-roberta-large-int8)
+2026-10-12 19:02:20,116 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 1.43s, tokens in=1043 out=39 (running totals)
+2026-10-12 19:02:20,118 INFO mc_agent.mc: line/end answered by the model (strict)
+2026-10-12 19:02:20,914 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.21s, tokens in=6449 out=113 (running totals)
+2026-10-12 19:02:20,917 INFO mc_agent.mc: debrief answered by the model (strict)
+2026-10-12 19:02:20,919 INFO mc_agent.mc: debrief: voice Stephen on generative with a neural fallback, 99 characters
+2026-10-12 19:02:23,312 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.66s, tokens in=1103 out=28 (running totals)
+2026-10-12 19:02:23,314 INFO mc_agent.mc: line/intro answered by the model (strict)
+2026-10-12 19:02:23,316 INFO mc_agent.mc: line/intro: voice Stephen on generative with a neural fallback, 38 characters
+2026-10-12 19:03:40,651 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.66s, tokens in=1103 out=29 (running totals)
+2026-10-12 19:03:40,653 INFO mc_agent.mc: line/intro answered by the model (strict)
+2026-10-12 19:03:40,654 INFO mc_agent.mc: line/intro: voice Stephen on generative with a neural fallback, 66 characters
+2026-10-12 19:03:43,508 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.66s, tokens in=1114 out=25 (running totals)
+2026-10-12 19:03:43,510 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:03:43,512 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 50 characters
+2026-10-12 19:03:46,977 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.65s, tokens in=1107 out=22 (running totals)
+2026-10-12 19:03:46,979 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:03:46,981 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 46 characters
+2026-10-12 19:04:06,131 INFO mc_agent.judge: judge/poetry line 1: unavailable (timeout) after 350 ms
+2026-10-12 19:04:11,303 INFO mc_agent.judge: judge/poetry line 2: unavailable (timeout) after 350 ms
+2026-10-12 19:04:14,027 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 1.35s, tokens in=1061 out=23 (running totals)
+2026-10-12 19:04:14,029 INFO mc_agent.mc: line/between answered by the model (warm)
+2026-10-12 19:04:17,008 INFO mc_agent.judge: judge/poetry line 3: unavailable (timeout) after 350 ms
+2026-10-12 19:04:21,906 INFO mc_agent.judge: judge/poetry line 4: unavailable (timeout) after 351 ms
+2026-10-12 19:04:30,380 INFO mc_agent.judge: judge/poetry line 5: unavailable (timeout) after 350 ms
+2026-10-12 19:04:35,531 INFO mc_agent.judge: judge/poetry line 6: unavailable (timeout) after 350 ms
+2026-10-12 19:04:41,433 INFO mc_agent.judge: judge/poetry line 7: unavailable (timeout) after 350 ms
+2026-10-12 19:04:48,745 INFO mc_agent.judge: judge/poetry line 8: unavailable (timeout) after 351 ms
+2026-10-12 19:04:53,012 INFO mc_agent.judge: judge/poetry line 9: unavailable (timeout) after 350 ms
+2026-10-12 19:04:59,448 INFO mc_agent.judge: judge/poetry line 10: unavailable (timeout) after 350 ms
+2026-10-12 19:05:04,396 INFO mc_agent.judge: judge/poetry line 11: unavailable (timeout) after 350 ms
+2026-10-12 19:05:07,095 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 1.37s, tokens in=1061 out=29 (running totals)
+2026-10-12 19:05:07,097 INFO mc_agent.mc: line/between answered by the model (warm)
+2026-10-12 19:05:08,464 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 0.73s, tokens in=1046 out=41 (running totals)
+2026-10-12 19:05:08,466 INFO mc_agent.mc: line/end answered by the model (warm)
+2026-10-12 19:05:10,201 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.46s, tokens in=7618 out=142 (running totals)
+2026-10-12 19:05:10,206 INFO mc_agent.mc: debrief answered by the model (warm)
+2026-10-12 19:05:10,208 INFO mc_agent.mc: debrief: voice Kajal on generative with a neural fallback, 121 characters
+2026-10-12 19:05:12,363 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.69s, tokens in=1104 out=24 (running totals)
+2026-10-12 19:05:12,366 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:05:12,367 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 52 characters
+2026-10-12 19:06:27,379 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.69s, tokens in=1104 out=22 (running totals)
+2026-10-12 19:06:27,381 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:06:27,382 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 46 characters
+
+
+==== MC (MC_REGION=us-west-2, from 19:07): lines, debriefs, judge ====
+2026-10-12 19:07:12,485 INFO mc_agent.voice: voices: neural in us-west-2 has 63 voices (0.36 s)
+2026-10-12 19:07:12,766 INFO mc_agent.voice: voices: long-form in us-east-1 has 6 voices (0.64 s)
+2026-10-12 19:07:13,052 INFO mc_agent.voice: voices: generative in ap-southeast-1 has 43 voices (0.93 s)
+2026-10-12 19:07:13,224 INFO mc_agent.mc: warm-up: model connection open (zai.glm-5, us-west-2) in 1.10s
+2026-10-12 19:07:13,224 INFO mc_agent.mc: warm-up: voices warm Kajal generative+neural, sarcastic Brian generative+neural, strict Stephen generative+neural, deadpan Matthew generative+neural
+2026-10-12 19:07:14,388 INFO mc_agent.judge: judge/poetry line 1: unavailable (timeout) after 350 ms
+2026-10-12 19:07:14,642 INFO mc_agent.judge: judge/standup line 1: 0.56 in 244 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 19:07:15,884 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 1.23s, tokens in=3055 out=154 (running totals)
+2026-10-12 19:07:15,885 INFO mc_agent.mc: debrief answered by the model (sarcastic)
+2026-10-12 19:07:31,578 INFO mc_agent.judge: judge/poetry line 1: unavailable (timeout) after 350 ms
+2026-10-12 19:07:32,941 INFO mc_agent.judge: judge/poetry line 2: unavailable (timeout) after 350 ms
+2026-10-12 19:07:34,243 INFO mc_agent.judge: judge/poetry line 3: 0.81 in 292 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:07:35,572 INFO mc_agent.judge: judge/poetry line 4: 0.81 in 320 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:07:42,164 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.47s, tokens in=1104 out=25 (running totals)
+2026-10-12 19:07:42,167 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:07:42,169 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 57 characters
+2026-10-12 19:08:11,967 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.69s, tokens in=1118 out=24 (running totals)
+2026-10-12 19:08:11,970 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:08:11,972 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 53 characters
+2026-10-12 19:08:32,899 INFO mc_agent.judge: judge/speech line 1: unavailable (timeout) after 351 ms
+2026-10-12 19:08:40,846 INFO mc_agent.judge: judge/speech line 2: 0.82 in 311 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:08:42,283 INFO mc_agent.judge: judge/speech line 3: 1.00 in 242 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:08:47,250 WARNING mc_agent.mc: line/between: MC unavailable (timeout: no answer within 3.5 s)
+2026-10-12 19:08:51,099 INFO mc_agent.judge: judge/speech line 4: unavailable (timeout) after 350 ms
+2026-10-12 19:08:56,241 INFO mc_agent.judge: judge/speech line 5: unavailable (timeout) after 351 ms
+2026-10-12 19:09:01,909 INFO mc_agent.judge: judge/speech line 6: 0.93 in 290 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:09:09,569 INFO mc_agent.judge: judge/speech line 7: unavailable (timeout) after 350 ms
+2026-10-12 19:09:15,033 INFO mc_agent.judge: judge/speech line 8: 1.00 in 274 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:09:22,583 INFO mc_agent.judge: judge/speech line 9: unavailable (timeout) after 350 ms
+2026-10-12 19:09:27,341 INFO mc_agent.judge: judge/speech line 10: 0.95 in 337 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:09:30,272 INFO mc_agent.judge: judge/speech line 11: 0.05 in 276 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 19:09:34,398 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 2.70s, tokens in=1076 out=31 (running totals)
+2026-10-12 19:09:34,402 INFO mc_agent.mc: line/between answered by the model (warm)
+2026-10-12 19:09:34,835 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 1.07s, tokens in=1059 out=37 (running totals)
+2026-10-12 19:09:34,838 INFO mc_agent.mc: line/end: answer rejected (it says 'best', a comparison with past sets, but the facts give no trend; compare nothing, and say 'longest' or 'strongest' for this set's own extremes); asking 
+2026-10-12 19:09:35,406 INFO mc_agent.mc: line/end model call 2: mantle zai.glm-5 in 0.57s, tokens in=2233 out=80 (running totals)
+2026-10-12 19:09:35,409 INFO mc_agent.mc: line/end answered by the model (warm)
+2026-10-12 19:09:35,994 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.23s, tokens in=8314 out=161 (running totals)
+2026-10-12 19:09:35,998 INFO mc_agent.mc: debrief: answer rejected (next is 'up' but the house rule gives 'again'; use it, or say 'my call' and why in line); asking again with 5.8s left
+2026-10-12 19:09:37,446 INFO mc_agent.mc: debrief model call 2: mantle zai.glm-5 in 1.45s, tokens in=16855 out=322 (running totals)
+2026-10-12 19:09:37,451 INFO mc_agent.mc: debrief answered by the model (warm)
+2026-10-12 19:09:37,453 INFO mc_agent.mc: debrief: voice Kajal on generative with a neural fallback, 111 characters
+2026-10-12 19:09:41,894 WARNING mc_agent.mc: line/intro: MC unavailable (timeout: no answer within 3.5 s)
+2026-10-12 19:09:43,053 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.63s, tokens in=1119 out=25 (running totals)
+2026-10-12 19:09:43,058 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:09:43,060 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 54 characters
+2026-10-12 19:10:57,853 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.41s, tokens in=1119 out=25 (running totals)
+2026-10-12 19:10:57,856 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:10:57,857 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 54 characters
+2026-10-12 19:11:13,912 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.40s, tokens in=1093 out=27 (running totals)
+2026-10-12 19:11:13,915 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:11:13,916 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 66 characters
+2026-10-12 19:11:50,631 INFO mc_agent.mc: line/heckle model call 1: mantle zai.glm-5 in 0.44s, tokens in=1161 out=29 (running totals)
+2026-10-12 19:11:50,635 INFO mc_agent.mc: line/heckle answered by the model (warm)
+2026-10-12 19:12:12,176 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 0.87s, tokens in=1032 out=27 (running totals)
+2026-10-12 19:12:12,178 INFO mc_agent.mc: line/end answered by the model (warm)
+2026-10-12 19:12:19,316 WARNING mc_agent.mc: debrief: MC unavailable (timeout: no answer within 8 s)
+2026-10-12 19:12:20,940 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.67s, tokens in=1095 out=29 (running totals)
+2026-10-12 19:12:20,943 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:12:20,944 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 76 characters
+2026-10-12 19:13:35,812 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.53s, tokens in=1095 out=28 (running totals)
+2026-10-12 19:13:35,815 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:13:35,816 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 71 characters
+2026-10-12 19:14:50,930 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.64s, tokens in=1095 out=28 (running totals)
+2026-10-12 19:14:50,936 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:14:50,938 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 71 characters
+2026-10-12 19:16:05,882 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.52s, tokens in=1095 out=28 (running totals)
+2026-10-12 19:16:05,888 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:16:05,890 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 71 characters
+2026-10-12 19:17:23,876 WARNING mc_agent.mc: line/intro: MC unavailable (timeout: no answer within 3.5 s)
+2026-10-12 19:17:25,470 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 1.09s, tokens in=1095 out=28 (running totals)
+2026-10-12 19:17:25,474 INFO mc_agent.mc: line/intro answered by the model (warm)
+2026-10-12 19:17:25,476 INFO mc_agent.mc: line/intro: voice Kajal on generative with a neural fallback, 71 characters
+
+
+==== judge tallies ====
+-- mc.log
+     11 judge/poetry unavailable (timeout)
+     38 judge/standup ok (humor-roberta-large-int8)
+-- mc-usw2.log
+      2 judge/poetry ok (mistral.ministral-3-8b-instruct)
+      3 judge/poetry unavailable (timeout)
+      6 judge/speech ok (mistral.ministral-3-8b-instruct)
+      5 judge/speech unavailable (timeout)
+      1 judge/standup ok (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+
+
+==== Bedrock reachability from the box (us-west-2) ====
+ap-south-1 bedrock-mantle connect 0.237609s total 0.942751s
+us-west-2 bedrock-mantle connect 0.003553s total 0.032859s
+
+
+==== crash scan after the clean launch ====
+logcat lines 11937; FATAL/ANR/Fatal signal/RenderProcessGone: 0
+
+
+==== recordings: blackdetect (0.3 s, pix_th 0.06) and stills (freezedetect -55 dB, 2 s) ====
+poetry.mkv: black segments 0; stills >= 2 s: 2.2 
+s1-standup-theatre.mkv: black segments 0; stills >= 2 s: none
+s2-standup-arena.mkv: black segments 0; stills >= 2 s: 2.033 
+s3-standup-openmic-wordsoff.mkv: black segments 0; stills >= 2 s: none
+s4-standup-club.mkv: black segments 0; stills >= 2 s: 2.1 2.2 2.266 
+singing.mkv: black segments 0; stills >= 2 s: none
+speech.mkv: black segments 0; stills >= 2 s: none
+
+
+==== the page's fps (not a finding) ====
+972 reports, mean 27.7, min 15

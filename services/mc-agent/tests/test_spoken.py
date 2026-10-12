@@ -149,8 +149,9 @@ def test_rounds(n, x, hedge, ok):
     ("two and a half minutes", [("two and a half", 2.5, None)]),
     ("half a minute", [("half", 0.5, None)]),
     ("the twenty-first line", [("twenty-first", 21, None)]),
-    ("nearly fifteen seconds", [("fifteen", 15, "below")]),
-    ("just over one a minute", [("one", 1, "above")]),
+    ("nearly fifteen seconds", [("fifteen", 15, "below", True)]),
+    ("just over one a minute", [("one", 1, "above", True)]),
+    ("under five seconds", [("five", 5, "below")]),  # a bound, not a claim of nearness
     ("fifteen or so, about 20", [("fifteen", 15, "either"), ("20", 20, "either")]),
     ("twenty-ish", [("twenty", 20, "either")]),
     ("one, two, three", [("one", 1, None), ("two", 2, None), ("three", 3, None)]),
@@ -160,7 +161,7 @@ def test_rounds(n, x, hedge, ok):
     ("4.1 s at 2:05", [("4.1", 4.1, None), ("2:05", None, None)]),
 ])
 def test_numbers_in(text, said):
-    assert numbers_in(text) == [Said(t, v, h) for t, v, h in said]
+    assert numbers_in(text) == [Said(*s) for s in said]
 
 
 # --- the prompts ask for it ----------------------------------------------------------------------------------

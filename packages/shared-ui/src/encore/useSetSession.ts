@@ -54,7 +54,8 @@ export interface SetSession {
   /**
    * The selection has settled on a set (the bill, or the cut sheet once the debrief is in): keep its intro written ahead
    * of OK, so OK starts with the MC's words and voice ready instead of waiting on the model. It is asked for now, again
-   * every 75 s while the set stays the same (a warm intro is used for 90 s), and again at once after a failed ask.
+   * every 7 minutes while the set stays the same (a warm intro is used for 8, inside its voice URL's 10), and again at
+   * once after a failed ask.
    * `null` stops keeping it warm. `arm` uses the answer when the set matches; otherwise it asks again.
    */
   warmIntro(set: IntroSet | null): void;
@@ -106,10 +107,15 @@ const STALE_MOMENT_SEC = 6;
 /** What an intro depends on: everything in the set except its id and the words mode. */
 export type IntroSet = Pick<SetConfig, 'act' | 'venue' | 'persona' | 'performer' | 'durationSec'>;
 
-/** A warmed intro older than this is asked for again (the MC's memory may have moved on). */
-const WARM_INTRO_TTL_MS = 90000;
+/**
+ * A warmed intro older than this is asked for again. Its words depend only on the selection, the performer and how many
+ * sets they have on record (all in its key), so it keeps; the limit is its voice, a presigned Polly URL valid for 600 s,
+ * which must still open when OK plays it. It was 90 s, renewed every 75 s, which made most of the QA's 38 intro calls
+ * for 8 sets while the bill or cut sheet simply rested (2026-10-12, issue 11).
+ */
+const WARM_INTRO_TTL_MS = 480000;
 /** While the selection rests, its warm intro is written again this long after the last one, before it expires. */
-const WARM_INTRO_RENEW_MS = 75000;
+const WARM_INTRO_RENEW_MS = 420000;
 /**
  * A failed warm-up is asked again at once, but never sooner than this after the failed ask began: a slow failure (the
  * model's timeout) retries straight away, a fast one (the service is down) does not loop.

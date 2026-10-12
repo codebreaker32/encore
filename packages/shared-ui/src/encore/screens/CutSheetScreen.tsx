@@ -1,11 +1,11 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import {
-  FEATURE_NAMES,
   PERSONAS,
   cutSheet,
-  type ContentFeature,
   getVenue,
+  ledgerRows,
+  measuredNext,
   type CutFrame,
   type McUnavailableReason,
   type SetRecord,
@@ -15,6 +15,7 @@ import {
 import { config as appConfig } from '../config';
 import { reasonInWords, type DebriefStatus } from '../useMc';
 import { clipCount, clipFor, type ClipKind } from '../world/clips';
+import { Gradient } from '../world/Gradient';
 import { Plate } from '../world/Plate';
 import { plateSource } from '../world/plates';
 import { colors, display, dsp, edge, mmss, sp, tabular, text, up } from '../world/theme';
@@ -35,16 +36,8 @@ export function nextWords(next: 'again' | 'up' | 'down'): string {
   return next === 'up' ? 'go up a room' : next === 'down' ? 'go down a room' : 'go again here';
 }
 
-/**
- * The house rule for the next room, as a measurement (not MC prose): up at ≥ 3 landed a minute with no gap of 4 s,
- * down under 1 a minute above the open mic, else again; the arena has no room above it.
- */
-export function measuredNext(record: SetRecord): 'again' | 'up' | 'down' {
-  const sc = record.scorecard;
-  if (sc.landedPerMin >= 3 && sc.longestDeadAirSec < 4 && record.venue !== 'arena') return 'up';
-  if (sc.landedPerMin < 1 && record.venue !== 'openmic') return 'down';
-  return 'again';
-}
+/** The house rule for the next room, as a measurement (not MC prose): see `measuredNext` in @strumble/crowd. */
+export { measuredNext };
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -53,162 +46,6 @@ export function dayLabel(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
   return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
-}
-
-interface Row {
-  n: string;
-  k: string;
-  v: string;
-  good?: boolean;
-  /** false → "not measured" in gold-dim; never a zero. */
-  measured: boolean;
-}
-
-function ledgerRows(state: SetState, record: SetRecord): Row[] {
-  const sc = record.scorecard;
-  const pack = state.pack;
-  const plural = pack.reaction.plural;
-  const notMeasured = { n: 'not measured', measured: false };
-  const rows: Row[] = [];
-  if (state.config.act === 'singing') {
-    rows.push(
-      sc.inTunePct === null
-        ? { ...notMeasured, k: 'in tune', v: 'no pitch was heard' }
-        : {
-            n: `${sc.inTunePct}%`,
-            k: 'in tune',
-            v: 'voiced time within 25 cents of a note',
-            good: sc.inTunePct >= 70,
-            measured: true,
-          },
-    );
-    rows.push(
-      sc.longestHoldSec === null
-        ? { ...notMeasured, k: 'longest hold', v: 'no pitch was heard' }
-        : {
-            n: `${sc.longestHoldSec.toFixed(1)} s`,
-            k: 'longest hold',
-            v: 'one note, held within 25 cents',
-            measured: true,
-          },
-    );
-    rows.push({
-      n: sc.landedPerMin.toFixed(1),
-      k: 'phrases held per minute',
-      v: `${sc.landed} phrases cleared the house standard · this room gave ${sc.roomReactions} ${plural}`,
-      good: true,
-      measured: true,
-    });
-    rows.push(contentRow(record));
-    rows.push({
-      n: `${sc.landed} / ${sc.candidates}`,
-      k: 'phrases that held',
-      v: `detection is an estimate; ${sc.unsure} unsure ${sc.unsure === 1 ? 'phrase was' : 'phrases were'} not counted`,
-      good: sc.candidates > 0 && sc.landed / sc.candidates >= 0.5,
-      measured: true,
-    });
-  } else {
-    rows.push({
-      n: sc.landedPerMin.toFixed(1),
-      k: 'landed per minute',
-      v: `${sc.landed} lines cleared the house standard · this room gave ${sc.roomReactions} ${sc.roomReactions === 1 ? pack.reaction.noun : plural}`,
-      good: true,
-      measured: true,
-    });
-    rows.push({
-      n: `${sc.longestDeadAirSec.toFixed(1)} s`,
-      k: 'longest dead air',
-      v:
-        sc.longestDeadAirAt === null
-          ? 'no silence longer than a beat'
-          : `at ${mmss(sc.longestDeadAirAt)}${sc.longestDeadAirSec >= state.venue.patienceSec ? ` · past this room's patience of ${state.venue.patienceSec.toFixed(1)} s` : ''}`,
-      measured: true,
-    });
-    rows.push(
-      sc.wpm === null
-        ? { ...notMeasured, k: 'words per minute', v: 'words were off on the phone' }
-        : {
-            n: `${sc.wpm}`,
-            k: 'words per minute',
-            v: sc.peakWpm !== null && sc.peakWpm > sc.wpm ? `peak ${sc.peakWpm} over 20 s` : 'steady across the set',
-            measured: true,
-          },
-    );
-    rows.push(
-      sc.fillers === null
-        ? { ...notMeasured, k: 'fillers', v: 'words were off on the phone' }
-        : {
-            n: `${sc.fillers.count}`,
-            k: 'fillers',
-            v: sc.fillers.top.length ? sc.fillers.top.map((f) => `"${f.word}" ×${f.n}`).join(', ') : 'none heard',
-            measured: true,
-          },
-    );
-    rows.push(contentRow(record));
-    rows.push({
-      n: `${sc.landed} / ${sc.candidates}`,
-      k: `${state.config.act === 'standup' ? 'punchlines' : 'lines'} that landed`,
-      v: `detection is an estimate; ${sc.unsure} unsure ${sc.unsure === 1 ? 'line was' : 'lines were'} not counted`,
-      good: sc.candidates > 0 && sc.landed / sc.candidates >= 0.5,
-      measured: true,
-    });
-  }
-  return rows;
-}
-
-function featureCount(f: ContentFeature, n: number): string {
-  return `${n} ${FEATURE_NAMES[f][n === 1 ? 0 : 1]}`;
-}
-
-/**
- * What the words showed (counted patterns, measured) and, when it was asked, how many lines the MC's model read in
- * time (its scores are estimates). "not measured" when words were off; singing shows its pitch features instead.
- */
-function contentRow(record: SetRecord): Row {
-  const c = record.scorecard.content;
-  if (c === undefined)
-    return { n: 'not measured', k: 'what you said', v: 'not counted on this record', measured: false };
-  if (c === null) return { n: 'not measured', k: 'what you said', v: 'words were off on the phone', measured: false };
-  const found = (Object.keys(c.features) as ContentFeature[])
-    .map((f) => ({ f, n: c.features[f] ?? 0 }))
-    .filter((x) => x.n > 0)
-    .sort((a, b) => b.n - a.n);
-  const model = c.judge
-    ? `the MC's model read ${c.judge.inTime} in time${c.judge.missed ? `, ${c.judge.missed} late` : ''} (an estimate)`
-    : '';
-  const detail = (rest: { f: ContentFeature; n: number }[]) =>
-    [...rest.slice(0, 2).map((x) => featureCount(x.f, x.n)), model].filter(Boolean).join(' · ');
-  if (c.rhymedEnds && c.rhymedEnds.of > 0) {
-    return {
-      n: `${c.rhymedEnds.rhymed} / ${c.rhymedEnds.of}`,
-      k: 'line ends that rhyme',
-      v: detail(found.filter((x) => x.f !== 'endRhyme')) || `${c.lines} lines heard`,
-      measured: true,
-    };
-  }
-  if (c.rangeSemitones !== null) {
-    return {
-      n: `${c.rangeSemitones}`,
-      k: 'semitones of range',
-      v: detail(found) || 'no note held 1.5 s',
-      measured: true,
-    };
-  }
-  if (found.length === 0) {
-    return {
-      n: '0',
-      k: 'patterns in your words',
-      v: [`${c.lines} ${c.lines === 1 ? 'line' : 'lines'} heard, none found`, model].filter(Boolean).join(' · '),
-      measured: true,
-    };
-  }
-  const top = found[0];
-  return {
-    n: `${top.n}`,
-    k: FEATURE_NAMES[top.f][top.n === 1 ? 0 : 1],
-    v: detail(found.slice(1)) || `of ${c.lines} ${c.lines === 1 ? 'line' : 'lines'} heard`,
-    measured: true,
-  };
 }
 
 /** Diagonal stripes from stacked Views: the cut sheet's dead-air frame. */
@@ -299,7 +136,7 @@ export function CutSheetScreen({
   const { venue, pack, config } = state;
   const frames = condense(cutSheet(state));
   const total = Math.max(1, state.now);
-  const rows = ledgerRows(state, record);
+  const rows = ledgerRows(record);
   const next = getVenue(config.act, nextVenue);
   const wide = venue.plates.wide[0] || '';
   // Thumbnails show the lifted still of the clip the director actually cut to (the angle at that time, same mapping as
@@ -343,6 +180,18 @@ export function CutSheetScreen({
   return (
     <View style={[styles.root, stage && styles.onStage]}>
       {stage ? <View style={styles.darken} /> : <Plate id={wide} grade="flat" darken={0.74} grainOpacity={0.1} />}
+      {stage ? (
+        // The room keeps moving after the set, and people walked behind the ledger (QA 2026-10-12): below the strip the
+        // house closes in further, so the numbers and the MC's words read; the strip's own room stays as it was.
+        <Gradient
+          style={styles.ledgerScrim}
+          stops={[
+            { at: 0, alpha: 0 },
+            { at: 0.16, alpha: 0.6 },
+            { at: 1, alpha: 0.7 },
+          ]}
+        />
+      ) : null}
       <View style={styles.head}>
         <Text style={styles.title}>{up('Cut sheet')}</Text>
         <Text style={styles.sub}>
@@ -456,6 +305,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.house },
   onStage: { backgroundColor: 'transparent' },
   darken: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.house, opacity: 0.74 },
+  ledgerScrim: { position: 'absolute', left: 0, right: 0, top: sp(410), bottom: 0 },
   head: { position: 'absolute', left: edge.x, top: edge.top, right: edge.x },
   title: { ...dsp(72, display.extraBold, 0.05, colors.paper) },
   sub: { fontFamily: text.regular, fontSize: sp(26), color: colors.goldDim, marginTop: sp(10) },

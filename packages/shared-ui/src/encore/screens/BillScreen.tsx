@@ -96,6 +96,18 @@ export function BillScreen({
       {stage ? <View style={styles.house} /> : null}
       <View style={styles.preview}>
         {stage ? null : <Plate id={venue.plates.wide[0] || ''} push pushMs={90000} to={1.04} />}
+        {stage ? (
+          // Over the 3D room the lower-third and the note sit on the brightest, busiest rows (the Arena's stands in the
+          // QA of 2026-10-12): the house darkens towards the floor behind them. The photograph has its own grade.
+          <Gradient
+            style={styles.foot}
+            stops={[
+              { at: 0, alpha: 0 },
+              { at: 0.4, alpha: 0.6 },
+              { at: 1, alpha: 0.88 },
+            ]}
+          />
+        ) : null}
         <Gradient
           horizontal
           style={styles.edge}
@@ -206,6 +218,7 @@ const styles = StyleSheet.create({
   house: { position: 'absolute', left: sp(1180), right: 0, top: 0, bottom: 0, backgroundColor: colors.house },
   preview: { position: 'absolute', left: 0, top: 0, width: sp(1180), height: sp(1080), overflow: 'hidden' },
   edge: { position: 'absolute', left: sp(1180 - 320), right: 0, top: 0, bottom: 0 },
+  foot: { position: 'absolute', left: 0, right: 0, bottom: 0, height: sp(500) },
   note: {
     position: 'absolute',
     left: edge.x,

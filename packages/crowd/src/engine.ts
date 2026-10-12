@@ -1346,6 +1346,11 @@ function closePhrase(state: SetState, now: number, finishing: boolean): SetState
   return { ...s, judged: [...s.judged, judged] };
 }
 
+/** A sample the phone heard as a pitched voice: a reading, clear and loud enough. */
+function isVoiced(p: PitchSample): boolean {
+  return p.midi !== null && p.clarity >= CLARITY_GATE && p.level >= NOISE_GATE;
+}
+
 /** The in-tune note a sample sits on (voiced, clear, loud enough, within IN_TUNE_CENTS), or null. */
 function noteOf(p: PitchSample): number | null {
   if (p.midi === null || p.clarity < CLARITY_GATE || p.level < NOISE_GATE) return null;
@@ -1415,12 +1420,13 @@ export function scorecard(state: SetState): Scorecard {
   let inTunePct: number | null = null;
   let longestHoldSec: number | null = null;
   if (act === 'singing') {
-    const voiced = state.pitch.filter((p) => p.midi !== null && p.clarity >= CLARITY_GATE && p.level >= NOISE_GATE);
+    const voiced = state.pitch.filter(isVoiced);
+    // No usable pitch from the phone: the hold, like the in-tune share, was not measured (null, never 0).
     if (voiced.length) {
       const inTune = voiced.filter((p) => p.midi !== null && centsOff(p.midi) <= IN_TUNE_CENTS).length;
       inTunePct = Math.round((100 * inTune) / voiced.length);
+      longestHoldSec = round1(longestHold(state.pitch));
     }
-    longestHoldSec = round1(longestHold(state.pitch));
   }
 
   return {
@@ -1459,6 +1465,8 @@ export function contentMeasures(state: SetState): ContentMeasures | null {
     return c;
   };
   if (act === 'singing') {
+    // Singing's patterns come from the pitch: with none heard, nothing was measured.
+    if (!state.pitch.some(isVoiced)) return null;
     const features = counts();
     let lines = 0;
     for (const j of state.judged) {
@@ -1699,10 +1707,15 @@ export function summaryLine(sc: Scorecard, act: ActId): string {
   const pack = getPack(act);
   const parts: string[] = [];
   if (act === 'singing') {
-    parts.push(`${sc.inTunePct === null ? 'no pitch measured' : `${sc.inTunePct}% in tune`}`);
-    if (sc.longestHoldSec !== null && sc.longestHoldSec > 0)
-      parts.push(`longest hold ${fixed(sc.longestHoldSec, 1)} s`);
-    parts.push(`${sc.landed} of ${sc.candidates} phrases held in ${mmss(sc.durationSec)}`);
+    if (sc.inTunePct === null) {
+      // Phrases are judged from the pitch: with none heard there is no count to report.
+      parts.push(`no pitch measured in ${mmss(sc.durationSec)}`);
+    } else {
+      parts.push(`${sc.inTunePct}% in tune`);
+      if (sc.longestHoldSec !== null && sc.longestHoldSec > 0)
+        parts.push(`longest hold ${fixed(sc.longestHoldSec, 1)} s`);
+      parts.push(`${sc.landed} of ${sc.candidates} phrases held in ${mmss(sc.durationSec)}`);
+    }
   } else {
     parts.push(`${sc.landed} of ${sc.candidates} lines landed in ${mmss(sc.durationSec)}`);
     parts.push(

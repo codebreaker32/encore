@@ -64,8 +64,10 @@ cd services/mc-agent
 uv sync
 uv run pytest -q                 # or from the root: yarn test:agent
 aws login                        # console sign-in; the SDK reads it (needs botocore[crt], already a dependency)
-# Defaults: MC_PROVIDER=mantle (Bedrock's OpenAI-compatible endpoint), MC_MODEL_ID=qwen.qwen3-235b-a22b-2507,
-# MC_REGION=ap-south-1, MC_TIMEOUT_S=8. When Claude is unlocked on the account:
+# Defaults: MC_PROVIDER=mantle (Bedrock's OpenAI-compatible endpoint), MC_MODEL_ID=zai.glm-5,
+# MC_REGION=ap-south-1, MC_TIMEOUT_S=8. Set MC_REGION to the region of the machine the MC runs on: the content
+# judge has 0.35 s, and a cross-region hop eats it (BOX=android is in us-west-2, so ~/emu/svc.sh runs the MC with
+# MC_REGION=us-west-2; from there ap-south-1 took 234 ms just to connect, QA 2026-10-12). When Claude is unlocked:
 #   export MC_PROVIDER=converse MC_MODEL_ID=global.anthropic.claude-haiku-5-5
 uv run python -m mc_agent.app    # serves POST http://localhost:8080/invocations (kinds: debrief, chat)
 ```

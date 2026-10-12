@@ -2,7 +2,7 @@
 
 Field names are camelCase on the wire and snake_case in Python; both are accepted on input and
 camelCase is produced on output. `None` means "not measured", never zero: `wpm` and `fillers`
-are None when words were off, `inTunePct` and `longestHoldSec` when the act is not singing.
+are None when words were off, `inTunePct` and `longestHoldSec` when the act is not singing or no pitch was heard.
 Keep this file in step with the TypeScript producer.
 """
 
@@ -82,11 +82,17 @@ class Scorecard(Wire):
     wpm: float | None = Field(default=None, description="Over spoken time; None when words were off.")
     peak_wpm: float | None = Field(default=None, description="Over any 20 s window; None when words were off.")
     fillers: Fillers | None = Field(default=None, description="None when words were off.")
-    in_tune_pct: float | None = Field(default=None, description="Singing only; None otherwise.")
-    longest_hold_sec: float | None = Field(default=None, description="Singing only; None otherwise.")
+    in_tune_pct: float | None = Field(
+        default=None, description="Singing only; None otherwise or when no pitch was heard."
+    )
+    longest_hold_sec: float | None = Field(
+        default=None, description="Singing only; None otherwise or when no pitch was heard (never 0 for not measured)."
+    )
     unsure: int = Field(ge=0, description="Lines the detector could not judge; never counted against anyone.")
     content: ContentMeasures | None = Field(
-        default=None, description="What the words showed; None when not measured (words off) or on older records."
+        default=None,
+        description="What the words (singing: the pitch) showed; None when not measured (words off; singing with no "
+        "pitch heard) or on older records.",
     )
 
     @property

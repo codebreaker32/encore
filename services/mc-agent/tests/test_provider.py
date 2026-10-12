@@ -175,6 +175,25 @@ def test_mantle_retries_once_with_the_guards_reason(mantle):
     assert "rejected by the honesty check" in retry and "47" in retry
 
 
+def test_the_debrief_checklist_leads_the_prompt_and_comes_back_with_the_retry(mantle):
+    """QA 2026-10-12, issue 4: a words-off debrief failed the "not measured" check, then the house rule on its retry.
+    The checklist (direction, the required sentence, the patterns it may name) is read first and repeated."""
+    seen, replies = mantle
+    off = debrief_req(wpm=None, peakWpm=None, fillers=None, longestDeadAirSec=2.0, landedPerMin=2.0)
+    good = {**NOTE, "line": "5 of 8 landed; pace and fillers not measured, words were off.", "next": "again"}
+    replies += [sse(json.dumps({**NOTE, "next": "again"})), sse(json.dumps(good))]
+    out = mc_module.debrief(off)
+    assert out["note"]["line"] == good["line"] and len(seen) == 2
+    first = json.loads(seen[0].content)["messages"]
+    prompt = next(m for m in first if m["role"] == "user")
+    text = json.dumps(prompt)
+    assert text.index("Checklist") < text.index("Measured facts")
+    assert '`next` is \\"again\\"' in text and "with the words \\\"not measured\\\"" in text
+    retry = json.dumps(json.loads(seen[1].content)["messages"][-1])
+    assert "rejected by the honesty check" in retry and "pace and fillers were not measured" in retry
+    assert "Checklist" in retry and "suggest no other room" in retry
+
+
 def test_mantle_rejected_twice_is_unavailable(mantle):
     seen, replies = mantle
     replies.append(sse(json.dumps({**NOTE, "next": "up"})))  # against the rule, and no "my call"

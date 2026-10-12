@@ -217,12 +217,13 @@ export interface Scorecard {
   fillers: { count: number; top: { word: string; n: number }[] } | null;
   /** Singing only: share of voiced time within 25 cents of a semitone. */
   inTunePct: number | null;
+  /** Singing only: the longest note held within 25 cents. null when not singing or no pitch was heard, never 0. */
   longestHoldSec: number | null;
   /** Lines the detector could not judge (too quiet, too short); never counted against the performer. */
   unsure: number;
   /**
    * What the words showed (stand-up, poetry, speech with words on) or the pitch (singing). null when not measured
-   * (words off); absent on records from before content judging.
+   * (words off; for singing, no pitch heard); absent on records from before content judging.
    */
   content?: ContentMeasures | null;
 }

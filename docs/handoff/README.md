@@ -1,6 +1,41 @@
 # Handoff: end of 2026-10-12 (about 16:10 UTC / 21:40 IST)
 
-The Google TV has **APK l** (`~/.cache/encore-apk/encore-release-2026-10-12-l.apk`), today's last build. No agent is running. The boxes stop themselves after 45 idle minutes. The laptop's tunnel to the build box is stopped, so the relay and MC there stop with the box. Restart them as described in "Starting again". Nothing is committed (the repo has no commits yet).
+## Late update (21:05 UTC / 02:35 IST, Tue 13 Oct)
+- **New APK m** (not yet on the TV): `~/.cache/encore-apk/encore-release-2026-10-12-m.apk` for the TV, and `-m-emu.apk` for the emulator. It contains the 7 emulator-QA fixes, the arena faces (v2), crowd shouts, and the club wide back on its lighter model. Install it on the TV in round 6.
+- **The launch-ANR fix is verified on the emulator.** `useStageMount` mounts the stage after the bill has painted. Test: launch with the WebView's files cold and the disk capped at 3 MB/s (a cgroup cap; `~/emu/coldtest.sh` and `coldab.sh` on BOX=android), pressing D-pad keys at +2 s and +8 s:
+  - l: ANR 2/2;
+  - m: 0/2, first frame 0.86–1.0 s.
+  - Not a valid test: with everything cold (including the app's own dex), both builds ANR before JS starts. A disk that slow fails any RN app.
+- **The judge from the emulator box, with the MC in us-west-2, on APK m:**
+  - **Stand-up:** 41/41 in time (TV-side p50 245 ms, p90 288 ms); the first 3 lines used the humour model alone while the LLM connection warmed.
+  - **Poetry:** 8/11 in time; the 3 misses are `model-error` (unparseable JSON), not timeouts. Next: log the error detail and fix the parse or prompt.
+  - **Speech:** not re-checked. My D-pad press changed the venue, so that set ran as stand-up.
+  - Cut sheets: `docs/android-emu/qa-2026-10-12/after-fix/`.
+- **New small bug:** after a poetry set the MC said "Take it to The Studio" while the action line said "PRESS OK TO GO AGAIN AT THE THEATRE · the MC says go up a room". The action line should say "go up" and use the act's own venue name.
+- **Still open from QA:** the room goes black for 1.3–4 s after a venue change on the bill.
+- **User feedback (02:30 IST):** the arena crowd's slight synced movement looks unreal.
+  - **Cause:** every sprite shared one sway and shake frequency.
+  - **Fix (arena motion v1, packed at 21:03 UTC into `apps/vega/assets/crowd`, not in APK m):**
+    - rare per-person idle moves instead of a continuous sway;
+    - laughs that ripple out from the stage with per-person delay, rate and size;
+    - row-level events for the impostor blocks.
+  - **Checks:** aliveprobe 0.49; anatomy 0. Strips are in `docs/mockups/arena-motion-v1-*`.
+  - **Next:** judge it on a recorded clip; the instanced 3D rows may still need per-person idle variation (the motion code).
+- **Faces, elbows and knees, and the JS reduction: work in progress, not merged.** The shared people.js, anim.js and .tv.glb are still build k.
+  - **Where it is:** the work is on BOX=build in `~/m/stage` (frozen copy `~/m/motion-wip-1012/`), plus the laptop's `~/encore-motion-wip-1012.tgz`.
+  - **Done there:**
+    - Person.update is about 10 ms at 8× (s17: 16.5 ms).
+    - Expressions by moment and temperament; 9 TV morph shapes, all venues ≤ 30 MB.
+    - Limb validator findings are down from 1,884 to 0 in targeted re-checks.
+  - **Blocking the merge:** the full anatomy sweep isn't at zero yet (new: Female_Adult_13's hand in her thigh, three floating hands, a few small ones), handsweep has 1 of 20 invalid, and bindcheck hasn't run.
+  - **Then:**
+    - an 8× A/B to decide between 9 and 8 face shapes;
+    - render the limbs-v1 and faces-v1 sheets;
+    - merge and pack.
+  - Steps and commands: the end of `docs/handoff/crowd3d.md`.
+- **Boxes:** all three are stopped (build, render, android).
+
+The Google TV has **APK l** (`~/.cache/encore-apk/encore-release-2026-10-12-l.apk`), today's last build. No agent is running. The boxes stop themselves after 45 idle minutes. The laptop's tunnel to the build box is stopped, so the relay and MC there stop with the box. Restart them as described in "Starting again". The code is in the private GitHub repo `codebreaker32/encore` (initial commit `0e977e9`, branch `main`). Agents' later edits are not committed yet.
 
 ## AWS account move (done 2026-10-12, 17:00–18:00 UTC)
 - **New account 695019458661** (paid plan; the default CLI profile).
@@ -64,7 +99,7 @@ The Google TV has **APK l** (`~/.cache/encore-apk/encore-release-2026-10-12-l.ap
 6. **Submission:** the GitHub repo (the user creates it), the Devpost write-up and images, product feedback, the friction log (AgentCore's zero quota is logged).
 
 ## Waiting on the user
-- **GitHub:** a repo, required by the rules.
+- **GitHub:** the private repo `codebreaker32/encore` exists. Still to decide: going public, judge or reviewer access, the LICENSE holder and the team name.
 - **AgentCore:**
   - **The block:** the account's applied quota is 0 in every region, while the AWS default is 1000. Service Quotas refuses the request, and a console Support case hit "quota request limit reached".
   - **Decision:** parked; product first.

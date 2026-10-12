@@ -42,7 +42,7 @@ from strands import Agent
 from strands.models import BedrockModel
 from strands.models.openai import OpenAIModel
 
-from .facts import chat_scope, moment_facts, moments, own_history, set_facts
+from .facts import chat_scope, debrief_checklist, moment_facts, moments, own_history, set_facts
 from .guard import Rejected, check_line, check_note, check_reply
 from .models import (
     ChatRequest, Debrief, DebriefRequest, GreenRoomReply, McLine, McLineDraft, McLineRequest, McNote, McNoteDraft,
@@ -182,9 +182,11 @@ async def _model(timeout_s: float) -> AsyncIterator[Any]:
     yield OpenAIModel(client=client, model_id=model_id(), params=model_params())
 
 
-async def _ask(kind: str, system: str, prompt: str, out: type[Out], check: Callable[[Out], Draft], deadline: float) -> Draft:
+async def _ask(
+    kind: str, system: str, prompt: str, out: type[Out], check: Callable[[Out], Draft], deadline: float, reminder: str = ""
+) -> Draft:
     """Ask once; if the guard rejects the answer and there is time for another call as slow as the first,
-    ask once more with the reason, in the same conversation."""
+    ask once more with the reason (and the request's checklist, `reminder`), in the same conversation."""
     global _last_call
     async with _model(max(deadline - time.monotonic(), 0.5) + 1.5) as model:
         agent = Agent(model=model, system_prompt=system, callback_handler=None)
@@ -212,14 +214,18 @@ async def _ask(kind: str, system: str, prompt: str, out: type[Out], check: Calla
                     raise
                 log.info("%s: answer rejected (%s); asking again with %.1fs left", kind, err, left)
                 message = f"That answer was rejected by the honesty check: {err}. Write it again, following every rule."
+                if reminder:
+                    message += f"\n{reminder}"
     raise AssertionError("unreachable")
 
 
-def _run(kind: str, system: str, prompt: str, out: type[Out], check: Callable[[Out], Draft], deadline: float) -> Draft:
+def _run(
+    kind: str, system: str, prompt: str, out: type[Out], check: Callable[[Out], Draft], deadline: float, reminder: str = ""
+) -> Draft:
     """The request's model calls, on the lasting loop. Past the deadline (when _answer has already said "timeout")
     the call is cancelled, so it stops holding a connection."""
     provider()  # a bad MC_PROVIDER fails before any network call
-    future = asyncio.run_coroutine_threadsafe(_ask(kind, system, prompt, out, check, deadline), _event_loop())
+    future = asyncio.run_coroutine_threadsafe(_ask(kind, system, prompt, out, check, deadline, reminder), _event_loop())
     try:
         return future.result(timeout=max(deadline - time.monotonic(), 0.0) + 0.1)
     except FutureTimeout:
@@ -229,12 +235,15 @@ def _run(kind: str, system: str, prompt: str, out: type[Out], check: Callable[[O
 
 def _ai_note(req: DebriefRequest, deadline: float) -> McNoteDraft:
     known = set_facts(req.scorecard, req.history, req.venue, moments(req.reactions, req.lines), req.reactions)
+    # The checklist leads, so the house rule's direction and a words-off set's "not measured" sentence are the first
+    # thing read (QA 2026-10-12: a words-off debrief failed on each in turn and the MC was silent).
+    checklist = debrief_checklist(req.scorecard, req.venue, req.reactions)
     prompt = (
-        f"The {req.act} {ACTS[req.act].unit} just ended. Measured facts:\n{known}\n\n"
+        f"The {req.act} {ACTS[req.act].unit} just ended.\n{checklist}\n\nMeasured facts:\n{known}\n\n"
         f"The full payload (JSON):\n{req.model_dump_json(indent=1)}"
     )
     system = system_prompt(req.persona, req.act, req.venue, req.performer, kind="debrief")
-    return _run("debrief", system, prompt, Debrief, lambda out: check_note(out, req), deadline)
+    return _run("debrief", system, prompt, Debrief, lambda out: check_note(out, req), deadline, checklist)
 
 
 def _ai_reply(req: ChatRequest, deadline: float) -> McReplyDraft:
