@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  body { background: #121008; }
+  .kitchen { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 30% 40%, #2a2210 0%, #171207 60%, #121008 100%); }
+  .step { position: absolute; left: 90px; top: 54px; right: 760px; }
+  .step .kicker { color: #ffb340; }
+  .step .text { font-size: 56px; font-weight: 800; line-height: 1.12; margin-top: 10px; }
+  .step .sub { font-size: 28px; color: #d9c9a0; margin-top: 16px; }
+  .timeline { position: absolute; left: 90px; right: 90px; top: 590px; }
+  .timeline .lab { font-size: 22px; color: #b9a98a; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; }
+  .track { display: flex; gap: 10px; }
+  .t { flex: 1; height: 54px; border-radius: 10px; background: #2a2210; position: relative; }
+  .t.done { background: #3f7a4a; } .t.now { background: #ffb340; outline: 4px solid #fff; } .t.wait { background: #2a2210; }
+  .t span { position: absolute; left: 0; right: 0; top: 64px; font-size: 20px; color: #d9c9a0; text-align: center; white-space: nowrap; }
+  .t.now span { color: #fff; font-weight: 700; }
+  .ear { position: absolute; right: 90px; top: 54px; width: 600px; }
+  .card { border-radius: 22px; background: #1e1809; border: 3px solid #3a2f12; padding: 24px 28px; margin-bottom: 18px; }
+  .card .lab { font-size: 22px; color: #b9a98a; letter-spacing: 3px; text-transform: uppercase; }
+  .card .val { font-size: 44px; font-weight: 800; margin-top: 6px; }
+  .card .sub { font-size: 22px; color: #d9c9a0; margin-top: 6px; }
+  .wave { display: flex; align-items: flex-end; gap: 4px; height: 70px; margin-top: 12px; }
+  .wave i { flex: 1; background: #ffb340; border-radius: 3px 3px 0 0; display: block; }
+  .big-timer { position: absolute; left: 90px; bottom: 110px; }
+  .big-timer .n { font-size: 120px; font-weight: 800; color: #ffb340; line-height: 1; font-variant-numeric: tabular-nums; }
+  .big-timer .lab { font-size: 26px; color: #b9a98a; letter-spacing: 3px; text-transform: uppercase; }
+  .next { position: absolute; right: 90px; bottom: 110px; width: 600px; border-radius: 22px; background: #2a2210; padding: 24px 28px; }
+  .next .lab { font-size: 22px; color: #b9a98a; letter-spacing: 3px; text-transform: uppercase; }
+  .next .val { font-size: 32px; font-weight: 700; margin-top: 8px; line-height: 1.25; }
+</style></head>
+<body><div class="tv">
+  <div class="kitchen">
+    <div class="step"><div class="kicker">Step 4 of 9 · dal tadka</div>
+      <div class="text">Onions in. Stir until the sizzle softens and they turn golden.</div>
+      <div class="sub">Hands busy? Just say “next” or “how long”. The phone on the counter is listening to the pan.</div></div>
+    <div class="ear">
+      <div class="card"><div class="lab">The pan right now</div><div class="val">Sizzling · steady</div><div class="sub">heard from the phone mic · onset 00:12 ago · no spitting</div>
+        <div class="wave"><i style="height:30%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:95%"></i><i style="height:90%"></i><i style="height:85%"></i><i style="height:88%"></i><i style="height:82%"></i><i style="height:84%"></i><i style="height:80%"></i><i style="height:78%"></i><i style="height:81%"></i><i style="height:76%"></i><i style="height:74%"></i><i style="height:72%"></i><i style="height:70%"></i><i style="height:69%"></i><i style="height:66%"></i></div></div>
+      <div class="card"><div class="lab">Colour check</div><div class="val" style="color:#ffb340">Not yet golden</div><div class="sub">from a photo you approved 20 s ago · ask again with “check”</div></div>
+    </div>
+    <div class="timeline"><div class="lab">Tonight · 3 pans, one screen</div>
+      <div class="track"><div class="t done"><span>rice on</span></div><div class="t done"><span>dal boiling</span></div><div class="t done"><span>oil hot</span></div><div class="t now"><span>onions · golden?</span></div><div class="t wait"><span>garlic 30 s</span></div><div class="t wait"><span>tomato</span></div><div class="t wait"><span>spices</span></div><div class="t wait"><span>tadka → dal</span></div><div class="t wait"><span>rice rest</span></div></div></div>
+    <div class="big-timer"><div class="lab">Rice · simmer</div><div class="n">06:40</div></div>
+    <div class="next"><div class="lab">Coming up</div><div class="val">Garlic goes in for 30 seconds the moment the onions are golden. Keep the tomato cut and ready.</div></div>
+  </div>
+  <div class="footer"><span>PAN PAL · the kitchen TV that hears your stove · audio never leaves the phone; photos only when you say “check”</span><span><span class="key">OK</span>next step &nbsp; <span class="key">◀</span>repeat &nbsp; <span class="key">▲</span>timer</span></div>
+</div></body></html>

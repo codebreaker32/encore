@@ -1,0 +1,184 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="world.css">
+<style>
+  /* Concept prototype: a live 3D crowd built entirely in code (Three.js). No photos, no video, no pre-drawn poses. */
+  #c { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
+  .grainov { position: absolute; inset: -40px; background: url("grain.png") repeat; background-size: 512px; opacity: .12; mix-blend-mode: overlay; pointer-events: none; }
+  .vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 75% 70% at 50% 46%, rgba(0,0,0,0) 55%, rgba(7,6,10,.72) 100%); }
+  .lowband { position: absolute; left: 0; right: 0; bottom: 0; height: 320px; pointer-events: none; background: linear-gradient(180deg, rgba(7,6,10,0), rgba(7,6,10,.7)); }
+  .cut { position: absolute; left: 90px; top: 54px; text-shadow: 0 2px 12px rgba(0,0,0,.85); }
+  .cut .what { font-family: var(--display); font-weight: 800; font-size: 44px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); line-height: 1; }
+  .cut .why { font-family: var(--text); font-size: 26px; color: var(--paper); margin-top: 10px; }
+  .cut .why span { color: var(--gold-dim); }
+</style></head>
+<body><div class="tv">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div class="lowband"></div><div class="vig"></div><div class="grainov"></div>
+  <div class="cut" id="cut"></div>
+  <div class="live"><i></i>LIVE <small>mic on · Aman's phone</small></div>
+  <div class="lower-third"><div class="venue">The Basement · <em>Comedy Club</em></div><div class="rule"></div><div class="clock">3:12 <small>of a 5:00 set</small></div></div>
+  <div class="hints"><span><b>OK</b>end set</span><span><b>Back</b>stop</span></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const Q = new URLSearchParams(location.search);
+const MODE = Q.get('state') || 'listen';            // 'listen' | 'laugh' | 'cycle' (listens, laughs, settles: the live demo)
+let STATE = MODE === 'cycle' ? 'listen' : MODE, SINCE = 0;
+const T = parseFloat(Q.get('t') || '1.3');          // seconds into the moment
+const STRENGTH = parseFloat(Q.get('s') || '0.85');  // how hard the line landed (from the engine)
+document.getElementById('cut').innerHTML = STATE === 'laugh'
+  ? '<div class="what">Laugh</div><div class="why">0.6 s after your line <span>· the room\'s third tonight</span></div>'
+  : '<div class="what">Wide</div><div class="why">the room is listening <span>· bit 3, 41 s in</span></div>';
+
+// Deterministic randomness: the same room every time, a different person in every seat.
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = rng(20261011);
+const pick = (a) => a[Math.floor(R() * a.length)];
+const lerp = (a, b, k) => a + (b - a) * k;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setSize(1920, 1080, false);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x07060a);
+scene.fog = new THREE.FogExp2(0x0b0810, 0.11);
+
+// The camera stands on the stage, a little above head height, looking out at the room.
+const camera = new THREE.PerspectiveCamera(STATE === 'laugh' ? 33 : 46, 1920 / 1080, 0.1, 80);
+function placeCamera(st) { camera.fov = st === 'laugh' ? 33 : 46; camera.updateProjectionMatrix(); if (st === 'laugh') { camera.position.set(-1.1, 1.6, -0.9); camera.lookAt(-0.7, 1.0, 4.6); } else { camera.position.set(0, 1.9, -1.2); camera.lookAt(0, 0.95, 7); } }
+placeCamera(STATE);
+
+// Light: warm key from the stage (the "spot" the performer stands in spills onto the front tables), cool rim from the back.
+scene.add(new THREE.AmbientLight(0x241a2a, 0.32));
+const key = new THREE.SpotLight(0xffc98a, 4.2, 22, 0.55, 0.7, 1.6);
+key.position.set(0.4, 3.6, -1.6); key.target.position.set(0, 0.6, 5);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.0004;
+scene.add(key, key.target);
+const rimL = new THREE.DirectionalLight(0x6f7dff, 1.3); rimL.position.set(-6, 5, 16); scene.add(rimL);
+const rimR = new THREE.DirectionalLight(0xc04a8a, 0.9); rimR.position.set(7, 4, 15); scene.add(rimR);
+
+const mat = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.85, metalness: 0 }, o));
+// Room: floor, brick-red back wall, a few practical bulbs.
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), mat(0x0e0a09)); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(30, 8), mat(0x3a1a16, { roughness: 1 })); wall.position.set(0, 4, 13.5); wall.rotation.y = Math.PI; scene.add(wall);
+for (let i = 0; i < 7; i++) {
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffd79a }));
+  bulb.position.set(-7.5 + i * 2.5, 3.1 + (i % 2) * 0.25, 13.2); scene.add(bulb);
+  const p = new THREE.PointLight(0xffb070, 0.7, 6, 2); p.position.copy(bulb.position); scene.add(p);
+}
+
+const SKIN = [0x8d5524, 0xc68642, 0xe0ac69, 0xf1c27d, 0x6b3e26, 0xa0673f, 0xd9a07a, 0x4a2c1d];
+const HAIR = [0x111111, 0x2b1a12, 0x3b2a1a, 0x5a3a20, 0x1a1a1a, 0x8a6a3a, 0x222222];
+const CLOTH = [0x1c2433, 0x2e2020, 0x232c22, 0x342a2c, 0x16161c, 0x46382c, 0x21253a, 0x5a2626, 0x26343c, 0x2c2c2c, 0x5c5046, 0x7a5a3a];
+
+// A person is a small rig: hips → spine → chest → neck → head, with shoulder → elbow arms. Every joint is driven by code.
+function person(x, z, seed) {
+  const r = rng(seed);
+  const p = new THREE.Group(); p.position.set(x, 0, z);
+  const skin = mat(SKIN[Math.floor(r() * SKIN.length)], { roughness: 0.7 });
+  const cloth = mat(CLOTH[Math.floor(r() * CLOTH.length)]);
+  const hair = mat(HAIR[Math.floor(r() * HAIR.length)], { roughness: 0.9 });
+  const scale = 0.92 + r() * 0.16; p.scale.setScalar(scale);
+  const chair = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.06, 0.42), mat(0x1c1410)); chair.position.y = 0.44; chair.castShadow = true; p.add(chair);
+  const legs = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.12, 0.42), cloth); legs.position.set(0, 0.52, -0.12); p.add(legs);
+  const spine = new THREE.Group(); spine.position.y = 0.52; p.add(spine);
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.5, 14), cloth); torso.position.y = 0.25; torso.scale.z = 0.62; torso.castShadow = true; spine.add(torso);
+  const shoulders = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), cloth); shoulders.position.y = 0.49; shoulders.scale.set(1, 0.35, 0.62); spine.add(shoulders);
+  const chest = new THREE.Group(); chest.position.y = 0.5; spine.add(chest);
+  const neckMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.055, 0.12, 10), skin); neckMesh.position.y = 0.06; chest.add(neckMesh);
+  const neck = new THREE.Group(); neck.position.y = 0.04; chest.add(neck);
+  const head = new THREE.Group(); head.position.y = 0.17; neck.add(head);
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.105, 18, 14), skin); skull.scale.set(0.95, 1.15, 1.02); skull.castShadow = true; head.add(skull);
+  const hairStyle = r();
+  if (hairStyle > 0.12) { const cap = new THREE.Mesh(new THREE.SphereGeometry(0.122, 18, 10, 0, Math.PI * 2, 0, Math.PI * (hairStyle > 0.6 ? 0.62 : 0.5)), hair); cap.position.y = 0.02; cap.rotation.x = -0.25; head.add(cap); }
+  if (hairStyle > 0.72) { const back = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.06), hair); back.position.set(0, -0.08, 0.1); head.add(back); }
+  // face: eyes and a mouth that opens with the laugh (the head faces -z, towards the stage)
+  const dark = new THREE.MeshBasicMaterial({ color: 0x1a0d0a });
+  const eyes = [-0.04, 0.04].map((ex) => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.013, 8, 6), dark); e.position.set(ex, 0.02, -0.105); head.add(e); return e; });
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 8), new THREE.MeshBasicMaterial({ color: 0x5a1c1c })); mouth.position.set(0, -0.052, -0.094); mouth.scale.set(1.1, 0.2, 0.35); head.add(mouth);
+  const teeth = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.012, 0.01), new THREE.MeshBasicMaterial({ color: 0xe8ddd0 })); teeth.position.set(0, -0.044, -0.104); teeth.visible = false; head.add(teeth);
+  const arms = [-1, 1].map((side) => {
+    const sh = new THREE.Group(); sh.position.set(side * 0.2, -0.03, 0); chest.add(sh);
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.042, 0.27, 8), cloth); upper.position.y = -0.135; upper.castShadow = true; sh.add(upper);
+    const el = new THREE.Group(); el.position.y = -0.27; sh.add(el);
+    const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.034, 0.24, 8), cloth); fore.position.y = -0.12; el.add(fore);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 8), skin); hand.position.y = -0.25; el.add(hand);
+    return { sh, el, side };
+  });
+  // Each person has their own temperament: how easily they laugh, how fast, how they show it.
+  const t = { eager: r(), delay: 0.05 + r() * 0.45, style: r(), phase: r() * 6.28, idle: pick(['still', 'lean', 'drink', 'arms', 'phone', 'chin']) };
+  if (t.idle === 'phone') { const ph = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.13, 0.01), new THREE.MeshBasicMaterial({ color: 0x9fc2ff })); ph.position.set(0, -0.3, -0.03); arms[1].el.add(ph); const gl = new THREE.PointLight(0x9fc2ff, 0.35, 0.8, 2); gl.position.set(0, -0.3, -0.12); arms[1].el.add(gl); }
+  p.userData = { spine, chest, neck, head, mouth, teeth, eyes, arms, t };
+  return p;
+}
+
+// The room: six rows facing the stage, small tables with drinks in the first three.
+const people = [];
+const ROWS = [ { z: 2.6, n: 7, w: 6.0 }, { z: 3.9, n: 8, w: 7.0 }, { z: 5.2, n: 9, w: 8.2 }, { z: 6.6, n: 10, w: 9.6 }, { z: 8.1, n: 11, w: 11 }, { z: 9.7, n: 12, w: 12.4 } ];
+let seed = 7;
+ROWS.forEach((row, ri) => {
+  for (let i = 0; i < row.n; i++) {
+    if (R() < 0.08) continue; // an empty seat here and there
+    const x = -row.w / 2 + (i + 0.5) * (row.w / row.n) + (R() - 0.5) * 0.25;
+    const z = row.z + (R() - 0.5) * 0.3;
+    const pp = person(x, z, seed++);
+    pp.lookAt(camera.position.x, 0, camera.position.z); pp.rotateY(Math.PI); // face the stage
+    pp.rotateY((R() - 0.5) * 0.35); pp.userData.row = ri;
+    scene.add(pp); people.push(pp);
+    if (ri < 3 && i % 2 === 0) {
+      const tz = z - 0.55; const tx = x + 0.45;
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.03, 20), mat(0x24170f, { roughness: 0.5 })); top.position.set(tx, 0.74, tz); top.castShadow = true; top.receiveShadow = true; scene.add(top);
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.72, 8), mat(0x111111)); stem.position.set(tx, 0.37, tz); scene.add(stem);
+      for (let g = 0; g < 2; g++) { const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.12, 10), new THREE.MeshStandardMaterial({ color: 0xffb347, emissive: 0x6a3a08, transparent: true, opacity: 0.85, roughness: 0.2 })); glass.position.set(tx + (g ? 0.12 : -0.1), 0.82, tz + (g ? -0.08 : 0.05)); scene.add(glass); }
+    }
+  }
+});
+
+// Behaviour: every joint angle is computed from the engine's moment, the person's temperament and the clock.
+function pose(pp, now) {
+  const { spine, chest, neck, head, mouth, teeth, eyes, arms, t } = pp.userData;
+  const breathe = Math.sin(now * 1.6 + t.phase) * 0.012;
+  let lean = 0, tilt = 0, turn = (t.style - 0.5) * 0.3, open = 0.15, squint = 1;
+  let A = { sx: 0.12, sz: 0.1, ex: -0.9 }, B = { sx: 0.12, sz: -0.1, ex: -0.9 };
+  if (STATE === 'listen') {
+    turn += Math.sin(now * 0.4 + t.phase) * 0.12;
+    if (t.idle === 'lean') { lean = 0.22; tilt = 0.12; A = { sx: -0.9, sz: 0.25, ex: -1.4 }; B = { sx: -0.9, sz: -0.25, ex: -1.4 }; }
+    if (t.idle === 'drink') { B = { sx: -1.25, sz: -0.2, ex: -1.9 }; tilt = -0.15; }
+    if (t.idle === 'arms') { A = { sx: -0.5, sz: 0.6, ex: -1.95 }; B = { sx: -0.5, sz: -0.6, ex: -1.95 }; lean = -0.08; }
+    if (t.idle === 'phone') { B = { sx: -0.7, sz: -0.1, ex: -1.6 }; tilt = 0.45; turn = 0.05; }
+    if (t.idle === 'chin') { B = { sx: -1.0, sz: -0.1, ex: -2.4 }; lean = 0.18; tilt = 0.1; }
+  } else {
+    // Who laughs, and how hard: front rows and eager people first; a strong line reaches the back.
+    const reach = STRENGTH * 1.25 - pp.userData.row * 0.12 + (t.eager - 0.5) * 0.5;
+    const local = now - SINCE - t.delay - pp.userData.row * 0.08;   // the laugh spreads back through the room
+    const k = Math.max(0, Math.min(1, reach)) * Math.max(0, Math.min(1, local / 0.35));
+    const shake = Math.sin(now * 17 + t.phase) * 0.06 * k;    // shoulders bouncing
+    open = 0.15 + 1.1 * k; squint = 1 - 0.75 * k;
+    if (t.style < 0.33) { tilt = -0.55 * k + shake; lean = -0.15 * k; A = { sx: -0.2, sz: 0.25, ex: -1.0 }; B = { sx: -0.2, sz: -0.25, ex: -1.0 }; }      // head thrown back
+    else if (t.style < 0.6) { lean = 0.42 * k + shake; tilt = 0.3 * k; A = { sx: -0.6 * k, sz: 0.35, ex: -1.6 }; B = { sx: -0.6 * k, sz: -0.35, ex: -1.6 }; } // doubled over
+    else if (t.style < 0.85) { const clap = Math.sin(now * 14 + t.phase) * 0.18 * k; tilt = -0.2 * k; A = { sx: -1.25 * k, sz: 0.55 + clap, ex: -1.5 }; B = { sx: -1.25 * k, sz: -0.55 - clap, ex: -1.5 }; } // clapping
+    else { tilt = -0.35 * k; A = { sx: -2.6 * k, sz: 0.3, ex: -0.4 }; B = { sx: -0.2, sz: -0.2, ex: -1.4 }; }  // a hand in the air
+    turn += Math.sin(now * 3 + t.phase) * 0.15 * k;           // turning to a friend
+  }
+  // The person faces -z (the stage): forward lean, a head thrown back and arms raised forward take the negative x rotation.
+  spine.rotation.x = -lean; chest.position.y = 0.5 + breathe; neck.rotation.x = -tilt; head.rotation.y = turn;
+  mouth.scale.set(1.1 + 0.5 * (open - 0.15), Math.max(0.2, open * 0.55), 0.35); teeth.visible = open > 0.5; eyes.forEach((e) => (e.scale.y = Math.max(0.15, squint)));
+  [A, B].forEach((a, i) => { arms[i].sh.rotation.x = -a.sx; arms[i].sh.rotation.z = a.sz; arms[i].el.rotation.x = -a.ex; });
+}
+
+let started = performance.now(), frames = 0, done = false;
+function frame() {
+  const now = Q.has('still') ? T : T + (performance.now() - started) / 1000;
+  if (MODE === 'cycle') { const c = now % 9; const st = c < 4.5 ? 'listen' : 'laugh'; if (st !== STATE) { STATE = st; SINCE = now; placeCamera(st); document.getElementById('cut').innerHTML = st === 'laugh' ? '<div class="what">Laugh</div><div class="why">0.6 s after your line <span>· the room\'s third tonight</span></div>' : '<div class="what">Wide</div><div class="why">the room is listening <span>· bit 3, 41 s in</span></div>'; } }
+  people.forEach((pp) => pose(pp, now));
+  renderer.render(scene, camera); frames++;
+  if (!done && (frames > 3 || Q.has('still'))) { done = true; document.body.dataset.ready = '1'; window.__people = people.length; }
+  if (!Q.has('still')) requestAnimationFrame(frame);
+}
+frame();
+</script></body></html>

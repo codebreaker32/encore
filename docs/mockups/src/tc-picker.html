@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="world.css">
+<style>
+  /* Tonight's bill: the room you'll face is live on the left; the running order on the right; OK goes live */
+  .preview { position: absolute; left: 0; top: 0; width: 1180px; height: 1080px; }
+  .preview .shot { width: 1180px; }
+  .preview .edge { position: absolute; right: 0; top: 0; bottom: 0; width: 320px; background: linear-gradient(90deg, rgba(7,6,10,0), var(--house)); }
+  .preview .lower-third { left: 90px; bottom: 200px; }
+  .preview .note { position: absolute; left: 90px; bottom: 72px; font-family: var(--text); font-size: 24px; color: var(--gold-dim); text-shadow: 0 2px 12px rgba(0,0,0,.8); max-width: 820px; line-height: 1.4; }
+  .order { position: absolute; left: 1120px; right: 90px; top: 54px; bottom: 72px; display: flex; flex-direction: column; justify-content: center; gap: 44px; }
+  .row .name { font-family: var(--display); font-weight: 500; font-size: 28px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-dim); }
+  .row .choices { display: flex; flex-wrap: nowrap; gap: 10px 30px; margin-top: 10px; }
+  .row .choices span { font-family: var(--display); font-weight: 600; font-size: 44px; letter-spacing: .03em; text-transform: uppercase; color: rgba(245,239,230,.42); line-height: 1.1; }
+  .row .choices span.on { color: var(--paper); }
+  .row.focus .choices span.on { color: var(--gold); text-decoration: underline; text-decoration-color: var(--red); text-decoration-thickness: 5px; text-underline-offset: 12px; }
+  .row .why { font-family: var(--text); font-size: 24px; color: var(--gold-dim); margin-top: 10px; line-height: 1.4; max-width: 680px; }
+  .go { margin-top: 10px; }
+  .go .status { font-family: var(--text); font-size: 24px; color: var(--paper); }
+  .go .status i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #2fb463; margin-right: 10px; }
+  .go .cta { margin-top: 14px; font-family: var(--display); font-weight: 800; font-size: 56px; letter-spacing: .06em; text-transform: uppercase; color: var(--paper); }
+  .go .cta b { color: var(--red); }
+  .brand { position: absolute; left: 90px; top: 54px; font-family: var(--display); font-weight: 800; font-size: 40px; letter-spacing: .12em; text-transform: uppercase; color: var(--paper); text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+</style></head>
+<body><div class="tv">
+  <div class="preview">
+    <div class="shot"><img src="photos/club-wide.jpg" alt="Comedy club room seen from the stage"><div class="grade"></div><div class="vignette"></div><div class="grain"></div></div>
+    <div class="edge"></div>
+    <div class="lower-third"><div class="venue">The Basement · <em>Comedy Club</em></div><div class="rule"></div><div class="clock">5:00 <small>set · a tough room, hecklers possible</small></div></div>
+    <div class="note">This is the room you'll face. It laughs only when your timing earns it; the scorecard afterwards is the same at every venue.</div>
+  </div>
+  <div class="brand">Encore</div>
+  <div class="order">
+    <div class="row"><div class="name">Act</div><div class="choices"><span class="on">Stand-up</span><span>Singing</span><span>Poetry</span><span>Speech</span></div></div>
+    <div class="row focus"><div class="name">Venue</div><div class="choices"><span>Open mic</span><span class="on">Comedy club</span><span>Theatre</span><span>Arena</span></div><div class="why">A dark room of eighty who paid to be here. Generous to a good setup, silent to a weak tag. Hecklers after two dead bits.</div></div>
+    <div class="row"><div class="name">MC</div><div class="choices"><span>Warm</span><span class="on">Sarcastic</span><span>Strict</span><span>Deadpan</span></div></div>
+    <div class="go"><div class="status"><i></i>Aman's phone is on the table and listening</div><div class="cta">Press <b>OK</b> to go live</div></div>
+  </div>
+</div></body></html>

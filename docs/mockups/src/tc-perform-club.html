@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="world.css">
+<style>
+  /* Comedy Club · stand-up · the instant after a punchline: the director cut to the room laughing */
+  .shot img { transform: scale(1.07); filter: saturate(1.0) contrast(1.08) brightness(1.06); }
+  .shot .grade { background:
+    radial-gradient(ellipse 60% 55% at 50% 42%, rgba(255,215,154,.22), rgba(0,0,0,0) 62%),
+    linear-gradient(180deg, rgba(7,6,10,.22) 0%, rgba(7,6,10,0) 28%, rgba(7,6,10,0) 62%, rgba(7,6,10,.6) 100%); }
+  .cut { position: absolute; left: 90px; top: 54px; text-shadow: 0 2px 12px rgba(0,0,0,.85); }
+  .cut .what { font-family: var(--display); font-weight: 800; font-size: 44px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); line-height: 1; }
+  .cut .why { font-family: var(--text); font-size: 26px; color: var(--paper); margin-top: 10px; }
+  .cut .why span { color: var(--gold-dim); }
+  .bits { position: absolute; right: 90px; bottom: 150px; text-align: right; text-shadow: 0 2px 12px rgba(0,0,0,.85); }
+  .bits .n { font-family: var(--display); font-weight: 600; font-size: 30px; letter-spacing: .12em; text-transform: uppercase; color: var(--paper); }
+  .bits .n b { color: var(--gold); }
+  .bits small { display: block; font-family: var(--text); font-size: 22px; color: var(--gold-dim); margin-top: 6px; letter-spacing: 0; text-transform: none; }
+</style></head>
+<body><div class="tv">
+  <div class="shot"><img src="photos/club-reaction-2.jpg" alt="A comedy club crowd laughing, lit from the stage"><div class="grade"></div><div class="vignette"></div><div class="grain"></div></div>
+  <div class="cut"><div class="what">Laugh</div><div class="why">0.8 s after your line <span>· the room's third tonight · cut to the floor</span></div></div>
+  <div class="live"><i></i>LIVE <small>mic on · Aman's phone</small></div>
+  <div class="bits"><div class="n">Bit <b>3</b> of 5 · the landlord</div><small>laughs 3 · longest dead air 1.9 s · pace 168 wpm</small></div>
+  <div class="lower-third">
+    <div class="venue">The Basement · <em>Comedy Club</em></div>
+    <div class="rule"></div>
+    <div class="clock">3:12 <small>of a 5:00 set</small></div>
+  </div>
+  <div class="hints"><span><b>OK</b>end set</span><span><b>Back</b>stop</span></div>
+</div></body></html>

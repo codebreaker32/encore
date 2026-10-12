@@ -1,0 +1,158 @@
+{
+ "file": "crowd-pool.mp3",
+ "sampleRate": 44100,
+ "totalSec": 88.45,
+ "firstAudibleSample": 11345,
+ "clips": [
+  {
+   "id": "laugh-0",
+   "src": "freesound-17121",
+   "kind": "laugh",
+   "level": 0.25,
+   "start": 0.25,
+   "dur": 3.4,
+   "startSample": 11025,
+   "samples": 149940
+  },
+  {
+   "id": "laugh-1",
+   "src": "freesound-507983",
+   "kind": "laugh",
+   "level": 0.35,
+   "start": 3.95,
+   "dur": 6.4,
+   "startSample": 174195,
+   "samples": 282240
+  },
+  {
+   "id": "laugh-2",
+   "src": "freesound-383207",
+   "kind": "laugh",
+   "level": 0.4,
+   "start": 10.65,
+   "dur": 5.8,
+   "startSample": 469665,
+   "samples": 255780
+  },
+  {
+   "id": "laugh-3",
+   "src": "freesound-383207",
+   "kind": "laugh",
+   "level": 0.3,
+   "start": 16.75,
+   "dur": 3,
+   "startSample": 738675,
+   "samples": 132300
+  },
+  {
+   "id": "laugh-4",
+   "src": "freesound-383207",
+   "kind": "laugh",
+   "level": 0.35,
+   "start": 20.05,
+   "dur": 3.8,
+   "startSample": 884205,
+   "samples": 167580
+  },
+  {
+   "id": "laugh-5",
+   "src": "freesound-581528",
+   "kind": "laugh",
+   "level": 0.55,
+   "start": 24.15,
+   "dur": 6.5,
+   "startSample": 1065015,
+   "samples": 286650
+  },
+  {
+   "id": "laugh-6",
+   "src": "freesound-581528",
+   "kind": "laugh",
+   "level": 0.6,
+   "start": 30.95,
+   "dur": 6.5,
+   "startSample": 1364895,
+   "samples": 286650
+  },
+  {
+   "id": "laugh-7",
+   "src": "freesound-438402",
+   "kind": "laugh",
+   "level": 0.7,
+   "start": 37.75,
+   "dur": 6.5,
+   "startSample": 1664775,
+   "samples": 286650
+  },
+  {
+   "id": "laugh-8",
+   "src": "freesound-438402",
+   "kind": "laugh",
+   "level": 0.75,
+   "start": 44.55,
+   "dur": 6.5,
+   "startSample": 1964655,
+   "samples": 286650
+  },
+  {
+   "id": "laugh-9",
+   "src": "freesound-438402",
+   "kind": "laugh",
+   "level": 0.65,
+   "start": 51.35,
+   "dur": 6.5,
+   "startSample": 2264535,
+   "samples": 286650
+  },
+  {
+   "id": "laugh-10",
+   "src": "freesound-438402",
+   "kind": "laugh",
+   "level": 0.6,
+   "start": 58.15,
+   "dur": 5.3,
+   "startSample": 2564415,
+   "samples": 233730
+  },
+  {
+   "id": "laugh-11",
+   "src": "freesound-245123",
+   "kind": "laugh",
+   "level": 0.85,
+   "start": 63.75,
+   "dur": 6.5,
+   "startSample": 2811375,
+   "samples": 286650
+  },
+  {
+   "id": "laugh-12",
+   "src": "freesound-245123",
+   "kind": "laugh",
+   "level": 0.8,
+   "start": 70.55,
+   "dur": 5.7,
+   "startSample": 3111255,
+   "samples": 251370
+  },
+  {
+   "id": "laugh-13",
+   "src": "freesound-245123",
+   "kind": "laugh",
+   "level": 0.8,
+   "start": 76.55,
+   "dur": 4.8,
+   "startSample": 3375855,
+   "samples": 211680
+  },
+  {
+   "id": "applause-14",
+   "src": "freesound-347547",
+   "kind": "applause",
+   "level": 0.7,
+   "start": 81.65,
+   "dur": 6.5,
+   "startSample": 3600765,
+   "samples": 286650
+  }
+ ]
+}

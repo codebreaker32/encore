@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  body { background: #0a0712; }
+  .hall { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 50% at 50% 100%, #2b2150 0%, #120d26 60%, #0a0712 100%); }
+  .lights { position: absolute; left: 0; right: 0; top: 0; height: 240px; background: linear-gradient(rgba(255,210,120,.18), rgba(255,210,120,0)); }
+  .crowd { position: absolute; left: 60px; right: 60px; top: 320px; display: grid; grid-template-columns: repeat(18, 1fr); row-gap: 6px; column-gap: 10px; }
+  .p { position: relative; height: 104px; }
+  .p .h { position: absolute; left: 50%; top: 10px; width: 54px; height: 54px; margin-left: -27px; border-radius: 50%; background: #5a4a8a; }
+  .p .b { position: absolute; left: 50%; top: 58px; width: 80px; height: 60px; margin-left: -40px; border-radius: 28px 28px 6px 6px; background: #3e3268; }
+  .p .m { position: absolute; left: 50%; top: 44px; width: 20px; height: 6px; margin-left: -10px; border-radius: 0 0 10px 10px; background: #1b1530; }
+  .p.laugh .h { background: #8c74d8; transform: translateY(-8px) rotate(-6deg); }
+  .p.laugh .m { height: 14px; width: 24px; margin-left: -12px; background: #11090a; border-radius: 0 0 14px 14px; }
+  .p.laugh .b { background: #5a48a0; }
+  .p.row2 { transform: scale(.9); } .p.row3 { transform: scale(.8); opacity: .9; } .p.row4 { transform: scale(.7); opacity: .8; } .p.row5 { transform: scale(.6); opacity: .7; }
+  .p.meh .h { background: #4a3f70; }
+  .meter { position: absolute; left: 90px; top: 60px; width: 520px; }
+  .meter .lab { font-size: 22px; color: #b9a9dd; letter-spacing: 3px; text-transform: uppercase; }
+  .bar { height: 26px; border-radius: 13px; background: #241a4a; margin-top: 10px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 72%; background: linear-gradient(90deg, #7cf29c, #ffe76a); border-radius: 13px; }
+  .live { position: absolute; right: 90px; top: 60px; text-align: right; }
+  .live .big { font-size: 64px; font-weight: 800; color: #ffe76a; line-height: 1; }
+  .live .lab { font-size: 22px; color: #b9a9dd; letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+  .bubble { position: absolute; z-index: 5; left: 50%; top: 185px; transform: translateX(-50%); padding: 22px 36px; border-radius: 22px; background: rgba(20,14,40,.92); border: 2px solid rgba(255,255,255,.18); font-size: 36px; color: #fff; max-width: 1100px; text-align: center; }
+  .bubble small { display: block; font-size: 22px; color: #b9a9dd; margin-top: 8px; }
+  .ticker { position: absolute; left: 90px; right: 90px; bottom: 130px; display: flex; gap: 12px; }
+  .seg { flex: 1; height: 36px; border-radius: 8px; background: #2b2150; position: relative; }
+  .seg.laugh { background: #7cf29c; } .seg.quiet { background: #4a3f70; } .seg.dead { background: #ff6b6b; } .seg.now { outline: 3px solid #fff; }
+  .seg span { position: absolute; left: 0; right: 0; top: -30px; font-size: 18px; color: #b9a9dd; text-align: center; white-space: nowrap; }
+</style></head>
+<body><div class="tv">
+  <div class="hall"><div class="lights"></div>
+    <div class="meter"><div class="lab">The room is with you</div><div class="bar"><i></i></div><div class="lab" style="margin-top:10px;letter-spacing:0;text-transform:none">pace 148 wpm · last pause 2.8 s · fillers 3</div></div>
+    <div class="live"><div class="big">4:12</div><div class="lab">set time · 5 min target</div></div>
+    <div class="bubble">“…and that is why my dog is now the landlord.”<small>punchline detected · laughter 0.8 s later · the heckler stayed quiet</small></div>
+    <div class="crowd" id="crowd"></div>
+    <div class="ticker">
+      <div class="seg laugh"><span>opener</span></div><div class="seg laugh"></div><div class="seg quiet"></div><div class="seg dead"><span>dead air 4 s</span></div><div class="seg quiet"></div><div class="seg laugh"></div><div class="seg laugh"></div><div class="seg quiet"></div><div class="seg laugh now"><span>now</span></div><div class="seg"></div><div class="seg"></div><div class="seg"></div>
+    </div>
+  </div>
+  <div class="footer"><span>THE CROWD · open mic · reactions are an estimate from your pauses, pace and punchlines, never a verdict</span><span><span class="key">OK</span>next bit &nbsp; <span class="key">▲▼</span>tougher / kinder room &nbsp; <span class="key">Back</span>end set</span></div>
+</div>
+<script>
+  const c = document.getElementById('crowd');
+  const rows = 5, cols = 18;
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let r = 0; r < rows; r++) for (let i = 0; i < cols; i++) {
+    const d = document.createElement('div');
+    const x = rnd(); d.className = 'p row' + (r + 1) + (x < 0.62 ? ' laugh' : x < 0.85 ? '' : ' meh');
+    d.innerHTML = '<div class="b"></div><div class="h"></div><div class="m"></div>';
+    c.appendChild(d);
+  }
+</script></body></html>

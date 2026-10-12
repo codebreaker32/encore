@@ -1,0 +1,25 @@
+{
+  "name": "@strumble/pitch-judge",
+  "version": "0.1.0",
+  "description": "Honest real-time note and chord judging for practice apps: pure JS, runs in browsers, React Native and Node. Says 'unsure' instead of guessing.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "fft.js": "^4.0.4",
+    "pitchy": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

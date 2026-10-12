@@ -1,0 +1,84 @@
+{
+ "Female_Adult_02": [
+  "f002_body_color.tga",
+  "f002_body_normal.tga",
+  "f002_head_color.tga",
+  "f002_head_normal.tga",
+  "f002_opacity_color.tga"
+ ],
+ "Female_Adult_13": [
+  "f019_body_color.tga",
+  "f019_body_normal.tga",
+  "f019_head_color.tga",
+  "f019_head_normal.tga",
+  "f019_opacity_color.tga"
+ ],
+ "Male_Adult_04": [
+  "m006_body_color.tga",
+  "m006_body_normal.tga",
+  "m006_head_color.tga",
+  "m006_head_normal.tga",
+  "m006_opacity_color.tga"
+ ],
+ "Male_Adult_07": [
+  "m013_body_color.tga",
+  "m013_body_normal.tga",
+  "m013_head_color.tga",
+  "m013_head_normal.tga",
+  "m013_opacity_color.tga"
+ ],
+ "Female_Adult_03": [
+  "f003_body_color.tga",
+  "f003_body_normal.tga",
+  "f003_head_color.tga",
+  "f003_head_normal.tga",
+  "f003_opacity_color.tga"
+ ],
+ "Female_Adult_04": [
+  "f004_body_color.tga",
+  "f004_body_normal.tga",
+  "f004_head_color.tga",
+  "f004_head_normal.tga",
+  "f004_opacity_color.tga"
+ ],
+ "Female_Adult_12": [
+  "f012_body_color.tga",
+  "f012_body_normal.tga",
+  "f012_head_color.tga",
+  "f012_head_normal.tga",
+  "f012_opacity_color.tga"
+ ],
+ "Female_Adult_17": [
+  "f006_body_color.tga",
+  "f006_body_normal.tga",
+  "f006_head_color.tga",
+  "f006_head_normal.tga",
+  "f006_opacity_color.tga"
+ ],
+ "Male_Adult_06": [
+  "m011_body_color.tga",
+  "m011_body_normal.tga",
+  "m011_head_color.tga",
+  "m011_head_normal.tga",
+  "m011_opacity_color.tga"
+ ],
+ "Male_Adult_10": [
+  "m024_body_color.tga",
+  "m024_body_normal.tga",
+  "m024_head_color.tga",
+  "m024_head_normal.tga",
+  "m024_opacity_color.tga"
+ ],
+ "Male_Adult_12": [
+  "m007_body_color.tga",
+  "m007_body_normal.tga",
+  "m007_head_color.tga",
+  "m007_head_normal.tga"
+ ],
+ "Male_Adult_17": [
+  "m022_body_color.tga",
+  "m022_body_normal.tga",
+  "m022_head_color.tga",
+  "m022_head_normal.tga"
+ ]
+}

@@ -1,0 +1,12 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b0a16; color: #f6f1ff; font-family: "Inter", "Segoe UI", "DejaVu Sans", system-ui, sans-serif; }
+.tv { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+.safe { position: absolute; inset: 54px 90px; }
+.footer { position: absolute; left: 90px; right: 90px; bottom: 30px; color: #8f82b8; font-size: 22px; display: flex; justify-content: space-between; }
+.kicker { font-size: 22px; letter-spacing: 3px; text-transform: uppercase; color: #8f82b8; }
+.title { font-size: 52px; font-weight: 800; line-height: 1.1; }
+.muted { color: #b9a9dd; }
+.pill { display: inline-block; padding: 8px 18px; border-radius: 999px; background: #241a4a; color: #b9a9dd; font-size: 22px; }
+.cta { display: inline-block; padding: 18px 40px; border-radius: 14px; background: #7cf29c; color: #10221a; font-size: 34px; font-weight: 800; }
+.hint { position: absolute; right: 90px; bottom: 80px; display: flex; gap: 28px; color: #b9a9dd; font-size: 24px; }
+.key { display: inline-block; min-width: 44px; padding: 4px 12px; border: 2px solid #4a3c7a; border-radius: 10px; margin-right: 8px; color: #f6f1ff; font-weight: 700; text-align: center; }

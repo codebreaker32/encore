@@ -1,0 +1,71 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  body { background: #06040d; }
+  .stage { position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 62%, #3a2a6e 0%, #16102e 55%, #06040d 100%); }
+  .curtain { position: absolute; top: 0; bottom: 0; width: 170px; background: repeating-linear-gradient(90deg, #7a1538 0 24px, #5a0f2a 24px 48px); }
+  .curtain.l { left: 0; border-right: 6px solid #a8244f; } .curtain.r { right: 0; border-left: 6px solid #a8244f; }
+  .valance { position: absolute; left: 0; right: 0; top: 0; height: 110px; background: #6b1230; border-bottom: 10px solid #d6b25a; }
+  .floor { position: absolute; left: 170px; right: 170px; bottom: 0; height: 160px; background: linear-gradient(#1b1538, #0a0817); }
+  .spot { position: absolute; width: 760px; height: 760px; border-radius: 50%; left: 580px; top: 170px; background: radial-gradient(circle, rgba(255, 236, 170, .22), rgba(255,236,170,0) 70%); }
+  /* crocodile built from CSS shapes */
+  .croc { position: absolute; left: 520px; top: 430px; width: 900px; height: 360px; }
+  .body { position: absolute; left: 0; top: 150px; width: 560px; height: 150px; background: #35a35f; border-radius: 80px 60px 60px 80px; }
+  .bumps { position: absolute; left: 60px; top: 120px; display: flex; gap: 38px; }
+  .bumps i { width: 44px; height: 44px; background: #2b8a4f; border-radius: 50% 50% 0 0; display: block; }
+  .jaw-top { position: absolute; left: 520px; top: 150px; width: 380px; height: 70px; background: #3cb46a; border-radius: 0 40px 40px 0; transform-origin: 0 100%; transform: rotate(-24deg); }
+  .jaw-bot { position: absolute; left: 520px; top: 220px; width: 360px; height: 60px; background: #2e9456; border-radius: 0 30px 30px 0; transform-origin: 0 0; transform: rotate(16deg); }
+  .teeth { position: absolute; left: 60px; top: 60px; display: flex; gap: 22px; } .teeth i { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 26px solid #fff; display: block; }
+  .teeth.b { top: -14px; } .teeth.b i { border-top: 0; border-bottom: 26px solid #fff; }
+  .eye { position: absolute; left: 470px; top: 118px; width: 46px; height: 46px; background: #fff; border-radius: 50%; }
+  .eye:after { content: ""; position: absolute; left: 16px; top: 10px; width: 16px; height: 26px; background: #111; border-radius: 50%; }
+  .tail { position: absolute; left: -210px; top: 190px; width: 260px; height: 70px; background: #2b8a4f; border-radius: 80px 0 0 80px; transform: rotate(8deg); }
+  .legs { position: absolute; left: 60px; top: 280px; display: flex; gap: 220px; } .legs i { width: 70px; height: 50px; background: #2b8a4f; border-radius: 0 0 20px 20px; display: block; }
+  /* rabbit */
+  .rabbit { position: absolute; left: 1330px; top: 560px; width: 220px; height: 240px; }
+  .rb { position: absolute; left: 30px; top: 120px; width: 170px; height: 120px; background: #e9e4f7; border-radius: 50%; }
+  .rh { position: absolute; left: 110px; top: 70px; width: 110px; height: 100px; background: #f3f0fb; border-radius: 50%; }
+  .ear { position: absolute; width: 34px; height: 120px; background: #f3f0fb; border-radius: 20px; top: -40px; }
+  .ear.a { left: 125px; transform: rotate(-12deg); } .ear.b { left: 170px; transform: rotate(10deg); }
+  .reye { position: absolute; left: 180px; top: 100px; width: 14px; height: 14px; background: #111; border-radius: 50%; }
+  /* the puppeteer's hand, as the phone sees it (small inset) */
+  .inset { position: absolute; right: 200px; top: 140px; width: 300px; height: 200px; border-radius: 14px; background: #120e24; border: 3px solid #4a3c7a; overflow: hidden; }
+  .inset .label { position: absolute; left: 12px; top: 8px; font-size: 18px; color: #b9a9dd; }
+  .hand { position: absolute; left: 110px; top: 70px; width: 90px; height: 90px; }
+  .hand i { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #7cf29c; display: block; }
+  .hand s { position: absolute; height: 3px; background: rgba(124,242,156,.5); transform-origin: 0 50%; display: block; }
+  .caption { position: absolute; left: 230px; right: 230px; bottom: 120px; text-align: center; font-size: 40px; font-weight: 700; color: #ffe9a8; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  .caption small { display: block; font-size: 24px; color: #b9a9dd; font-weight: 400; margin-top: 8px; }
+  .cast { position: absolute; left: 200px; top: 140px; display: flex; gap: 14px; }
+  .cast span { padding: 10px 18px; border-radius: 999px; background: rgba(0,0,0,.45); border: 2px solid #4a3c7a; font-size: 22px; color: #b9a9dd; }
+  .cast span.on { border-color: #7cf29c; color: #7cf29c; }
+</style></head>
+<body><div class="tv">
+  <div class="stage">
+    <div class="spot"></div>
+    <div class="floor"></div>
+    <div class="curtain l"></div><div class="curtain r"></div>
+    <div class="valance"></div>
+    <div class="cast"><span class="on">Croc (Aman's right hand)</span><span class="on">Rabbit (left hand)</span><span>Boulder</span><span>Bird</span></div>
+    <div class="inset"><div class="label">Phone sees: 2 hands · 21 points each · 17 fps</div>
+      <div class="hand">
+        <s style="left:40px;top:60px;width:50px;transform:rotate(-70deg)"></s><s style="left:40px;top:60px;width:60px;transform:rotate(-30deg)"></s><s style="left:40px;top:60px;width:62px;transform:rotate(0deg)"></s><s style="left:40px;top:60px;width:58px;transform:rotate(25deg)"></s><s style="left:40px;top:60px;width:40px;transform:rotate(60deg)"></s>
+        <i style="left:36px;top:56px"></i><i style="left:52px;top:12px"></i><i style="left:88px;top:28px"></i><i style="left:98px;top:58px"></i><i style="left:90px;top:84px"></i><i style="left:56px;top:92px"></i>
+      </div>
+    </div>
+    <div class="croc">
+      <div class="tail"></div>
+      <div class="body"></div>
+      <div class="bumps"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="legs"><i></i><i></i></div>
+      <div class="jaw-bot"><div class="teeth b"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="jaw-top"><div class="teeth"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="eye"></div>
+    </div>
+    <div class="rabbit"><div class="ear a"></div><div class="ear b"></div><div class="rb"></div><div class="rh"></div><div class="reye"></div></div>
+    <div class="caption">“The crocodile yawned… and the rabbit decided it was <em>not</em> a good time to ask directions.”
+      <small>Narrator · improvising on what it sees · say “the end” to finish the scene</small></div>
+  </div>
+  <div class="footer"><span>HANDSHADOW · Scene 2 · the river</span><span><span class="key">OK</span>new scene &nbsp; <span class="key">◀ ▶</span>backdrop &nbsp; <span class="key">▲</span>sound on &nbsp; <span class="key">Back</span>bow</span></div>
+</div></body></html>

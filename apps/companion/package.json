@@ -1,0 +1,31 @@
+{
+  "name": "@strumble/companion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Encore performer's phone: join from the TV code, put it on the table, and it listens. Only timing, levels and (optionally) words go to the TV; never audio. No install.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules dist"
+  },
+  "dependencies": {
+    "@strumble/crowd": "workspace:*",
+    "@strumble/pitch-judge": "workspace:*",
+    "couch-link": "workspace:*",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "~19.1.17",
+    "@types/react-dom": "~19.1.11",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.7"
+  }
+}

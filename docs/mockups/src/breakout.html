@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  body { background: #0a0d12; }
+  .room { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 70% 40%, #1d2a3a 0%, #0f1620 55%, #0a0d12 100%); }
+  .clock { position: absolute; left: 90px; top: 54px; }
+  .clock .big { font-size: 128px; font-weight: 800; letter-spacing: 4px; color: #ffd166; line-height: 1; font-variant-numeric: tabular-nums; }
+  .clock .lab { font-size: 24px; color: #9fb3c8; letter-spacing: 3px; text-transform: uppercase; }
+  .doors { position: absolute; left: 90px; top: 250px; display: flex; gap: 18px; }
+  .door { width: 120px; height: 160px; border-radius: 12px; border: 3px solid #2e4259; background: #142030; position: relative; }
+  .door span { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; font-size: 20px; color: #9fb3c8; }
+  .door.open { background: #1f4d3a; border-color: #7cf29c; } .door.open:after { content: "✓"; position: absolute; left: 0; right: 0; top: 34px; text-align: center; font-size: 60px; color: #7cf29c; }
+  .door.now { border-color: #ffd166; box-shadow: 0 0 30px rgba(255,209,102,.35); } .door.now:after { content: "?"; position: absolute; left: 0; right: 0; top: 34px; text-align: center; font-size: 60px; color: #ffd166; }
+  .door.lock:after { content: "•"; position: absolute; left: 0; right: 0; top: 30px; text-align: center; font-size: 60px; color: #2e4259; }
+  .riddle { position: absolute; left: 90px; right: 760px; top: 470px; }
+  .riddle .kicker { color: #ffd166; }
+  .riddle .text { font-size: 56px; font-weight: 800; line-height: 1.15; margin-top: 12px; }
+  .riddle .sub { font-size: 26px; color: #9fb3c8; margin-top: 18px; }
+  .scan { position: absolute; right: 90px; top: 250px; width: 600px; height: 560px; border-radius: 22px; background: #0d1520; border: 3px solid #2e4259; overflow: hidden; }
+  .scan .lab { position: absolute; left: 20px; top: 16px; font-size: 22px; color: #9fb3c8; z-index: 2; }
+  .scan .frame { position: absolute; inset: 60px 30px 90px; border-radius: 16px; background: linear-gradient(135deg, #223447, #15222f); }
+  .obj { position: absolute; left: 190px; top: 130px; width: 220px; height: 220px; border-radius: 50%; border: 10px solid #e9e4f7; background: #f3f0fb; }
+  .obj:before { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 80px; background: #111; transform-origin: 50% 0; transform: translate(-3px, 0) rotate(190deg); }
+  .obj:after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 60px; background: #111; transform-origin: 50% 0; transform: translate(-3px, 0) rotate(-60deg); }
+  .verdict { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: #1f4d3a; color: #7cf29c; font-size: 30px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .verdict small { font-weight: 400; color: #bfe9cc; font-size: 22px; margin-left: 14px; }
+  .team { position: absolute; left: 90px; bottom: 86px; display: flex; gap: 14px; }
+  .team span { padding: 10px 18px; border-radius: 999px; background: #142030; border: 2px solid #2e4259; font-size: 22px; color: #9fb3c8; }
+  .team span.on { border-color: #7cf29c; color: #7cf29c; }
+  .hints { position: absolute; right: 90px; bottom: 86px; font-size: 24px; color: #9fb3c8; }
+</style></head>
+<body><div class="tv">
+  <div class="room">
+    <div class="clock"><div class="lab">Time left</div><div class="big">07:42</div></div>
+    <div class="doors"><div class="door open"><span>Door 1</span></div><div class="door open"><span>Door 2</span></div><div class="door now"><span>Door 3</span></div><div class="door lock"><span>Door 4</span></div><div class="door lock"><span>Door 5</span></div><div class="door lock"><span>Exit</span></div></div>
+    <div class="riddle"><div class="kicker">Door 3 · the game master says</div>
+      <div class="text">“Something in this room stopped at ten past three. Bring it to me.”</div>
+      <div class="sub">Built from one photo of your living room (taken with your consent, deleted after the game). Hold the object up to the phone to answer. Unsure checks come back grey, never wrong.</div></div>
+    <div class="scan"><div class="lab">Phone · scanner · Aman</div><div class="frame"><div class="obj"></div></div><div class="verdict">That’s it. Door 3 opens.<small>confidence 0.91 · checked by the game master</small></div></div>
+    <div class="team"><span class="on">Aman · scanner</span><span>Riya · 1 hint left</span><span>Team hints: 2</span></div>
+    <div class="hints"><span class="key">OK</span>use a hint &nbsp; <span class="key">▲</span>re-read &nbsp; <span class="key">Back</span>give up</div>
+  </div>
+  <div class="footer"><span>BREAKOUT · your living room, 12 minutes, 6 doors</span><span>Game master: Amazon Bedrock · clues reference only objects it saw in your photo</span></div>
+</div></body></html>

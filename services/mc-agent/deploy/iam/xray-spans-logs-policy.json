@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TransactionSearchXRayAccess",
+      "Effect": "Allow",
+      "Principal": { "Service": "xray.amazonaws.com" },
+      "Action": "logs:PutLogEvents",
+      "Resource": [
+        "arn:aws:logs:ap-south-1:911167912118:log-group:aws/spans:*",
+        "arn:aws:logs:ap-south-1:911167912118:log-group:/aws/application-signals/data:*",
+        "arn:aws:logs:ap-south-1:911167912118:log-group:/aws/bedrock-agentcore/runtimes/*:*"
+      ],
+      "Condition": {
+        "ArnLike": { "aws:SourceArn": "arn:aws:xray:ap-south-1:911167912118:*" },
+        "StringEquals": { "aws:SourceAccount": "911167912118" }
+      }
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  body { background: #0d0608; }
+  .stage { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 55% at 50% 65%, #6b3a1a 0%, #2e1710 55%, #0d0608 100%); }
+  .curtain { position: absolute; top: 0; bottom: 0; width: 200px; background: repeating-linear-gradient(90deg, #b8232f 0 26px, #8f1a25 26px 52px); }
+  .curtain.l { left: 0; } .curtain.r { right: 0; }
+  .valance { position: absolute; left: 0; right: 0; top: 0; height: 120px; background: #8f1a25; border-bottom: 12px solid #e0b64a; }
+  .boards { position: absolute; left: 200px; right: 200px; bottom: 0; height: 130px; background: repeating-linear-gradient(90deg, #4a2a16 0 120px, #3b2111 120px 240px); border-top: 6px solid #e0b64a; }
+  .sofa { position: absolute; left: 200px; right: 200px; bottom: 130px; height: 120px; background: #2a1a2e; border-radius: 40px 40px 0 0; opacity: .9; }
+  .sofa:after { content: "the back of your sofa"; position: absolute; left: 50%; top: 44px; transform: translateX(-50%); color: #7d6a85; font-size: 22px; }
+  /* dragon puppet rising over the sofa */
+  .dragon { position: absolute; left: 520px; top: 300px; width: 700px; height: 560px; }
+  .neck { position: absolute; left: 120px; top: 260px; width: 140px; height: 300px; background: #2f9d5a; border-radius: 70px 70px 0 0; transform: rotate(-8deg); }
+  .head { position: absolute; left: 100px; top: 120px; width: 300px; height: 170px; background: #35b066; border-radius: 90px 40px 40px 90px; transform: rotate(-10deg); }
+  .jaw { position: absolute; left: 250px; top: 250px; width: 230px; height: 70px; background: #2a8f50; border-radius: 0 30px 50px 0; transform-origin: 0 0; transform: rotate(26deg); }
+  .jaw .tongue { position: absolute; left: 30px; top: 10px; width: 110px; height: 26px; background: #ff6b8a; border-radius: 20px; }
+  .teeth { position: absolute; left: 230px; top: 236px; display: flex; gap: 20px; } .teeth i { display: block; width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent; border-top: 24px solid #fff; }
+  .eye { position: absolute; left: 180px; top: 130px; width: 56px; height: 56px; background: #fff; border-radius: 50%; }
+  .eye:after { content: ""; position: absolute; left: 22px; top: 12px; width: 18px; height: 30px; background: #111; border-radius: 50%; }
+  .horn { position: absolute; width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 70px solid #e0b64a; top: 70px; }
+  .horn.a { left: 170px; transform: rotate(-20deg); } .horn.b { left: 230px; transform: rotate(10deg); }
+  .star { position: absolute; color: #ffe76a; font-size: 48px; font-weight: 800; text-shadow: 0 0 20px #ffe76a; }
+  .frog { position: absolute; left: 1330px; top: 560px; width: 180px; height: 150px; }
+  .frog .b { position: absolute; left: 0; top: 50px; width: 180px; height: 100px; background: #6fcf5a; border-radius: 90px 90px 20px 20px; }
+  .frog .e { position: absolute; top: 20px; width: 50px; height: 50px; background: #fff; border-radius: 50%; } .frog .e:after { content: ""; position: absolute; left: 18px; top: 14px; width: 16px; height: 22px; background: #111; border-radius: 50%; }
+  .frog .e.a { left: 30px; } .frog .e.b { left: 100px; }
+  .frog .m { position: absolute; left: 40px; top: 95px; width: 100px; height: 10px; background: #2a6b22; border-radius: 10px; }
+  .director { position: absolute; left: 240px; top: 150px; width: 520px; padding: 18px 22px; border-radius: 16px; background: rgba(0,0,0,.55); border: 2px solid #e0b64a; }
+  .director .lab { font-size: 20px; color: #e0b64a; letter-spacing: 3px; text-transform: uppercase; }
+  .director .t { font-size: 30px; font-weight: 700; margin-top: 6px; }
+  .director .s { font-size: 22px; color: #d9c9a0; margin-top: 8px; }
+  .inset { position: absolute; right: 240px; top: 150px; width: 400px; padding: 16px 20px; border-radius: 16px; background: rgba(0,0,0,.55); border: 2px solid #4a3c7a; }
+  .inset .lab { font-size: 20px; color: #b9a9dd; letter-spacing: 2px; text-transform: uppercase; }
+  .row { display: flex; justify-content: space-between; font-size: 22px; margin-top: 10px; }
+  .meter { height: 14px; border-radius: 7px; background: #241a4a; margin-top: 6px; overflow: hidden; } .meter i { display: block; height: 100%; width: 78%; background: #7cf29c; }
+  .line { position: absolute; left: 240px; right: 240px; bottom: 290px; text-align: center; font-size: 44px; font-weight: 800; color: #ffe9a8; text-shadow: 0 2px 12px rgba(0,0,0,.9); }
+  .line small { display: block; font-size: 22px; color: #d9c9a0; font-weight: 400; margin-top: 6px; }
+</style></head>
+<body><div class="tv">
+  <div class="stage">
+    <div class="boards"></div><div class="sofa"></div>
+    <div class="curtain l"></div><div class="curtain r"></div><div class="valance"></div>
+    <div class="director"><div class="lab">Tonight's scene</div><div class="t">The dragon who was afraid of toast</div><div class="s">Director's prompt · OK = next scene · ▲▼ backdrop</div></div>
+    <div class="inset"><div class="lab">Phone inside the sock</div>
+      <div class="row"><span>tilt → head</span><span>−12°</span></div>
+      <div class="row"><span>raise → enter</span><span>up</span></div>
+      <div class="row"><span>shake → bump</span><span>—</span></div>
+      <div class="row"><span>your voice → mouth</span><span>loud</span></div><div class="meter"><i></i></div></div>
+    <div class="dragon">
+      <div class="neck"></div><div class="head"></div><div class="horn a"></div><div class="horn b"></div>
+      <div class="jaw"><div class="tongue"></div></div><div class="teeth"><i></i><i></i><i></i><i></i><i></i></div><div class="eye"></div>
+      <div class="star" style="left:430px;top:60px">✦</div><div class="star" style="left:500px;top:140px;font-size:32px">✦</div>
+    </div>
+    <div class="frog"><div class="b"></div><div class="e a"></div><div class="e b"></div><div class="m"></div></div>
+    <div class="line">“HELLOOOO! Is anyone there? I smell… <em>toast</em>.”<small>the mouth follows how loud you are · only the loudness number leaves the phone, never audio</small></div>
+  </div>
+  <div class="footer"><span>SOCK STAGE · Aman = dragon (right sock) · Riya = frog (left sock)</span><span><span class="key">OK</span>next scene &nbsp; <span class="key">▲▼</span>backdrop &nbsp; <span class="key">Back</span>curtain</span></div>
+</div></body></html>

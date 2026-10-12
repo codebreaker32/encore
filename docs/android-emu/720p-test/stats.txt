@@ -1,0 +1,467 @@
+Encore on a 720p Android TV emulator, 2026-10-12 (UTC). BOX=android: c7i.2xlarge, 8 vCPU, KVM, no GPU; -gpu host (Mesa llvmpipe), Xvfb, PulseAudio null sink.
+AVD encore_tv34_720: avdmanager -d tv_720p, system-images;android-34;android-tv;x86, 1280x720 @ 213 dpi, 4 guest cores, 3 GB; emulator -gpu host -accel on -no-snapshot -no-boot-anim -no-metrics (sound on).
+APK encore-release-2026-10-12-h-emu.apk (md5 fa9140ac6cda0bb24b00d81a06fb3429). Page: preset tv, 30 fps cap, 800x450 drawn.
+
+
+==== bill probe, LP_NUM_THREADS unset (no recorder) ====
+10-12 13:20:58.275  4206  4232 I ReactNativeJS: [crowd] audio running
+10-12 13:20:59.798  4206  4232 I ReactNativeJS: [crowd] view 962×541 css · dpr 1.3312500715255737 · inner 1920×1081 · canvas 962×541 css, 800×450 drawn
+10-12 13:20:59.803  4206  4232 I ReactNativeJS: [crowd] 97 fps · 10.3 ms · 44 calls · 77499 tris
+10-12 13:21:01.817  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:21:03.843  4206  4232 I ReactNativeJS: [crowd] 29 fps · 34.1 ms · 44 calls · 77499 tris
+10-12 13:21:05.849  4206  4232 I ReactNativeJS: [crowd] 29 fps · 34.6 ms · 44 calls · 77499 tris
+10-12 13:21:07.887  4206  4232 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:21:09.943  4206  4232 I ReactNativeJS: [crowd] 29 fps · 34.5 ms · 44 calls · 77499 tris
+10-12 13:21:11.937  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.6 ms · 44 calls · 77499 tris
+10-12 13:21:13.942  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 44 calls · 77499 tris
+10-12 13:21:15.973  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.3 ms · 44 calls · 77499 tris
+10-12 13:21:17.976  4206  4232 I ReactNativeJS: [crowd] 29 fps · 34.0 ms · 44 calls · 77499 tris
+10-12 13:21:19.998  4206  4232 I ReactNativeJS: [crowd] 31 fps · 32.5 ms · 44 calls · 77499 tris
+10-12 13:21:22.009  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 44 calls · 77499 tris
+10-12 13:21:24.034  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:21:26.036  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:21:28.067  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:21:30.080  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.6 ms · 44 calls · 77499 tris
+10-12 13:21:32.102  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:21:34.112  4206  4232 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:21:36.114  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:21:38.148  4206  4232 I ReactNativeJS: [crowd] 29 fps · 34.5 ms · 44 calls · 77499 tris
+10-12 13:21:40.158  4206  4232 I ReactNativeJS: [crowd] 30 fps · 33.8 ms · 44 calls · 77499 tris
+10-12 13:21:42.199  4206  4232 I ReactNativeJS: [crowd] 28 fps · 35.9 ms · 44 calls · 77499 tris
+10-12 13:21:44.215  4206  4232 I ReactNativeJS: [crowd] 29 fps · 34.9 ms · 44 calls · 77499 tris
+10-12 13:21:46.240  4206  4232 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:21:48.271  4206  4232 I ReactNativeJS: [crowd] 28 fps · 35.4 ms · 44 calls · 77499 tris
+10-12 13:21:50.303  4206  4232 I ReactNativeJS: [crowd] 27 fps · 36.9 ms · 44 calls · 77499 tris
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+  34320 ubuntu    20   0 6492292   4.0g 212484 S 554.5  25.9   7:39.17 qemu-system-x86
+  34427 ubuntu    20   0 1580204  22116  18552 S   9.1   0.1   0:00.69 netsimd
+
+
+==== bill probe, LP_NUM_THREADS=8 (no recorder) ====
+10-12 13:22:26.964  1821  1987 I ReactNativeJS: [crowd] audio running
+10-12 13:22:28.721  1821  1987 I ReactNativeJS: [crowd] view 962×541 css · dpr 1.3312500715255737 · inner 1920×1081 · canvas 962×541 css, 800×450 drawn
+10-12 13:22:28.730  1821  1987 I ReactNativeJS: [crowd] 117 fps · 8.6 ms · 44 calls · 77499 tris
+10-12 13:22:30.771  1821  1987 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:22:32.795  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.8 ms · 44 calls · 77499 tris
+10-12 13:22:34.831  1821  1987 I ReactNativeJS: [crowd] 28 fps · 36.3 ms · 44 calls · 77499 tris
+10-12 13:22:36.860  1821  1987 I ReactNativeJS: [crowd] 29 fps · 34.1 ms · 44 calls · 77499 tris
+10-12 13:22:38.890  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.6 ms · 44 calls · 77499 tris
+10-12 13:22:40.920  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.3 ms · 44 calls · 77499 tris
+10-12 13:22:42.952  1821  1987 I ReactNativeJS: [crowd] 30 fps · 32.9 ms · 44 calls · 77499 tris
+10-12 13:22:44.969  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:22:46.985  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.9 ms · 44 calls · 77499 tris
+10-12 13:22:49.004  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.5 ms · 44 calls · 77499 tris
+10-12 13:22:51.005  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:22:53.020  1821  1987 I ReactNativeJS: [crowd] 29 fps · 34.9 ms · 44 calls · 77499 tris
+10-12 13:22:55.061  1821  1987 I ReactNativeJS: [crowd] 29 fps · 34.2 ms · 44 calls · 77499 tris
+10-12 13:22:57.057  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.9 ms · 44 calls · 77499 tris
+10-12 13:22:59.087  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:23:01.092  1821  1987 I ReactNativeJS: [crowd] 29 fps · 34.5 ms · 44 calls · 77499 tris
+10-12 13:23:03.128  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.8 ms · 44 calls · 77499 tris
+10-12 13:23:05.152  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.3 ms · 44 calls · 77499 tris
+10-12 13:23:07.173  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.0 ms · 44 calls · 77499 tris
+10-12 13:23:09.206  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.1 ms · 44 calls · 77499 tris
+10-12 13:23:11.201  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.1 ms · 44 calls · 77499 tris
+10-12 13:23:13.234  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:23:15.252  1821  1987 I ReactNativeJS: [crowd] 29 fps · 34.2 ms · 44 calls · 77499 tris
+10-12 13:23:17.265  1821  1987 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+probe-default: 24 reports (first 2 dropped), mean 29.3 fps, 34.2 ms
+probe-lp8: 23 reports (first 2 dropped), mean 29.7 fps, 33.7 ms
+
+
+==== scripted stand-up set (words on), LP_NUM_THREADS=8, x11grab + pulse recording running: timeline ====
+13:24:31.566 launch
+13:24:40.653 deep link
+13:24:52.731 room MPGM
+13:24:52.744 recorder started
+13:24:55.747 phone joins
+13:25:05.829 OK
+13:26:06.419 mid-set top
+13:28:49.233 phone finished
+13:29:20.243 cut sheet samples
+13:29:23.254 recorder stopped
+13:29:23.271 done
+
+
+==== phone ====
+13:25:05.886 [tv] arm standup at club, 300 s, persona sarcastic
+13:25:05.936 [tv] hush for 1.5 s
+13:25:06.942 [tv] hush for 1.5 s
+13:25:07.380 [phone] live: "Rent, Parents and Other Utilities", 43 lines, ends at 221.1 s of a 300 s slot
+13:25:07.960 [tv] hush for 1.5 s
+13:25:08.951 [tv] hush for 1.5 s
+13:25:09.953 [tv] hush for 1.5 s
+13:25:10.943 [tv] hush for 1.5 s
+13:25:11.944 [tv] hush for 1.5 s
+13:25:22.564 [tv] hush for 3.3 s
+13:25:24.939 [tv] hush for 5.8 s
+13:25:28.421 [phone] tag    bit 1 · This winter, I'm hoping for global warming.
+13:25:28.740 [tv] hush for 3.8 s
+13:25:39.008 [tv] hush for 3.3 s
+13:25:48.010 [tv] hush for 3.3 s
+13:25:53.352 [tv] hush for 3.8 s
+13:26:03.327 [tv] hush for 3.8 s
+13:26:08.229 [tv] hush for 3.8 s
+13:26:19.949 [tv] hush for 7.0 s
+13:26:54.670 [tv] hush for 3.8 s
+13:27:12.918 [tv] hush for 3.3 s
+13:27:16.709 [tv] hush for 3.3 s
+13:27:22.722 [tv] hush for 3.8 s
+13:27:28.324 [tv] hush for 3.3 s
+13:27:41.699 [tv] hush for 3.8 s
+13:27:46.275 [tv] hush for 3.8 s
+13:27:57.274 [tv] hush for 3.3 s
+13:28:02.070 [tv] hush for 3.8 s
+13:28:20.807 [tv] hush for 3.8 s
+13:28:30.390 [tv] hush for 3.3 s
+13:28:34.622 [tv] hush for 3.8 s
+13:28:42.634 [tv] hush for 5.8 s
+13:28:45.470 [tv] hush for 3.8 s
+13:28:48.479 [phone] finished
+
+
+==== every [crowd] line (bill 13:24:41-13:25:06, set 13:25:06-13:28:49, cut sheet after) ====
+10-12 13:24:34.036  2108  2348 I ReactNativeJS: [crowd] audio running
+10-12 13:24:35.326  2108  2348 I ReactNativeJS: [crowd] view 962×541 css · dpr 1.3312500715255737 · inner 1920×1081 · canvas 962×541 css, 800×450 drawn
+10-12 13:24:35.337  2108  2348 I ReactNativeJS: [crowd] 100 fps · 10.0 ms · 44 calls · 77499 tris
+10-12 13:24:37.363  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.1 ms · 44 calls · 77499 tris
+10-12 13:24:39.368  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.8 ms · 44 calls · 77499 tris
+10-12 13:24:41.407  2108  2348 I ReactNativeJS: [crowd] 26 fps · 38.9 ms · 44 calls · 77499 tris
+10-12 13:24:43.429  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.2 ms · 44 calls · 77499 tris
+10-12 13:24:45.444  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.6 ms · 44 calls · 77499 tris
+10-12 13:24:47.469  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.2 ms · 44 calls · 77499 tris
+10-12 13:24:49.493  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.8 ms · 44 calls · 77499 tris
+10-12 13:24:51.494  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.4 ms · 44 calls · 77499 tris
+10-12 13:24:53.522  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.8 ms · 44 calls · 77499 tris
+10-12 13:24:55.527  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.4 ms · 44 calls · 77499 tris
+10-12 13:24:57.527  2108  2348 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:24:59.535  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.9 ms · 44 calls · 77499 tris
+10-12 13:25:01.554  2108  2348 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:25:03.562  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.4 ms · 44 calls · 77499 tris
+10-12 13:25:05.558  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.9 ms · 44 calls · 77499 tris
+10-12 13:25:07.585  2108  2348 I ReactNativeJS: [crowd] 27 fps · 37.3 ms · 45 calls · 77513 tris
+10-12 13:25:09.605  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.7 ms · 45 calls · 77513 tris
+10-12 13:25:11.637  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.8 ms · 45 calls · 77513 tris
+10-12 13:25:13.639  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.7 ms · 45 calls · 77513 tris
+10-12 13:25:15.640  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.6 ms · 45 calls · 77513 tris
+10-12 13:25:17.670  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.6 ms · 45 calls · 77513 tris
+10-12 13:25:19.687  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.8 ms · 45 calls · 77513 tris
+10-12 13:25:21.691  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.1 ms · 45 calls · 77513 tris
+10-12 13:25:23.705  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:25:25.716  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.8 ms · 44 calls · 77499 tris
+10-12 13:25:27.724  2108  2348 I ReactNativeJS: [crowd] 30 fps · 32.8 ms · 44 calls · 77499 tris
+10-12 13:25:29.737  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.3 ms · 44 calls · 77499 tris
+10-12 13:25:31.781  2108  2348 I ReactNativeJS: [crowd] 25 fps · 39.5 ms · 44 calls · 77499 tris
+10-12 13:25:33.790  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.5 ms · 44 calls · 77499 tris
+10-12 13:25:35.830  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.5 ms · 44 calls · 77499 tris
+10-12 13:25:37.825  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.6 ms · 44 calls · 77499 tris
+10-12 13:25:39.837  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.4 ms · 45 calls · 77513 tris
+10-12 13:25:41.841  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.4 ms · 45 calls · 77513 tris
+10-12 13:25:43.854  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.2 ms · 45 calls · 77513 tris
+10-12 13:25:45.914  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.8 ms · 45 calls · 77513 tris
+10-12 13:25:47.995  2108  2348 I ReactNativeJS: [crowd] 26 fps · 38.1 ms · 44 calls · 77499 tris
+10-12 13:25:49.964  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.3 ms · 44 calls · 77499 tris
+10-12 13:25:51.974  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.8 ms · 44 calls · 77499 tris
+10-12 13:25:53.995  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.6 ms · 45 calls · 77513 tris
+10-12 13:25:56.044  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.4 ms · 44 calls · 77499 tris
+10-12 13:25:58.013  2108  2348 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 45 calls · 77513 tris
+10-12 13:26:00.095  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.3 ms · 45 calls · 77513 tris
+10-12 13:26:02.054  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.2 ms · 45 calls · 77513 tris
+10-12 13:26:04.089  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:26:06.112  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.5 ms · 45 calls · 77513 tris
+10-12 13:26:08.189  2108  2348 I ReactNativeJS: [crowd] 26 fps · 37.9 ms · 44 calls · 77499 tris
+10-12 13:26:10.138  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.4 ms · 44 calls · 77499 tris
+10-12 13:26:12.192  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.5 ms · 44 calls · 77499 tris
+10-12 13:26:14.174  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:26:16.200  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.2 ms · 44 calls · 77499 tris
+10-12 13:26:18.197  2108  2348 I ReactNativeJS: [crowd] 27 fps · 37.4 ms · 44 calls · 77499 tris
+10-12 13:26:20.291  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.3 ms · 44 calls · 77499 tris
+10-12 13:26:22.223  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:26:24.258  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:26:26.291  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.1 ms · 44 calls · 77499 tris
+10-12 13:26:28.287  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.1 ms · 44 calls · 77499 tris
+10-12 13:26:30.328  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.7 ms · 44 calls · 77499 tris
+10-12 13:26:32.309  2108  2348 I ReactNativeJS: [crowd] 26 fps · 38.1 ms · 44 calls · 77499 tris
+10-12 13:26:34.337  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:26:36.434  2108  2348 I ReactNativeJS: [crowd] 26 fps · 38.1 ms · 44 calls · 77499 tris
+10-12 13:26:38.412  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.7 ms · 44 calls · 77499 tris
+10-12 13:26:40.428  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.9 ms · 44 calls · 77499 tris
+10-12 13:26:42.441  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.2 ms · 44 calls · 77499 tris
+10-12 13:26:44.453  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.4 ms · 44 calls · 77499 tris
+10-12 13:26:46.473  2108  2348 I ReactNativeJS: [crowd] 27 fps · 37.4 ms · 44 calls · 77499 tris
+10-12 13:26:48.487  2108  2348 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:26:50.521  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.0 ms · 44 calls · 77499 tris
+10-12 13:26:52.544  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.1 ms · 44 calls · 77499 tris
+10-12 13:26:54.607  2108  2348 I ReactNativeJS: [crowd] 26 fps · 37.8 ms · 44 calls · 77499 tris
+10-12 13:26:56.576  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:26:58.608  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 44 calls · 77499 tris
+10-12 13:27:00.676  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.7 ms · 45 calls · 77513 tris
+10-12 13:27:02.657  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.3 ms · 45 calls · 77513 tris
+10-12 13:27:04.647  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.6 ms · 45 calls · 77513 tris
+10-12 13:27:06.668  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.4 ms · 45 calls · 77513 tris
+10-12 13:27:08.668  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.5 ms · 45 calls · 77513 tris
+10-12 13:27:10.676  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.1 ms · 45 calls · 77513 tris
+10-12 13:27:12.746  2108  2348 I ReactNativeJS: [crowd] 25 fps · 39.4 ms · 45 calls · 77513 tris
+10-12 13:27:14.720  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.6 ms · 45 calls · 77513 tris
+10-12 13:27:16.774  2108  2348 I ReactNativeJS: [crowd] 26 fps · 38.1 ms · 45 calls · 77513 tris
+10-12 13:27:18.725  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 45 calls · 77513 tris
+10-12 13:27:20.741  2108  2348 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 45 calls · 77513 tris
+10-12 13:27:22.812  2108  2348 I ReactNativeJS: [crowd] 24 fps · 41.2 ms · 44 calls · 77499 tris
+10-12 13:27:24.786  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.0 ms · 44 calls · 77499 tris
+10-12 13:27:26.818  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:27:28.819  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.9 ms · 45 calls · 77513 tris
+10-12 13:27:30.873  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.9 ms · 45 calls · 77513 tris
+10-12 13:27:32.852  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 45 calls · 77513 tris
+10-12 13:27:34.888  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 45 calls · 77513 tris
+10-12 13:27:36.888  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.4 ms · 45 calls · 77513 tris
+10-12 13:27:39.021  2108  2348 I ReactNativeJS: [crowd] 26 fps · 38.3 ms · 45 calls · 77513 tris
+10-12 13:27:40.907  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 45 calls · 77513 tris
+10-12 13:27:42.921  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.2 ms · 45 calls · 77513 tris
+10-12 13:27:44.947  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.8 ms · 45 calls · 77513 tris
+10-12 13:27:46.974  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.5 ms · 44 calls · 77499 tris
+10-12 13:27:49.005  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:27:51.022  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.8 ms · 44 calls · 77499 tris
+10-12 13:27:53.063  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:27:55.086  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.6 ms · 44 calls · 77499 tris
+10-12 13:27:57.243  2108  2348 I ReactNativeJS: [crowd] 24 fps · 42.3 ms · 44 calls · 77499 tris
+10-12 13:27:59.222  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.4 ms · 44 calls · 77499 tris
+10-12 13:28:01.177  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.9 ms · 44 calls · 77499 tris
+10-12 13:28:03.186  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.1 ms · 44 calls · 77499 tris
+10-12 13:28:05.190  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.4 ms · 44 calls · 77499 tris
+10-12 13:28:07.203  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 44 calls · 77499 tris
+10-12 13:28:09.219  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.0 ms · 44 calls · 77499 tris
+10-12 13:28:11.226  2108  2348 I ReactNativeJS: [crowd] 25 fps · 39.5 ms · 44 calls · 77499 tris
+10-12 13:28:13.240  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.5 ms · 44 calls · 77499 tris
+10-12 13:28:15.256  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.8 ms · 44 calls · 77499 tris
+10-12 13:28:17.270  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.7 ms · 44 calls · 77499 tris
+10-12 13:28:19.285  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.2 ms · 44 calls · 77499 tris
+10-12 13:28:21.313  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.9 ms · 44 calls · 77499 tris
+10-12 13:28:23.339  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.6 ms · 44 calls · 77499 tris
+10-12 13:28:25.356  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.8 ms · 45 calls · 77513 tris
+10-12 13:28:27.356  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.3 ms · 45 calls · 77513 tris
+10-12 13:28:29.367  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.2 ms · 45 calls · 77513 tris
+10-12 13:28:31.368  2108  2348 I ReactNativeJS: [crowd] 30 fps · 33.8 ms · 44 calls · 77499 tris
+10-12 13:28:33.396  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:28:35.408  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:28:37.423  2108  2348 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:28:39.661  2108  2348 I ReactNativeJS: [crowd] 27 fps · 37.0 ms · 45 calls · 77513 tris
+10-12 13:28:41.446  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.2 ms · 45 calls · 77513 tris
+10-12 13:28:43.478  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.1 ms · 44 calls · 77499 tris
+10-12 13:28:45.552  2108  2348 I ReactNativeJS: [crowd] 25 fps · 40.6 ms · 44 calls · 77499 tris
+10-12 13:28:47.507  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.3 ms · 44 calls · 77499 tris
+10-12 13:28:49.521  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.4 ms · 44 calls · 77499 tris
+10-12 13:28:51.547  2108  2348 I ReactNativeJS: [crowd] 26 fps · 38.6 ms · 44 calls · 77499 tris
+10-12 13:28:53.570  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:28:55.591  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.6 ms · 44 calls · 77499 tris
+10-12 13:28:57.601  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.7 ms · 44 calls · 77499 tris
+10-12 13:28:59.612  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.5 ms · 44 calls · 77499 tris
+10-12 13:29:01.622  2108  2348 I ReactNativeJS: [crowd] 27 fps · 36.4 ms · 44 calls · 77499 tris
+10-12 13:29:03.674  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.7 ms · 44 calls · 77499 tris
+10-12 13:29:05.659  2108  2348 I ReactNativeJS: [crowd] 28 fps · 35.3 ms · 44 calls · 77499 tris
+10-12 13:29:07.705  2108  2348 I ReactNativeJS: [crowd] 27 fps · 37.1 ms · 44 calls · 77499 tris
+10-12 13:29:09.737  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.2 ms · 44 calls · 77499 tris
+10-12 13:29:11.775  2108  2348 I ReactNativeJS: [crowd] 28 fps · 36.1 ms · 44 calls · 77499 tris
+10-12 13:29:13.792  2108  2348 I ReactNativeJS: [crowd] 29 fps · 35.0 ms · 44 calls · 77499 tris
+10-12 13:29:15.808  2108  2348 I ReactNativeJS: [crowd] 27 fps · 37.4 ms · 44 calls · 77499 tris
+10-12 13:29:17.819  2108  2348 I ReactNativeJS: [crowd] 29 fps · 34.5 ms · 44 calls · 77499 tris
+10-12 13:29:19.824  2108  2348 I ReactNativeJS: [crowd] 27 fps · 37.5 ms · 44 calls · 77499 tris
+10-12 13:29:21.851  2108  2348 I ReactNativeJS: [crowd] 31 fps · 32.8 ms · 44 calls · 77499 tris
+all: 141 reports, mean 28.3 fps (min 24, max 31), 35.4 ms
+set only: 110 reports, mean 28.4 fps (min 24, max 30), 35.3 ms
+
+
+==== gfxinfo, the set (reset at OK, read when the phone finished) ====
+Applications Graphics Acceleration Info:
+Uptime: 272683 Realtime: 272683
+
+** Graphics info for pid 2108 [com.strumble.tv] **
+
+Stats since: 49242413365ns
+Total frames rendered: 6757
+Janky frames: 5555 (82.21%)
+Janky frames (legacy): 6687 (98.96%)
+50th percentile: 42ms
+90th percentile: 61ms
+95th percentile: 69ms
+99th percentile: 81ms
+Number Missed Vsync: 379
+Number High input latency: 2430
+Number Slow UI thread: 780
+Number Slow bitmap uploads: 6
+Number Slow issue draw commands: 5555
+Number Frame deadline missed: 5555
+Number Frame deadline missed (legacy): 5528
+HISTOGRAM: 5ms=0 6ms=0 7ms=0 8ms=0 9ms=0 10ms=0 11ms=0 12ms=0 13ms=0 14ms=1 15ms=0 16ms=3 17ms=4 18ms=3 19ms=12 20ms=20 21ms=24 22ms=25 23ms=21 24ms=28 25ms=41 26ms=57 27ms=53 28ms=47 29ms=44 30ms=60 31ms=70 32ms=447 34ms=242 36ms=312 38ms=647 40ms=1182 42ms=790 44ms=465 46ms=312 48ms=536 53ms=292 57ms=238 61ms=195 65ms=200 69ms=171 73ms=71 77ms=40 81ms=51 85ms=21 89ms=15 93ms=9 97ms=4 101ms=3 105ms=1 109ms=0 113ms=0 117ms=0 121ms=0 125ms=0 129ms=0 133ms=0 150ms=0 200ms=0 250ms=0 300ms=0 350ms=0 400ms=0 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=0 750ms=0 800ms=0 850ms=0 900ms=0 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 12ms
+90th gpu percentile: 25ms
+95th gpu percentile: 4950ms
+99th gpu percentile: 4950ms
+GPU HISTOGRAM: 1ms=0 2ms=0 3ms=0 4ms=31 5ms=293 6ms=280 7ms=310 8ms=425 9ms=578 10ms=652 11ms=644 12ms=509 13ms=343 14ms=209 15ms=162 16ms=158 17ms=162 18ms=172 19ms=184 20ms=157 21ms=166 22ms=187 23ms=155 24ms=178 25ms=156 4950ms=646
+
+Pipeline=Skia (OpenGL)
+Memory policy:
+  Max surface area: 2073600
+  Max resource usage: 99.53MB (x48)
+  Background retention: 50% (altUiHidden = true)
+  GPU Context timeout: 10
+Contexts: 1 (stopped = 0)
+CPU Caches:
+  Glyph Cache: 776.46 KB (1 entry)
+  Glyph Count: 48 
+Total CPU memory usage:
+  795096 bytes, 776.46 KB (0.00 bytes is purgeable)
+GPU Caches:
+  Other:
+    Other: 14.61 KB (1 entry)
+  Image:
+    Texture: 2.00 KB (2 entries)
+  Scratch:
+    RenderTarget: 7.50 MB (2 entries)
+    Buffer Object: 176.00 KB (5 entries)
+    Texture: 2.00 MB (1 entry)
+Total GPU memory usage:
+  10158708 bytes, 9.69 MB (3.88 MB is purgeable)
+
+Profile data in ms:
+
+	com.strumble.tv/com.strumble.tv.MainActivity/android.view.ViewRootImpl@afcc66a (visibility=0)
+View hierarchy:
+
+  com.strumble.tv/com.strumble.tv.MainActivity/android.view.ViewRootImpl@afcc66a
+  120 views, 140.37 kB of render nodes
+
+
+Total ViewRootImpl   : 1
+Total attached Views : 120
+Total RenderNode     : 140.37 kB (used) / 317.09 kB (capacity)
+
+
+
+==== gfxinfo, cut sheet (30 s) ====
+Applications Graphics Acceleration Info:
+Uptime: 302821 Realtime: 302821
+
+** Graphics info for pid 2108 [com.strumble.tv] **
+
+Stats since: 272771668215ns
+Total frames rendered: 845
+Janky frames: 741 (87.69%)
+Janky frames (legacy): 845 (100.00%)
+50th percentile: 44ms
+90th percentile: 65ms
+95th percentile: 69ms
+99th percentile: 81ms
+Number Missed Vsync: 14
+Number High input latency: 208
+Number Slow UI thread: 124
+Number Slow bitmap uploads: 0
+Number Slow issue draw commands: 741
+Number Frame deadline missed: 741
+Number Frame deadline missed (legacy): 741
+HISTOGRAM: 5ms=0 6ms=0 7ms=0 8ms=0 9ms=0 10ms=0 11ms=0 12ms=0 13ms=0 14ms=0 15ms=0 16ms=0 17ms=1 18ms=0 19ms=0 20ms=0 21ms=1 22ms=3 23ms=4 24ms=4 25ms=7 26ms=2 27ms=3 28ms=3 29ms=8 30ms=8 31ms=4 32ms=31 34ms=22 36ms=46 38ms=87 40ms=84 42ms=62 44ms=57 46ms=33 48ms=124 53ms=63 57ms=60 61ms=39 65ms=38 69ms=29 73ms=9 77ms=3 81ms=8 85ms=1 89ms=0 93ms=0 97ms=0 101ms=0 105ms=0 109ms=0 113ms=0 117ms=0 121ms=0 125ms=0 129ms=0 133ms=1 150ms=0 200ms=0 250ms=0 300ms=0 350ms=0 400ms=0 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=0 750ms=0 800ms=0 850ms=0 900ms=0 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 15ms
+90th gpu percentile: 25ms
+95th gpu percentile: 4950ms
+99th gpu percentile: 4950ms
+GPU HISTOGRAM: 1ms=0 2ms=0 3ms=0 4ms=1 5ms=3 6ms=12 7ms=51 8ms=71 9ms=66 10ms=56 11ms=59 12ms=37 13ms=36 14ms=30 15ms=19 16ms=36 17ms=30 18ms=39 19ms=35 20ms=37 21ms=33 22ms=34 23ms=32 24ms=31 25ms=25 4950ms=72
+
+Pipeline=Skia (OpenGL)
+Memory policy:
+  Max surface area: 2073600
+  Max resource usage: 99.53MB (x48)
+  Background retention: 50% (altUiHidden = true)
+  GPU Context timeout: 10
+Contexts: 1 (stopped = 0)
+CPU Caches:
+  Glyph Cache: 874.95 KB (1 entry)
+  Glyph Count: 65 
+Total CPU memory usage:
+  895951 bytes, 874.95 KB (0.00 bytes is purgeable)
+GPU Caches:
+  Other:
+    Other: 43.75 KB (1 entry)
+  Image:
+    Texture: 5.28 MB (26 entries)
+  Scratch:
+    RenderTarget: 7.50 MB (2 entries)
+    Buffer Object: 206.00 KB (6 entries)
+    Texture: 2.00 MB (1 entry)
+Total GPU memory usage:
+  15748868 bytes, 15.02 MB (3.88 MB is purgeable)
+
+Profile data in ms:
+
+	com.strumble.tv/com.strumble.tv.MainActivity/android.view.ViewRootImpl@afcc66a (visibility=0)
+View hierarchy:
+
+  com.strumble.tv/com.strumble.tv.MainActivity/android.view.ViewRootImpl@afcc66a
+  299 views, 496.60 kB of render nodes
+
+
+Total ViewRootImpl   : 1
+Total attached Views : 299
+Total RenderNode     : 496.60 kB (used) / 1823.78 kB (capacity)
+
+
+
+==== host top and guest top, 60 s into the set ====
+top - 13:26:06 up  1:43,  2 users,  load average: 9.11, 5.43, 2.51
+Tasks: 228 total,   1 running, 227 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 61.0 us, 19.0 sy,  0.0 ni, 20.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st 
+MiB Mem :  15700.2 total,   4311.2 free,   4701.2 used,   7060.1 buff/cache     
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.  10999.0 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+  35543 ubuntu    20   0 6299616   3.1g 211080 S 560.0  20.3   9:33.19 qemu-system-x86
+  35838 ubuntu    20   0 1098848 100852  55448 S  30.0   0.6   0:22.87 ffmpeg
+  34296 ubuntu    20   0  234332  94340  69168 S  10.0   0.6   0:06.50 Xvfb
+  34301 ubuntu    20   0  683120   9060   7944 S  10.0   0.1   0:13.50 pulseaudio
+      1 root      20   0   22452  13808   9636 S   0.0   0.1   0:02.29 systemd
+      2 root      20   0       0      0      0 S   0.0   0.0   0:00.00 kthreadd
+      3 root      20   0       0      0      0 S   0.0   0.0   0:00.00 pool_workqueue_release
+Tasks: 299 total,   2 running, 297 sleeping,   0 stopped,   0 zombie
+  Mem:  3050212K total,  2097096K used,   953116K free,    18536K buffers
+ Swap:  2287652K total,    88576K used,  2199076K free,  1120872K cached
+400%cpu  35%user   0%nice 150%sys 142%idle   0%iow   8%irq   0%sirq  65%host
+  PID USER         PR  NI VIRT  RES  SHR S[%CPU] %MEM     TIME+ ARGS
+ 2108 u0_a122      10 -10 1.4G 277M 184M S  126   9.2   1:48.98 com.strumble.tv
+  382 system       -3 -10  58M  28M  14M R 30.7   0.9   0:30.03 android.hardware.graphics.composer3-service.ranchu
+ 2503 u0_i9000     10 -10 1.4G 238M 107M S 19.2   7.9   0:18.35 com.google.android.webview:sandboxed_process0:org.chromium.content.app.Sand
+ 2980 shell        20   0  18M 5.0M 4.3M R  7.6   0.1   0:00.02 top -b -n 1 -m 8
+  399 system       -3  -8  90M  37M  24M S  7.6   1.2   0:04.71 surfaceflinger
+  343 audioserver  20   0  46M  14M  12M S  3.8   0.4   0:01.27 android.hardware.audio.service
+ 2822 u0_a85       20   0 1.3G 129M  86M S  0.0   4.3   0:00.32 com.android.vending:background
+ 2547 u0_a92       20   0 1.2G  88M  51M S  0.0   2.9   0:00.03 com.google.android.webview:webview_service
+
+
+==== meminfo, cut sheet ====
+  Native Heap    43164    43120        0        0    45592    68120    46122    12999
+           Java Heap:     9696                          37176
+         Native Heap:    43120                          45592
+           TOTAL PSS:   164195            TOTAL RSS:   315444      TOTAL SWAP (KB):        0
+
+
+==== the recording's real frame rate (realfps.py: frames that changed, mpdecimate hi=256 lo=64 frac=0.1) ====
+captured frames: 8021; changed frames: 7544 over 267.4 s
+bill          0.0-  12.5 s:  25.8 new frames/s; longest hold   67 ms; holds over 100 ms: 0; median gap 33 ms
+intro        14.0-  20.0 s:  26.2 new frames/s; longest hold   67 ms; holds over 100 ms: 0; median gap 33 ms
+set          20.0- 236.0 s:  28.9 new frames/s; longest hold  100 ms; holds over 100 ms: 1; median gap 33 ms
+cutsheet    238.0- 267.0 s:  24.8 new frames/s; longest hold   67 ms; holds over 100 ms: 0; median gap 33 ms
+sample60      5.0-  65.0 s:  27.7 new frames/s; longest hold   67 ms; holds over 100 ms: 0; median gap 33 ms
+
+
+==== the 60 s sample ====
+stream|codec_name=h264|width=1280|height=720|r_frame_rate=30/1
+stream|codec_name=aac|r_frame_rate=0/0
+format|duration=60.033333|size=10914357|bit_rate=1454439
+sample = recording 5-65 s: bill (phone joins), OK at 13.1 s, intro card, live from ~15 s; laugh cues in the sample (recording s):
+  29.8 s  13:25:22.564
+  32.2 s  13:25:24.939
+  36 s  13:25:28.740
+  46.3 s  13:25:39.008
+  55.3 s  13:25:48.010
+  60.6 s  13:25:53.352
+
+
+==== laugh level against the room tone (prepost.py), whole set ====
+23 cues: change median +1.9 dB, min -1.5, max +4.4; louder by 3 dB or more: 8

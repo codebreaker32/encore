@@ -1,0 +1,247 @@
+{
+ "crowd3d-v6-pre-arena-listen": {
+  "breakdown": {
+   "front": 30822,
+   "inst": {
+    "stand-rail-xfar:Female_Adult_17": 2300,
+    "stand-rail-xfar:Female_Adult_02": 1412,
+    "stand-rail-xfar:Male_Adult_06": 920,
+    "stand-rail-xfar:Male_Adult_04": 1232,
+    "stand-rail-xfar:Female_Adult_04": 3384,
+    "stand-rail-xfar:Male_Adult_12": 555,
+    "stand-down-xfar:Male_Adult_17": 2688,
+    "stand-down-xfar:Female_Adult_12": 4961,
+    "stand-down-xfar:Male_Adult_10": 2277,
+    "stand-down-xfar:Male_Adult_12": 1850,
+    "stand-down-xfar:Female_Adult_02": 2824,
+    "stand-down-xfar:Male_Adult_06": 2070
+   },
+   "other": 15529
+  },
+  "venue": "arena",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 38,
+  "triangles": 72824,
+  "front": 6,
+  "mid": 0,
+  "back": 84,
+  "sprites": 7173,
+  "shot": "wide",
+  "cpuMs": 0.3220000000186265,
+  "texMB": 22.254109700520836,
+  "dlMB": 3.205965042114258,
+  "programs": 14,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Male_Adult_17",
+   "Female_Adult_12",
+   "Male_Adult_07",
+   "Female_Adult_03",
+   "Male_Adult_10"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1784
+ },
+ "crowd3d-v6-pre-arena-laugh": {
+  "breakdown": {
+   "front": 30822,
+   "inst": {
+    "stand-rail-xfar:Female_Adult_17": 2300,
+    "stand-rail-xfar:Female_Adult_02": 1412,
+    "stand-rail-xfar:Male_Adult_06": 920,
+    "stand-rail-xfar:Male_Adult_04": 1232,
+    "stand-rail-xfar:Female_Adult_04": 3384,
+    "stand-rail-xfar:Male_Adult_12": 555,
+    "stand-down-xfar:Male_Adult_17": 2688,
+    "stand-down-xfar:Female_Adult_12": 4961,
+    "stand-down-xfar:Male_Adult_10": 2277,
+    "stand-down-xfar:Male_Adult_12": 1850,
+    "stand-down-xfar:Female_Adult_02": 2824,
+    "stand-down-xfar:Male_Adult_06": 2070
+   },
+   "other": 15529
+  },
+  "venue": "arena",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 37,
+  "triangles": 72822,
+  "front": 6,
+  "mid": 0,
+  "back": 84,
+  "sprites": 7173,
+  "shot": "close",
+  "cpuMs": 0.5019000000134111,
+  "texMB": 22.254109700520836,
+  "dlMB": 3.205965042114258,
+  "programs": 14,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Male_Adult_17",
+   "Female_Adult_12",
+   "Male_Adult_07",
+   "Female_Adult_03",
+   "Male_Adult_10"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 2055
+ },
+ "crowd3d-v6-pre-arena-laugh-wide": {
+  "breakdown": {
+   "front": 30822,
+   "inst": {
+    "stand-rail-xfar:Female_Adult_17": 2300,
+    "stand-rail-xfar:Female_Adult_02": 1412,
+    "stand-rail-xfar:Male_Adult_06": 920,
+    "stand-rail-xfar:Male_Adult_04": 1232,
+    "stand-rail-xfar:Female_Adult_04": 3384,
+    "stand-rail-xfar:Male_Adult_12": 555,
+    "stand-down-xfar:Male_Adult_17": 2688,
+    "stand-down-xfar:Female_Adult_12": 4961,
+    "stand-down-xfar:Male_Adult_10": 2277,
+    "stand-down-xfar:Male_Adult_12": 1850,
+    "stand-down-xfar:Female_Adult_02": 2824,
+    "stand-down-xfar:Male_Adult_06": 2070
+   },
+   "other": 15529
+  },
+  "venue": "arena",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 38,
+  "triangles": 72824,
+  "front": 6,
+  "mid": 0,
+  "back": 84,
+  "sprites": 7173,
+  "shot": "wide",
+  "cpuMs": 0.4838999999212102,
+  "texMB": 22.254109700520836,
+  "dlMB": 3.205965042114258,
+  "programs": 14,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Male_Adult_17",
+   "Female_Adult_12",
+   "Male_Adult_07",
+   "Female_Adult_03",
+   "Male_Adult_10"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1812
+ },
+ "crowd3d-v6-pre-arena-preview": {
+  "breakdown": {
+   "front": 30822,
+   "inst": {
+    "stand-rail-xfar:Female_Adult_17": 2300,
+    "stand-rail-xfar:Female_Adult_02": 1412,
+    "stand-rail-xfar:Male_Adult_06": 920,
+    "stand-rail-xfar:Male_Adult_04": 1232,
+    "stand-rail-xfar:Female_Adult_04": 3384,
+    "stand-rail-xfar:Male_Adult_12": 555,
+    "stand-down-xfar:Male_Adult_17": 2688,
+    "stand-down-xfar:Female_Adult_12": 4961,
+    "stand-down-xfar:Male_Adult_10": 2277,
+    "stand-down-xfar:Male_Adult_12": 1850,
+    "stand-down-xfar:Female_Adult_02": 2824,
+    "stand-down-xfar:Male_Adult_06": 2070
+   },
+   "other": 15529
+  },
+  "venue": "arena",
+  "mode": "preview",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 35,
+  "triangles": 67288,
+  "front": 6,
+  "mid": 0,
+  "back": 84,
+  "sprites": 7173,
+  "shot": "wide",
+  "cpuMs": 0.4319999999105931,
+  "texMB": 22.254109700520836,
+  "dlMB": 3.205965042114258,
+  "programs": 14,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Male_Adult_17",
+   "Female_Adult_12",
+   "Male_Adult_07",
+   "Female_Adult_03",
+   "Male_Adult_10"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1638
+ },
+ "crowd3d-v6-pre-arena-after": {
+  "breakdown": {
+   "front": 30822,
+   "inst": {
+    "stand-rail-xfar:Female_Adult_17": 2300,
+    "stand-rail-xfar:Female_Adult_02": 1412,
+    "stand-rail-xfar:Male_Adult_06": 920,
+    "stand-rail-xfar:Male_Adult_04": 1232,
+    "stand-rail-xfar:Female_Adult_04": 3384,
+    "stand-rail-xfar:Male_Adult_12": 555,
+    "stand-down-xfar:Male_Adult_17": 2688,
+    "stand-down-xfar:Female_Adult_12": 4961,
+    "stand-down-xfar:Male_Adult_10": 2277,
+    "stand-down-xfar:Male_Adult_12": 1850,
+    "stand-down-xfar:Female_Adult_02": 2824,
+    "stand-down-xfar:Male_Adult_06": 2070
+   },
+   "other": 15529
+  },
+  "venue": "arena",
+  "mode": "after",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 38,
+  "triangles": 72824,
+  "front": 6,
+  "mid": 0,
+  "back": 84,
+  "sprites": 7173,
+  "shot": "wide",
+  "cpuMs": 0.5257999999644235,
+  "texMB": 22.254109700520836,
+  "dlMB": 3.205965042114258,
+  "programs": 14,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Male_Adult_17",
+   "Female_Adult_12",
+   "Male_Adult_07",
+   "Female_Adult_03",
+   "Male_Adult_10"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1784
+ }
+}

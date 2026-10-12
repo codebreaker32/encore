@@ -1,0 +1,33 @@
+{
+  "act": "poetry",
+  "title": "Monsoon, Mumbai",
+  "wps": 2.1,
+  "bits": [
+    {
+      "name": "night",
+      "lines": [
+        { "role": "line", "text": "The monsoon comes to Mumbai late at night," },
+        { "role": "strong", "text": "and every window keeps a square of light." },
+        { "role": "line", "text": "My mother sets a bucket by the stair," },
+        { "role": "strong", "text": "my father talks to God about a chair." }
+      ]
+    },
+    {
+      "name": "the street",
+      "lines": [
+        { "role": "line", "text": "The silver water sings along the street," },
+        { "role": "strong", "text": "and slips inside the shoes of tired feet." },
+        { "role": "flat", "text": "We do not sleep. We are too busy listening." }
+      ]
+    },
+    {
+      "name": "the turn",
+      "lines": [
+        { "role": "line", "text": "But somewhere in the dark the city turns," },
+        { "role": "strong", "text": "and every child who fell asleep returns." },
+        { "role": "line", "text": "The roof still leaks. My father still says soon." },
+        { "role": "strong", "text": "We sleep beneath the bucket and the moon." }
+      ]
+    }
+  ]
+}

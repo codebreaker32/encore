@@ -1,0 +1,464 @@
+{
+  "version": 1,
+  "houseStandard": 0.55,
+  "personas": {
+    "warm": {
+      "name": "Meera",
+      "blurb": "Wants you to do well and says so; finds the number that proves it."
+    },
+    "sarcastic": {
+      "name": "Vik",
+      "blurb": "Dry as the ice bucket. Mocks the material and the numbers, never the person."
+    },
+    "strict": {
+      "name": "Mr. Rao",
+      "blurb": "Counts the beats and the fillers. Praise is rare and exact."
+    },
+    "deadpan": {
+      "name": "Dev",
+      "blurb": "Reads the numbers in a flat voice and lets them land."
+    }
+  },
+  "acts": [
+    {
+      "id": "standup",
+      "name": "Stand-up",
+      "reaction": {
+        "kind": "laugh",
+        "noun": "laugh",
+        "plural": "laughs",
+        "verb": "laughed"
+      },
+      "unit": "set",
+      "defaultDurationSec": 300,
+      "listensFor": "A beat left after a line, a short line after a longer one, emphasis at the end of the line, no fillers. The room cannot understand a joke; it laughs at timing.",
+      "venues": [
+        {
+          "id": "openmic",
+          "name": "Open Mic",
+          "house": "The Back Room",
+          "blurb": "Thirty people in a pub back room who came for the cheap pints and laugh at anything with a beat. Nobody heckles.",
+          "seats": 30,
+          "threshold": 0.42,
+          "patienceSec": 5,
+          "hecklesAfterDeadBits": 0,
+          "reactionHoldMs": 1800,
+          "plates": {
+            "wide": [
+              "openmic-pub-tables-from-stage-bertelli",
+              "openmic-small-club-crowd-attias"
+            ],
+            "reaction": [
+              "comedy-laughing-seated-group-lewis"
+            ],
+            "finale": [
+              "openmic-pub-guitar-from-stage-bertelli"
+            ]
+          }
+        },
+        {
+          "id": "club",
+          "name": "Comedy Club",
+          "house": "The Basement",
+          "blurb": "A dark room of eighty who paid to be here. Generous to a good setup, silent to a weak tag. Hecklers after two dead bits.",
+          "seats": 80,
+          "threshold": 0.55,
+          "patienceSec": 3.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2000,
+          "plates": {
+            "wide": [
+              "comedy-club-dark-red-quintero",
+              "comedy-club-crowd-hands-quintero"
+            ],
+            "reaction": [
+              "comedy-laughing-crowd-jimenez",
+              "comedy-laughing-faces-bucks"
+            ],
+            "finale": [
+              "comedy-club-neon-crowd-regan-asante"
+            ]
+          }
+        },
+        {
+          "id": "theatre",
+          "name": "Theatre",
+          "house": "The Playhouse",
+          "blurb": "Eight hundred seats and a quiet so complete you can hear a setup fail. They laugh late and only when it is earned.",
+          "seats": 800,
+          "threshold": 0.66,
+          "patienceSec": 2.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2300,
+          "plates": {
+            "wide": [
+              "theatre-red-seats-lit-faces-luhaers",
+              "theatre-attentive-audience-antenna"
+            ],
+            "reaction": [
+              "comedy-improv-bar-audience-lindamarie",
+              "theatre-rows-warm-faces-oquendo"
+            ],
+            "finale": [
+              "theatre-applause-red-seats-vietfotos"
+            ]
+          }
+        },
+        {
+          "id": "arena",
+          "name": "Arena",
+          "house": "The Bowl",
+          "blurb": "Twenty thousand under floodlights who can only hear your timing. Land it clean or the stadium talks among itself.",
+          "seats": 20000,
+          "threshold": 0.75,
+          "patienceSec": 2,
+          "hecklesAfterDeadBits": 1,
+          "reactionHoldMs": 2600,
+          "plates": {
+            "wide": [
+              "arena-packed-blue-crowd-quintero",
+              "arena-crowd-faces-from-stage-whitehead"
+            ],
+            "reaction": [
+              "arena-cheering-faces-green",
+              "arena-festival-hands-up-lakatos"
+            ],
+            "finale": [
+              "arena-hands-raised-orange-vanleur"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "poetry",
+      "name": "Poetry",
+      "reaction": {
+        "kind": "snap",
+        "noun": "snap",
+        "plural": "snaps",
+        "verb": "snapped"
+      },
+      "unit": "piece",
+      "defaultDurationSec": 180,
+      "listensFor": "Held beats, short lines, a steady pace, no fillers. The house stays silent for everything else; it snaps for a beat that holds.",
+      "venues": [
+        {
+          "id": "openmic",
+          "name": "Open Mic",
+          "house": "Tuesday Slam",
+          "blurb": "A slam night of thirty who snap at a held beat and sit still for everything else. Nobody heckles.",
+          "seats": 30,
+          "threshold": 0.42,
+          "patienceSec": 5,
+          "hecklesAfterDeadBits": 0,
+          "reactionHoldMs": 1800,
+          "plates": {
+            "wide": [
+              "poetry-slam-open-mic-audience-aculibrary",
+              "openmic-pub-tables-from-stage-bertelli",
+              "openmic-small-club-crowd-attias"
+            ],
+            "reaction": [
+              "comedy-laughing-seated-group-lewis"
+            ],
+            "finale": [
+              "openmic-pub-guitar-from-stage-bertelli"
+            ]
+          }
+        },
+        {
+          "id": "club",
+          "name": "Club",
+          "house": "The Cellar",
+          "blurb": "Eighty regulars who know the form. Snaps for a short line with a held beat, silence for a rushed one, a heckle after two flat pieces.",
+          "seats": 80,
+          "threshold": 0.55,
+          "patienceSec": 3.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2000,
+          "plates": {
+            "wide": [
+              "comedy-club-dark-red-quintero",
+              "comedy-club-crowd-hands-quintero"
+            ],
+            "reaction": [
+              "comedy-laughing-crowd-jimenez",
+              "comedy-laughing-faces-bucks"
+            ],
+            "finale": [
+              "comedy-club-neon-crowd-regan-asante"
+            ]
+          }
+        },
+        {
+          "id": "theatre",
+          "name": "Theatre",
+          "house": "The Studio",
+          "blurb": "A black-box room of eight hundred that listens hard and snaps only for a beat that truly holds.",
+          "seats": 800,
+          "threshold": 0.66,
+          "patienceSec": 2.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2300,
+          "plates": {
+            "wide": [
+              "theatre-red-seats-lit-faces-luhaers",
+              "theatre-attentive-audience-antenna"
+            ],
+            "reaction": [
+              "comedy-improv-bar-audience-lindamarie",
+              "theatre-rows-warm-faces-oquendo"
+            ],
+            "finale": [
+              "theatre-applause-red-seats-vietfotos"
+            ]
+          }
+        },
+        {
+          "id": "arena",
+          "name": "Arena",
+          "house": "The Dome",
+          "blurb": "Twenty thousand under a dome. Only the longest, cleanest beat reaches the back rows.",
+          "seats": 20000,
+          "threshold": 0.75,
+          "patienceSec": 2,
+          "hecklesAfterDeadBits": 1,
+          "reactionHoldMs": 2600,
+          "plates": {
+            "wide": [
+              "arena-packed-blue-crowd-quintero",
+              "arena-crowd-faces-from-stage-whitehead"
+            ],
+            "reaction": [
+              "arena-cheering-faces-green",
+              "arena-festival-hands-up-lakatos"
+            ],
+            "finale": [
+              "arena-hands-raised-orange-vanleur"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "speech",
+      "name": "Speech",
+      "reaction": {
+        "kind": "applause",
+        "noun": "applause",
+        "plural": "applause",
+        "verb": "applauded"
+      },
+      "unit": "talk",
+      "defaultDurationSec": 240,
+      "listensFor": "Emphasis and a beat at the end of a point, a pace inside 120 to 160 words a minute, no fillers. The room applauds delivery, not the argument.",
+      "venues": [
+        {
+          "id": "openmic",
+          "name": "Open Mic",
+          "house": "The Meeting Hall",
+          "blurb": "Thirty people with coffee who applaud a clear point and forgive an um. Nobody heckles.",
+          "seats": 30,
+          "threshold": 0.42,
+          "patienceSec": 5,
+          "hecklesAfterDeadBits": 0,
+          "reactionHoldMs": 1800,
+          "plates": {
+            "wide": [
+              "openmic-pub-tables-from-stage-bertelli",
+              "openmic-small-club-crowd-attias"
+            ],
+            "reaction": [
+              "comedy-laughing-seated-group-lewis"
+            ],
+            "finale": [
+              "openmic-pub-guitar-from-stage-bertelli"
+            ]
+          }
+        },
+        {
+          "id": "club",
+          "name": "Club",
+          "house": "The Lecture Room",
+          "blurb": "Eighty who came to learn. Applause for emphasis and a beat at the end of a point, silence for a rush, a heckle after two flat points.",
+          "seats": 80,
+          "threshold": 0.55,
+          "patienceSec": 3.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2000,
+          "plates": {
+            "wide": [
+              "comedy-club-dark-red-quintero",
+              "comedy-club-crowd-hands-quintero"
+            ],
+            "reaction": [
+              "comedy-laughing-crowd-jimenez",
+              "comedy-laughing-faces-bucks"
+            ],
+            "finale": [
+              "comedy-club-neon-crowd-regan-asante"
+            ]
+          }
+        },
+        {
+          "id": "theatre",
+          "name": "Theatre",
+          "house": "The Auditorium",
+          "blurb": "Eight hundred in raked seats who applaud a point delivered at pace, inside 120 to 160 words a minute.",
+          "seats": 800,
+          "threshold": 0.66,
+          "patienceSec": 2.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2300,
+          "plates": {
+            "wide": [
+              "theatre-red-seats-lit-faces-luhaers",
+              "theatre-attentive-audience-antenna"
+            ],
+            "reaction": [
+              "comedy-improv-bar-audience-lindamarie",
+              "theatre-rows-warm-faces-oquendo"
+            ],
+            "finale": [
+              "theatre-applause-red-seats-vietfotos"
+            ]
+          }
+        },
+        {
+          "id": "arena",
+          "name": "Arena",
+          "house": "The Keynote",
+          "blurb": "A keynote crowd of twenty thousand. One point, hit hard, with a beat after it, or the room checks its phones.",
+          "seats": 20000,
+          "threshold": 0.75,
+          "patienceSec": 2,
+          "hecklesAfterDeadBits": 1,
+          "reactionHoldMs": 2600,
+          "plates": {
+            "wide": [
+              "arena-packed-blue-crowd-quintero",
+              "arena-crowd-faces-from-stage-whitehead"
+            ],
+            "reaction": [
+              "arena-cheering-faces-green",
+              "arena-festival-hands-up-lakatos"
+            ],
+            "finale": [
+              "arena-hands-raised-orange-vanleur"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "singing",
+      "name": "Singing",
+      "reaction": {
+        "kind": "cheer",
+        "noun": "cheer",
+        "plural": "cheers",
+        "verb": "cheered"
+      },
+      "unit": "song",
+      "defaultDurationSec": 210,
+      "listensFor": "Notes held in tune and clean phrase endings; an off-pitch wobble gets silence. The room cheers the hold, not the song.",
+      "venues": [
+        {
+          "id": "openmic",
+          "name": "Open Mic",
+          "house": "The Pub Mic",
+          "blurb": "Thirty people at tables who cheer any phrase held in tune. Nobody heckles.",
+          "seats": 30,
+          "threshold": 0.42,
+          "patienceSec": 5,
+          "hecklesAfterDeadBits": 0,
+          "reactionHoldMs": 1800,
+          "plates": {
+            "wide": [
+              "openmic-singer-facing-tables-winminaung",
+              "openmic-pub-tables-from-stage-bertelli"
+            ],
+            "reaction": [
+              "comedy-laughing-seated-group-lewis"
+            ],
+            "finale": [
+              "openmic-pub-guitar-from-stage-bertelli"
+            ]
+          }
+        },
+        {
+          "id": "club",
+          "name": "Club",
+          "house": "The Bar Stage",
+          "blurb": "Eighty at a bar stage. Cheers for a note held true, nothing for a wobble, a heckle after two flat phrases.",
+          "seats": 80,
+          "threshold": 0.55,
+          "patienceSec": 3.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2000,
+          "plates": {
+            "wide": [
+              "comedy-club-dark-red-quintero",
+              "comedy-club-crowd-hands-quintero"
+            ],
+            "reaction": [
+              "comedy-laughing-crowd-jimenez",
+              "comedy-laughing-faces-bucks"
+            ],
+            "finale": [
+              "comedy-club-neon-crowd-regan-asante"
+            ]
+          }
+        },
+        {
+          "id": "theatre",
+          "name": "Theatre",
+          "house": "The Concert Hall",
+          "blurb": "A hall of eight hundred that hears every cent. Hold the note and the lights go up.",
+          "seats": 800,
+          "threshold": 0.66,
+          "patienceSec": 2.5,
+          "hecklesAfterDeadBits": 2,
+          "reactionHoldMs": 2300,
+          "plates": {
+            "wide": [
+              "theatre-opera-house-balconies-dumitru",
+              "theatre-balconies-santa-isabel-ribeiro"
+            ],
+            "reaction": [
+              "comedy-improv-bar-audience-lindamarie",
+              "theatre-rows-warm-faces-oquendo"
+            ],
+            "finale": [
+              "theatre-applause-red-seats-vietfotos"
+            ]
+          }
+        },
+        {
+          "id": "arena",
+          "name": "Arena",
+          "house": "The Stadium",
+          "blurb": "A stadium of twenty thousand phone lights. Only a long, true hold raises them.",
+          "seats": 20000,
+          "threshold": 0.75,
+          "patienceSec": 2,
+          "hecklesAfterDeadBits": 1,
+          "reactionHoldMs": 2600,
+          "plates": {
+            "wide": [
+              "singing-phones-faces-warm-quintero",
+              "singing-phone-lights-crowd-blue-quintero"
+            ],
+            "reaction": [
+              "singing-phones-up-blue-qudratovna"
+            ],
+            "finale": [
+              "singing-phone-lights-dark-osezua"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

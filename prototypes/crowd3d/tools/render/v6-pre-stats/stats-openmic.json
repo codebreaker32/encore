@@ -1,0 +1,232 @@
+{
+ "crowd3d-v6-pre-openmic-listen": {
+  "breakdown": {
+   "front": 32533,
+   "inst": {
+    "sil:Female_Adult_13": 3144,
+    "sil:Female_Adult_12": 3780,
+    "sil:Male_Adult_10": 2792,
+    "sil:Male_Adult_07": 3348,
+    "sil:Female_Adult_03": 4324,
+    "sil:Male_Adult_17": 2037,
+    "stand-drink-sil:Male_Adult_10": 1396,
+    "stand-drink-sil:Male_Adult_17": 679,
+    "stand-drink-sil:Female_Adult_12": 945
+   },
+   "other": 3415
+  },
+  "venue": "openmic",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 34,
+  "triangles": 58393,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.4249000000301749,
+  "texMB": 26.86201985677083,
+  "dlMB": 3.3344669342041016,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_17",
+   "Male_Adult_04",
+   "Female_Adult_02",
+   "Male_Adult_12",
+   "Female_Adult_04",
+   "Male_Adult_06"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 2156
+ },
+ "crowd3d-v6-pre-openmic-laugh": {
+  "breakdown": {
+   "front": 32533,
+   "inst": {
+    "sil:Female_Adult_13": 3144,
+    "sil:Female_Adult_12": 3780,
+    "sil:Male_Adult_10": 2792,
+    "sil:Male_Adult_07": 3348,
+    "sil:Female_Adult_03": 4324,
+    "sil:Male_Adult_17": 2037,
+    "stand-drink-sil:Male_Adult_10": 1396,
+    "stand-drink-sil:Male_Adult_17": 679,
+    "stand-drink-sil:Female_Adult_12": 945
+   },
+   "other": 3401
+  },
+  "venue": "openmic",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 33,
+  "triangles": 58379,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "close",
+  "cpuMs": 0.5789999999590218,
+  "texMB": 26.86201985677083,
+  "dlMB": 3.3344669342041016,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_17",
+   "Male_Adult_04",
+   "Female_Adult_02",
+   "Male_Adult_12",
+   "Female_Adult_04",
+   "Male_Adult_06"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1796
+ },
+ "crowd3d-v6-pre-openmic-laugh-wide": {
+  "breakdown": {
+   "front": 32533,
+   "inst": {
+    "sil:Female_Adult_13": 3144,
+    "sil:Female_Adult_12": 3780,
+    "sil:Male_Adult_10": 2792,
+    "sil:Male_Adult_07": 3348,
+    "sil:Female_Adult_03": 4324,
+    "sil:Male_Adult_17": 2037,
+    "stand-drink-sil:Male_Adult_10": 1396,
+    "stand-drink-sil:Male_Adult_17": 679,
+    "stand-drink-sil:Female_Adult_12": 945
+   },
+   "other": 3401
+  },
+  "venue": "openmic",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 33,
+  "triangles": 58379,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.5084999999441208,
+  "texMB": 26.86201985677083,
+  "dlMB": 3.3344669342041016,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_17",
+   "Male_Adult_04",
+   "Female_Adult_02",
+   "Male_Adult_12",
+   "Female_Adult_04",
+   "Male_Adult_06"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1561
+ },
+ "crowd3d-v6-pre-openmic-preview": {
+  "breakdown": {
+   "front": 32533,
+   "inst": {
+    "sil:Female_Adult_13": 3144,
+    "sil:Female_Adult_12": 3780,
+    "sil:Male_Adult_10": 2792,
+    "sil:Male_Adult_07": 3348,
+    "sil:Female_Adult_03": 4324,
+    "sil:Male_Adult_17": 2037,
+    "stand-drink-sil:Male_Adult_10": 1396,
+    "stand-drink-sil:Male_Adult_17": 679,
+    "stand-drink-sil:Female_Adult_12": 945
+   },
+   "other": 3401
+  },
+  "venue": "openmic",
+  "mode": "preview",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 25,
+  "triangles": 43277,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.3850999999176711,
+  "texMB": 26.86201985677083,
+  "dlMB": 3.3344669342041016,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_17",
+   "Male_Adult_04",
+   "Female_Adult_02",
+   "Male_Adult_12",
+   "Female_Adult_04",
+   "Male_Adult_06"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1383
+ },
+ "crowd3d-v6-pre-openmic-after": {
+  "breakdown": {
+   "front": 32533,
+   "inst": {
+    "sil:Female_Adult_13": 3144,
+    "sil:Female_Adult_12": 3780,
+    "sil:Male_Adult_10": 2792,
+    "sil:Male_Adult_07": 3348,
+    "sil:Female_Adult_03": 4324,
+    "sil:Male_Adult_17": 2037,
+    "stand-drink-sil:Male_Adult_10": 1396,
+    "stand-drink-sil:Male_Adult_17": 679,
+    "stand-drink-sil:Female_Adult_12": 945
+   },
+   "other": 3415
+  },
+  "venue": "openmic",
+  "mode": "after",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 34,
+  "triangles": 58393,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.6771000000303613,
+  "texMB": 26.86201985677083,
+  "dlMB": 3.3344669342041016,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_17",
+   "Male_Adult_04",
+   "Female_Adult_02",
+   "Male_Adult_12",
+   "Female_Adult_04",
+   "Male_Adult_06"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1682
+ }
+}

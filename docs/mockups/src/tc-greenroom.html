@@ -1,0 +1,56 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="world.css">
+<style>
+  /* The green room: house lights up; the MC talks in the world's title-card voice; your sets at a glance */
+  .bg .shot img { filter: saturate(.9) brightness(.78) contrast(1.0); transform: scale(1.03); }
+  .bg .shot .grade { background: linear-gradient(90deg, rgba(7,6,10,.93) 0%, rgba(7,6,10,.84) 40%, rgba(7,6,10,.5) 64%, rgba(7,6,10,.42) 100%); }
+  .head { position: absolute; left: 90px; top: 54px; }
+  .head .t { font-family: var(--display); font-weight: 800; font-size: 64px; letter-spacing: .05em; text-transform: uppercase; line-height: 1; }
+  .head .s { font-family: var(--text); font-size: 24px; color: var(--gold-dim); margin-top: 8px; }
+  .earlier { position: absolute; left: 90px; top: 200px; width: 980px; }
+  .earlier .turn { font-family: var(--text); font-size: 24px; line-height: 1.4; color: rgba(245,239,230,.6); margin-bottom: 14px; }
+  .earlier .turn b { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim); margin-right: 12px; }
+  .now { position: absolute; left: 90px; top: 380px; width: 1000px; }
+  .now .who { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-weight: 600; font-size: 24px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  .now .who i { width: 14px; height: 14px; border-radius: 50%; background: var(--red); box-shadow: 0 0 14px rgba(200,30,58,.9); }
+  .now .line { font-family: var(--display); font-weight: 700; font-size: 60px; letter-spacing: .02em; line-height: 1.08; color: var(--paper); margin-top: 16px; text-transform: uppercase; }
+  .now .line em { font-style: normal; color: var(--gold); }
+  .talk { position: absolute; left: 90px; bottom: 72px; }
+  .talk .cta { font-family: var(--display); font-weight: 800; font-size: 46px; letter-spacing: .06em; text-transform: uppercase; color: var(--paper); }
+  .talk .cta b { color: var(--red); }
+  .talk .ask { font-family: var(--text); font-size: 24px; color: var(--gold-dim); margin-top: 10px; line-height: 1.4; max-width: 980px; }
+  .talk .ask em { font-style: normal; color: var(--paper); }
+  .sets { position: absolute; left: 1240px; right: 90px; top: 200px; }
+  .sets .lab { font-family: var(--display); font-weight: 600; font-size: 24px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 10px; }
+  .sets .row { display: flex; align-items: baseline; gap: 18px; padding: 10px 0; border-bottom: 1px solid rgba(255,215,154,.2); }
+  .sets .row .n { font-family: var(--display); font-weight: 700; font-size: 44px; letter-spacing: .02em; color: var(--paper); width: 110px; font-variant-numeric: tabular-nums; }
+  .sets .row .n.good { color: var(--gold); }
+  .sets .row .d { font-family: var(--text); font-size: 22px; color: var(--gold-dim); line-height: 1.3; }
+  .sets .row .d b { color: var(--paper); font-weight: 500; display: block; font-size: 24px; }
+  .next { margin-top: 26px; }
+  .next .lab { margin-bottom: 6px; }
+  .next .v { font-family: var(--display); font-weight: 700; font-size: 40px; letter-spacing: .04em; text-transform: uppercase; color: var(--paper); }
+  .next .v em { font-style: normal; color: var(--gold); }
+  .next .why { font-family: var(--text); font-size: 22px; color: var(--gold-dim); margin-top: 6px; line-height: 1.4; }
+  .hints { bottom: 72px; }
+</style></head>
+<body><div class="tv">
+  <div class="bg"><div class="shot"><img src="photos/theatre-wide.jpg" alt=""><div class="grade"></div><div class="vignette"></div><div class="grain"></div></div></div>
+  <div class="head"><div class="t">Green room</div><div class="s">Between sets with your MC · Sarcastic · remembers your last six sets</div></div>
+  <div class="earlier">
+    <div class="turn"><b>MC</b>"So, the theatre. Eight hundred seats, and they don't laugh to be polite. Your landlord bit has legs; the airport bit has had its legs removed."</div>
+    <div class="turn"><b>You</b>"Can I open with the landlord bit instead?"</div>
+  </div>
+  <div class="now"><div class="who"><i></i>MC · speaking</div>
+    <div class="line">"You can. Last three sets you opened at 190 words a minute and lost them by line two. <em>Open slow.</em> I'll be timing."</div></div>
+  <div class="talk"><div class="cta">Hold <b>OK</b> to talk</div>
+    <div class="ask">Try <em>"what killed bit three?"</em>, <em>"am I ready for the theatre?"</em> or <em>"be nicer tonight"</em>. Your words go to the MC; your audio never leaves the phone.</div></div>
+  <div class="sets"><div class="lab">Your sets · laughs per minute</div>
+    <div class="row"><div class="n">2.2</div><div class="d"><b>Open mic · Tue</b>dead air 6.0 s · fillers 9</div></div>
+    <div class="row"><div class="n">2.8</div><div class="d"><b>Open mic · Wed</b>fillers 11 · opener landed</div></div>
+    <div class="row"><div class="n good">3.4</div><div class="d"><b>Comedy club · Thu</b>landlord bit landed twice</div></div>
+    <div class="row"><div class="n">3.1</div><div class="d"><b>Comedy club · Fri</b>bit 3 went quiet at 196 wpm</div></div>
+    <div class="next"><div class="lab">Next up</div><div class="v">Prithvi · <em>Theatre</em> · 3:00 slot</div><div class="why">800 seats that don't laugh to be polite. Your club average of 3.1 would be a quiet night here; the MC thinks you're ready anyway.</div></div>
+  </div>
+  <div class="hints"><span><b>Right</b>tonight's bill</span><span><b>Back</b>cut sheet</span></div>
+</div></body></html>

@@ -1,0 +1,71 @@
+{
+ "file": "crowd-sprite.mp3",
+ "sampleRate": 24000,
+ "totalSec": 51.25491666666667,
+ "firstAudibleSample": 6700,
+ "segments": {
+  "laugh-small": {
+   "start": 0.25,
+   "dur": 3.2939583333333333,
+   "loop": false,
+   "startSample": 6000,
+   "samples": 79055
+  },
+  "laugh-medium": {
+   "start": 3.8939583333333334,
+   "dur": 3.783875,
+   "loop": false,
+   "startSample": 93455,
+   "samples": 90813
+  },
+  "laugh-big": {
+   "start": 8.027833333333334,
+   "dur": 5.727833333333334,
+   "loop": false,
+   "startSample": 192668,
+   "samples": 137468
+  },
+  "applause-small": {
+   "start": 14.105666666666666,
+   "dur": 4.988875,
+   "loop": false,
+   "startSample": 338536,
+   "samples": 119733
+  },
+  "applause-big": {
+   "start": 19.444541666666666,
+   "dur": 6.228083333333333,
+   "loop": false,
+   "startSample": 466669,
+   "samples": 149474
+  },
+  "cheer-big": {
+   "start": 26.022625,
+   "dur": 5.80025,
+   "loop": false,
+   "startSample": 624543,
+   "samples": 139206
+  },
+  "snaps": {
+   "start": 32.172875,
+   "dur": 3.0320416666666667,
+   "loop": false,
+   "startSample": 772149,
+   "samples": 72769
+  },
+  "murmur": {
+   "start": 35.554916666666664,
+   "dur": 7,
+   "loop": true,
+   "startSample": 853318,
+   "samples": 168000
+  },
+  "room-tone-club": {
+   "start": 42.904916666666665,
+   "dur": 8,
+   "loop": true,
+   "startSample": 1029718,
+   "samples": 192000
+  }
+ }
+}

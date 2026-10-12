@@ -1,0 +1,5 @@
+# Build outputs live outside the repo (~/encore-mc-build on the build box); keep stray local copies out of git.
+*.zip
+pkg/
+host/
+bench-logs/

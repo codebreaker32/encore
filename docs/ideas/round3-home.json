@@ -1,0 +1,97 @@
+[
+  {
+    "id": "home-tabletop-world",
+    "name": "Tabletop World",
+    "one_liner": "Toys on the coffee table get a living world on the wall: the phone watches the toys, the TV builds the world around them.",
+    "impossible_on_phone": "The phone has to be the eye in a mug above the table, so the only screen the child can see while playing is the wall, and the world only makes sense at room scale behind the toys.",
+    "ten_second_shot": "Three plastic dinosaurs on a table. The child slides one toward the edge; a few seconds later the volcano on the wall behind them rumbles, a river appears where the toy stopped, and the room hears: 'The small one found the water first.'",
+    "interaction": "TV: the world (layered scene, props placed where the toys are, one story beat in big type, a 'the world is watching' shimmer while the agent thinks). Phone: camera in a mug pointed down at the table; sends a snapshot when the toys settle after a move; speaks the narration, since it sits next to the toys. Remote: OK = next chapter (also keeps Vega awake), Up/Down = day/night or weather, Back = new world.",
+    "mechanism": "Phone: getUserMedia rear camera -> canvas every 500 ms -> frame diff on a 64x36 downsample -> when the toys have settled after a move, one 512 px JPEG (~40 KB) is POSTed over HTTPS to the agent. Agent: Strands on Bedrock AgentCore, Claude with image input, structured output {world: one of 5, props: [{kind, x, y, scale}], beat, narration, mood}; AgentCore Memory keeps the story so chapters follow on across evenings. Phone forwards the <2 KB scene JSON to the TV over couch-link. TV: RN Views/Images from a pre-made PNG layer library (sky/far/mid/ground for 5 worlds plus ~15 props, generated once with Amazon Nova Canvas, original content) with Animated parallax; props animate in. No SVG, no TV audio.",
+    "reuse_percent": 45,
+    "build_days": 4,
+    "demo_honesty": "One adult, three toys, a phone in a mug, the simulator on the laptop. No actors: the demo-er's own hand moves the toys on camera. Latency is shown truthfully (the wall shimmers for 3-6 s). Narration comes from the phone speaker, so the simulator's unreliable W3C audio never matters. The video keeps the table and the simulator window in one frame.",
+    "genericness": 2,
+    "biggest_risk": "Vision misreads or 4-8 s latency make the world feel late or wrong. Mitigation: send only when the toys have settled, restrict props to a small vocabulary, keep beats slow (one every 10-20 s), and never contradict a prop already placed.",
+    "crowding_keywords": [
+      "Osmo",
+      "AR toys app",
+      "toy story generator"
+    ]
+  },
+  {
+    "id": "home-star-wand",
+    "name": "Star Wand",
+    "one_liner": "The TV is the bedroom's night sky; a child waves the phone like a wand to join stars, and the sky names and keeps it.",
+    "impossible_on_phone": "You point a wand at something far away and above you, and the sky you draw on has to be the biggest surface in the room, seen from a bed with the lights off; the phone is the wand, not the sky.",
+    "ten_second_shot": "Lights off. A child in bed sweeps the phone through the air; a cursor glides across a wall of stars, five of them light up and join, and the sky writes 'The Sleepy Giraffe' under the shape while a soft voice tells its twenty-second myth. The next night, it is still there.",
+    "interaction": "TV: the sky (slow-drifting stars, moon phase from the real date), the cursor, the lines, the constellation's name and myth, the household's saved sky. Phone (the wand): DeviceOrientation yaw/pitch streamed ~20 Hz; touch-and-hold to draw from the current star, release to finish; speaks the myth. Remote: OK = fix the constellation in the sky (also keeps Vega awake), Back = undo, Left/Right = browse earlier nights.",
+    "mechanism": "Phone: DeviceOrientationEvent over HTTPS (iOS needs requestPermission on a tap), relative yaw/pitch from a 'centre' set by a tap, EMA-smoothed, sent over couch-link as {dx, dy, hold}; a thumb-trackpad on the phone screen is the fallback. TV: star field as absolutely positioned Views, lines as thin rotated Views (no SVG), snap-to-nearest-star; on release it sends the ordered star points and an age band to the agent. Agent: Strands on Bedrock AgentCore, Claude structured output {name, creature, myth <= 60 words, bedtime_mood}; AgentCore Memory stores the household sky so myths refer back ('near the Giraffe you found on Tuesday'). Speech on the phone via speechSynthesis or an Amazon Polly MP3 the phone fetches.",
+    "reuse_percent": 50,
+    "build_days": 3,
+    "demo_honesty": "One adult on a sofa in a dark room with the simulator on the laptop. Real wand motion from a real phone, and the trackpad fallback is shown once so nobody thinks the sensor is faked. The agent's output is live Bedrock with the fallback label when it is not. Drift is handled by a visible 're-centre' tap.",
+    "genericness": 3,
+    "biggest_risk": "Orientation drift and jitter make the cursor feel drunk on some phones. The fix (relative motion, smoothing, star snapping, trackpad fallback) must be designed in from day one, not bolted on.",
+    "crowding_keywords": [
+      "star projector",
+      "Stellarium",
+      "constellation drawing game"
+    ]
+  },
+  {
+    "id": "home-housefish",
+    "name": "Housefish",
+    "one_liner": "An aquarium on the wall the household feeds at dinner: each person drops one moment from their day and it swims in as a fish.",
+    "impossible_on_phone": "An aquarium is furniture: it only works as something that sits in the room all evening and that nobody has to open, and a tank you carry in your pocket is a screensaver, not a shared ritual.",
+    "ten_second_shot": "Dinner table, the TV behind it showing a calm tank. Someone types 'finally fixed the bike' on their phone; Dad presses OK on the remote; a stubby orange fish with a tiny wrench-shaped fin swims in from the edge, and the others say 'that one's yours' before the caption even appears.",
+    "interaction": "TV: the tank (sand, weed, light, bubbles, slow fish; each fish carries a caption; a 'week film' on Sunday). Phone (private hand): one text line or photo per person per day, with a name, and a 'feed' button. Remote: OK = accept the drop (the remote holder 'feeds' the tank, and the press keeps Vega awake), Left/Right = move between fish to read captions, Up = week film.",
+    "mechanism": "Phone sends {name, text, optional 512 px photo} over HTTPS to the agent. Agent: Strands on Bedrock AgentCore, Claude (vision for photos) returns a structured fish {body: one of 8 templates, palette: 3 colours, size, speed, wobble, fin_detail, caption <= 40 chars, mood}; the raw words are never shown unless the sender ticks 'share the words'. TV: fish drawn from Views only (borderRadius bodies, rotated-square tails, fin Views), moved with RN Animated along drifting paths; state persisted in TV storage so the tank is the household's week; Sunday 'week film' replays each arrival. AgentCore Memory optional ('the bike fish from Monday').",
+    "reuse_percent": 50,
+    "build_days": 3,
+    "demo_honesty": "One adult alone: three drops typed over an evening (a friend can add more from their phone), a remote press on the simulator for each, and the Sunday replay. The video shows the tank on the simulator, not stock aquarium footage. Fish generation is live Bedrock with the fallback label when it is not.",
+    "genericness": 3,
+    "biggest_risk": "It reads as 'a mood journal with a fish skin' unless the tank is beautiful and the dinner ritual is shown as a real habit. Also Vega's ~5-minute input kill (hardware only) caps all-evening ambience, so the ritual is framed as a 15-minute dinner moment with OK presses, plus a wake-lock feature request.",
+    "crowding_keywords": [
+      "aquarium screensaver",
+      "family journal app",
+      "mood tracker"
+    ]
+  },
+  {
+    "id": "home-cafe-night",
+    "name": "Café Night",
+    "one_liner": "Kids run a pretend café: the TV is menu board and kitchen screen, parents order from the sofa, an AI critic reviews the plate.",
+    "impossible_on_phone": "A café exists because its menu board and order screen hang on the wall where the chef, the waiter and the customers all read them from different spots; put them on a phone and there is no café, just a kid with an app.",
+    "ten_second_shot": "A seven-year-old in an apron holds a plate of toast with sliced banana up to the phone. Three seconds later the wall shows 'The Banana Sunrise: 4 stars. Brave use of jam, service was fast' under a big red stamp, and the kid takes a bow in front of the TV.",
+    "interaction": "TV (the café's walls): menu board with prices and tonight's special, the kitchen display with tickets and timers, the bell, the review stamp. Phones: the chef's pad (what's on offer, 'ready', photograph the plate) and the customers' pads (order, tip with emojis). Remote: the manager: OK = open the café / serve the next ticket (keeps Vega awake), Up/Down = change the special, Back = close for the night.",
+    "mechanism": "couch-link already does one host plus N named phones with presence; roles are chosen on join. The chef types or speaks (Web Speech API, typing fallback) what is on offer; the agent (Strands on Bedrock AgentCore, Claude structured output: dishes, prices, special, decor theme) writes the menu and the TV renders a chalkboard in RN Views. Orders go phone -> TV; tickets with timers are Views. 'Ready' rings the bell on the customer's phone (TV audio is unreliable on the simulator). The chef's plate photo (512 px JPEG) goes to the agent (Claude vision) -> {dish_name, stars, review <= 30 words}. AgentCore Memory keeps the café's name and regulars across nights ('Welcome back, table three').",
+    "reuse_percent": 55,
+    "build_days": 3,
+    "demo_honesty": "One adult alone: phone as the chef, a laptop browser tab as a customer, the simulator as the wall. The plate is real food made during the demo (toast). The review is live Bedrock with the fallback label when it is not. No child is required and nothing is scripted.",
+    "genericness": 3,
+    "biggest_risk": "Reads as a toy ordering app if the wall is dull or the review is bland. The agent must be funny and specific about the photo, and the board must look like a real café's chalkboard carrying the kid's own dish names.",
+    "crowding_keywords": [
+      "Toca Kitchen",
+      "pretend play restaurant",
+      "kitchen display system"
+    ]
+  },
+  {
+    "id": "home-rangoli-wall",
+    "name": "Rangoli Wall",
+    "one_liner": "Draw one wedge of a rangoli on paper under the phone's camera; the TV blooms it into a full, wall-sized, symmetrical pattern as you draw.",
+    "impossible_on_phone": "The drawing happens on the floor or table under the camera, so the phone cannot also be the surface, and a pattern meant to fill a room needs the wall, not a six-inch screen.",
+    "ten_second_shot": "A child draws a single curved chalk line on a sheet of paper. On the wall, sixteen copies of that line sweep round at once and lock into a flower; by the time the second line lands, the whole room is looking at the wall, not the paper.",
+    "interaction": "TV: the mandala (the live wedge reflected 8 to 16 ways), a slow bloom when a stroke completes, the pattern's name, a festival mode with diyas lit round the edge by each phone. Phone: camera in a mug over the paper, streaming small frames; a tap sets the wedge angle and centre; 'done' freezes the pattern. Remote: OK = set the pattern (keeps Vega awake), Left/Right = 8/12/16-fold, Up/Down = colour mood, Back = new sheet.",
+    "mechanism": "Phone: getUserMedia rear camera -> canvas crop to the wedge -> 256-320 px JPEG at ~3 fps (~12 KB each, far under the relay's 256 KB cap) -> couch-link to the TV. TV: one RN Image per copy (same source, decoded once) with rotate and scaleX(-1) transforms, no SVG; the agent is off the hot path. If data-URI images fail on Vega, the relay serves the latest frame at an HTTP URL and the TV loads it with a cache-buster. Optional AI on 'done': the agent (Strands, Claude vision on Bedrock) names the pattern, suggests the next line in words ('a dot between each petal') and, in festival mode, writes a one-line blessing.",
+    "reuse_percent": 55,
+    "build_days": 2,
+    "demo_honesty": "One adult, a sheet of paper, chalk or a marker, a phone in a mug, the simulator. Nothing to fake: the mirroring is deterministic and live; Bedrock only names the result. The video shows the hand drawing and the simulator in the same shot so latency is visible.",
+    "genericness": 3,
+    "biggest_risk": "The user calls it a kaleidoscope camera app on a TV. The answer is that the artefact is a wall-sized pattern made by a hand on paper for a room (and Diwali, 8 Nov 2026, falls inside the judging window); if that does not convince, drop it rather than defend it.",
+    "crowding_keywords": [
+      "kaleidoscope camera",
+      "rangoli design app",
+      "mandala drawing"
+    ]
+  }
+]

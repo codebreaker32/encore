@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="world.css">
+<style>
+  /* Arena · singing · phone lights swaying on the chorus; a pitch line is the only data and it rides the lower-third */
+  .shot img { filter: saturate(1.05) contrast(1.08) brightness(.9); transform: scale(1.06); }
+  .shot .grade { background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(120,160,255,.10), rgba(0,0,0,0) 60%), linear-gradient(180deg, rgba(7,6,10,.2) 0%, rgba(7,6,10,0) 30%, rgba(7,6,10,0) 60%, rgba(7,6,10,.65) 100%); }
+  .cut { position: absolute; left: 90px; top: 54px; font-family: var(--display); font-weight: 600; font-size: 28px; letter-spacing: .14em; color: var(--gold-dim); text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  .cut b { color: var(--paper); font-weight: 700; }
+  .pitch { position: absolute; left: 90px; right: 90px; bottom: 210px; height: 90px; }
+  .pitch:before { content: ""; position: absolute; left: -90px; right: -90px; top: -60px; bottom: -30px; background: linear-gradient(180deg, rgba(7,6,10,0), rgba(7,6,10,.55) 35%, rgba(7,6,10,.55) 75%, rgba(7,6,10,0)); }
+  .pitch svg { width: 100%; height: 90px; overflow: visible; }
+  .pitch .lab { position: absolute; left: 0; top: -34px; font-family: var(--text); font-size: 22px; color: var(--gold-dim); text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  .pitch .now { position: absolute; right: 0; top: -34px; font-family: var(--display); font-size: 30px; letter-spacing: .1em; color: var(--gold); text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+</style></head>
+<body><div class="tv">
+  <div class="shot"><img src="photos/arena-wide.jpg" alt="Arena crowd with raised hands and phone lights"><div class="grade"></div><div class="vignette"></div><div class="grain"></div></div>
+  <div class="cut">WIDE · CHORUS · <b>the floor is swaying with you</b></div>
+  <div class="live"><i></i>LIVE <small>mic on · Aman's phone</small></div>
+  <div class="pitch"><div class="lab">your pitch against the melody · last 12 seconds · grey where it couldn't tell</div><div class="now">G4 · in tune</div>
+    <svg viewBox="0 0 1740 90" preserveAspectRatio="none">
+      <polyline fill="none" stroke="rgba(245,239,230,.35)" stroke-width="3" points="0,60 120,60 240,40 360,40 480,25 600,25 720,45 840,45 960,25 1080,25 1200,12 1320,12 1440,30 1560,30 1740,30"/>
+      <polyline fill="none" stroke="#ffd79a" stroke-width="5" stroke-linejoin="round" points="0,62 60,61 120,58 180,44 240,42 300,41 360,41 420,30 480,27 540,26 600,26 660,40 720,47 780,46 840,44 900,28"/>
+      <polyline fill="none" stroke="#8a8a8a" stroke-width="5" stroke-dasharray="8 8" points="900,28 960,27 1020,26 1080,26"/>
+      <polyline fill="none" stroke="#ffd79a" stroke-width="5" stroke-linejoin="round" points="1080,26 1140,14 1200,12 1260,12 1320,13 1380,24 1440,31 1500,30 1560,30"/>
+      <circle cx="1560" cy="30" r="9" fill="#ffd79a"/>
+    </svg></div>
+  <div class="lower-third">
+    <div class="venue">Wankhede · <em>Arena</em></div>
+    <div class="rule"></div>
+    <div class="clock">2:04 <small>of a 3:30 song · chorus 2</small></div>
+  </div>
+  <div class="hints"><span><b>OK</b>end song</span><span><b>Back</b>stop</span></div>
+</div></body></html>

@@ -1,0 +1,105 @@
+{
+  "act": "standup",
+  "title": "Rent, Parents and Other Utilities",
+  "wps": 2.6,
+  "bits": [
+    {
+      "name": "the landlord",
+      "lines": [
+        { "role": "setup", "text": "I rent a flat in Bengaluru, which means I have a landlord, and he has a plan." },
+        { "role": "setup", "text": "Last November he promised he would fix the water heater by winter." },
+        { "role": "punch", "text": "He didn't say which winter." },
+        { "role": "tag", "text": "This winter, I'm hoping for global warming." }
+      ]
+    },
+    {
+      "name": "the family group",
+      "lines": [
+        { "role": "setup", "text": "My family has a group chat with forty-three people in it." },
+        { "role": "setup", "text": "In six years, nobody has asked a single question." },
+        { "role": "punch", "text": "It's just good morning flowers, from uncles who have never bought a flower." },
+        { "role": "tag", "text": "At five in the morning. Uncle, the flowers aren't even awake." }
+      ]
+    },
+    {
+      "name": "three moods",
+      "lines": [
+        { "role": "setup", "text": "My dad only has three moods." },
+        { "role": "punch", "text": "Hungry, cricket, and disappointed in me." },
+        { "role": "tag", "text": "On a good day, he manages all three at dinner." }
+      ]
+    },
+    {
+      "name": "the gym (dies)",
+      "dead": true,
+      "lines": [
+        { "text": "So yeah, I've been trying to get fit lately, I guess." },
+        { "text": "There's a gym near my place, it's pretty big, they have machines." },
+        { "text": "Some days I go, some days I don't, you know how it is." },
+        { "text": "Anyway, the gym is fine, it's a gym." }
+      ]
+    },
+    {
+      "name": "traffic (dies)",
+      "dead": true,
+      "lines": [
+        { "text": "Um, what else, okay, traffic here is bad, right." },
+        { "text": "It takes forever to get anywhere, basically." },
+        { "text": "So that's traffic." }
+      ]
+    },
+    {
+      "name": "dating apps",
+      "lines": [
+        { "role": "setup", "text": "I'm back on the dating apps, which are job portals with better lighting." },
+        { "role": "setup", "text": "Every single profile says they love travelling." },
+        { "role": "punch", "text": "Sir, you went to Goa once, in 2016, with your office." },
+        { "role": "flat", "text": "I mean, travelling is nice, I like trains too." }
+      ]
+    },
+    {
+      "name": "the smart speaker",
+      "lines": [
+        { "role": "setup", "text": "My mother got a smart speaker, and she treats it like a new daughter-in-law." },
+        { "role": "setup", "text": "She tells it to play the news." },
+        { "role": "setup", "text": "She tells it to switch off the fan." },
+        { "role": "punch", "text": "She tells it nobody in this house listens to her. It says, okay." },
+        { "role": "tag", "text": "She's never been happier. She's thinking of moving in with it." }
+      ]
+    },
+    {
+      "name": "the startup",
+      "lines": [
+        { "role": "setup", "text": "My cousin quit his job to build an app that reminds you to drink water." },
+        { "role": "setup", "text": "He has raised four crore." },
+        { "role": "punch", "text": "My grandmother has done that job for free since 1962." }
+      ]
+    },
+    {
+      "name": "the wedding",
+      "lines": [
+        { "role": "setup", "text": "An Indian wedding has three days of events." },
+        { "role": "setup", "text": "The haldi, the sangeet, and the wedding." },
+        { "role": "punch", "text": "And one uncle at all three, asking when I'm getting married." }
+      ]
+    },
+    {
+      "name": "the new boss (callback)",
+      "lines": [
+        { "role": "setup", "text": "My sister just started a new job at a bank." },
+        { "role": "setup", "text": "First day, she calls me, very excited, she's met her new boss." },
+        { "role": "punch", "text": "It's my landlord. He promised her a promotion by winter." }
+      ]
+    },
+    {
+      "name": "the closer",
+      "lines": [
+        { "role": "setup", "text": "Last Sunday, India lost a final, right at dinner time." },
+        { "role": "punch", "text": "All three of my dad's moods, on one plate." },
+        { "role": "setup", "text": "Anyway, my landlord says I can stay another year." },
+        { "role": "punch", "text": "He didn't say which year." },
+        { "role": "tag", "text": "You've been lovely. Goodnight!" }
+      ]
+    }
+  ]
+}

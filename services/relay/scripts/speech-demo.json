@@ -1,0 +1,33 @@
+{
+  "act": "speech",
+  "title": "The Lake",
+  "wps": 2.5,
+  "bits": [
+    {
+      "name": "the promise",
+      "lines": [
+        { "role": "setup", "text": "Good evening, everyone, and thank you for coming out in the rain." },
+        { "role": "setup", "text": "For twenty years, this neighbourhood has been told the lake cannot be saved and this town cannot change." },
+        { "role": "strong", "text": "That ends tonight." }
+      ]
+    },
+    {
+      "name": "the plan",
+      "lines": [
+        { "role": "strong", "text": "We will clean it, plant it, and bring the birds home." },
+        { "role": "line", "text": "Some people ask, why should we bother?" },
+        { "role": "strong", "text": "A lake is not something we own, but something we borrow." }
+      ]
+    },
+    {
+      "name": "the ask",
+      "lines": [
+        { "role": "line", "text": "Ask not what this lake can give you." },
+        { "role": "strong", "text": "Ask what you can give it, on Sunday, at seven." },
+        { "role": "flat", "text": "The meeting point is the main gate near the temple, and there will be tea." },
+        { "role": "strong", "text": "Let's show up. Let's get muddy. Let's get it done." },
+        { "role": "tag", "text": "Thank you." }
+      ]
+    }
+  ]
+}

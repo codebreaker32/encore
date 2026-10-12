@@ -1,0 +1,70 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RuntimeLogGroups",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogGroup", "logs:DescribeLogStreams"],
+      "Resource": "arn:aws:logs:ap-south-1:911167912118:log-group:/aws/bedrock-agentcore/runtimes/*"
+    },
+    {
+      "Sid": "SpanDeliveryPolicy",
+      "Effect": "Allow",
+      "Action": "logs:PutResourcePolicy",
+      "Resource": "arn:aws:logs:ap-south-1:911167912118:log-group:/aws/bedrock-agentcore/runtimes/encore_mc-*"
+    },
+    {
+      "Sid": "DescribeLogGroups",
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
+      "Resource": "arn:aws:logs:ap-south-1:911167912118:log-group:*"
+    },
+    {
+      "Sid": "RuntimeLogEvents",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+      "Resource": "arn:aws:logs:ap-south-1:911167912118:log-group:/aws/bedrock-agentcore/runtimes/*:log-stream:*"
+    },
+    {
+      "Sid": "Traces",
+      "Effect": "Allow",
+      "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:PutSpans",
+        "xray:PutSpansForIndexing",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Metrics",
+      "Effect": "Allow",
+      "Action": "cloudwatch:PutMetricData",
+      "Resource": "*",
+      "Condition": { "StringEquals": { "cloudwatch:namespace": "bedrock-agentcore" } }
+    },
+    {
+      "Sid": "McModelMantle",
+      "Effect": "Allow",
+      "Action": "bedrock-mantle:CreateInference",
+      "Resource": "arn:aws:bedrock-mantle:ap-south-1:911167912118:project/*"
+    },
+    {
+      "Sid": "McModelBedrock",
+      "Effect": "Allow",
+      "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+      "Resource": [
+        "arn:aws:bedrock:*::foundation-model/*",
+        "arn:aws:bedrock:*:911167912118:inference-profile/*"
+      ]
+    },
+    {
+      "Sid": "McVoice",
+      "Effect": "Allow",
+      "Action": ["polly:SynthesizeSpeech", "polly:DescribeVoices", "polly:StartSpeechSynthesisStream"],
+      "Resource": "*"
+    }
+  ]
+}

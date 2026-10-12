@@ -1,0 +1,45 @@
+{
+  "name": "encore",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/relay"
+  ],
+  "packageManager": "yarn@4.5.0",
+  "resolutions": {
+    "js-yaml": "^3.15.1",
+    "min-document": "^2.19.1",
+    "logkitty": "^0.7.1",
+    "node-fetch": "^2.6.7",
+    "ws": "^8.21.0"
+  },
+  "scripts": {
+    "dev:relay": "yarn workspace @strumble/relay dev",
+    "dev:companion": "yarn workspace @strumble/companion dev",
+    "dev:tv-web": "yarn workspace @strumble/tv-expo web",
+    "dev:vega": "yarn workspace @strumble/vega start",
+    "dev:android": "yarn workspace @strumble/tv-expo android",
+    "build:vega": "yarn workspace @strumble/vega run build",
+    "build:vega:debug": "yarn workspace @strumble/vega run build:debug",
+    "test": "yarn workspaces foreach -A -pt --include couch-link --include @strumble/pitch-judge --include @strumble/crowd --include @strumble/relay run test",
+    "test:agent": "cd services/mc-agent && uv run pytest -q",
+    "test:all": "yarn workspaces foreach -A -pt run test",
+    "typecheck": "yarn workspaces foreach -A -pt run typecheck",
+    "pack:crowd": "node prototypes/crowd3d/tools/pack.mjs apps/vega/assets/crowd --tv",
+    "lint:all": "yarn workspaces foreach -A -pt run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean:all": "yarn workspaces foreach -A run clean && rm -rf node_modules",
+    "dev:fake-tv": "yarn workspace @strumble/relay fake-tv",
+    "dev:mc": "cd services/mc-agent && uv run python -m mc_agent.app"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  },
+  "description": "Encore: the Fire TV that is a live audience. Your phone listens on the table; the TV cuts to a real room reacting to your timing, then shows you the honest numbers.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12"
+  }
+}

@@ -1,0 +1,497 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T00:00:00+05:30",
+  "title": "Design System: Encore",
+  "extensions": {
+    "colorMeta": {
+      "house": {
+        "role": "neutral",
+        "displayName": "House Black",
+        "canonical": "oklch(13% 0.010 298)",
+        "tonalRamp": [
+          "oklch(15% 0.010 298)",
+          "oklch(27% 0.010 298)",
+          "oklch(39% 0.010 298)",
+          "oklch(51% 0.010 298)",
+          "oklch(63% 0.010 298)",
+          "oklch(75% 0.010 298)",
+          "oklch(87% 0.010 298)",
+          "oklch(95% 0.010 298)"
+        ]
+      },
+      "gold": {
+        "role": "primary",
+        "displayName": "Tungsten Gold",
+        "canonical": "oklch(90% 0.089 78)",
+        "tonalRamp": [
+          "oklch(15% 0.089 78)",
+          "oklch(27% 0.089 78)",
+          "oklch(39% 0.089 78)",
+          "oklch(51% 0.089 78)",
+          "oklch(63% 0.089 78)",
+          "oklch(75% 0.089 78)",
+          "oklch(87% 0.089 78)",
+          "oklch(95% 0.089 78)"
+        ]
+      },
+      "gold-dim": {
+        "role": "primary",
+        "displayName": "Gold Dim",
+        "canonical": "oklch(70% 0.085 82)",
+        "tonalRamp": [
+          "oklch(15% 0.085 82)",
+          "oklch(27% 0.085 82)",
+          "oklch(39% 0.085 82)",
+          "oklch(51% 0.085 82)",
+          "oklch(63% 0.085 82)",
+          "oklch(75% 0.085 82)",
+          "oklch(87% 0.085 82)",
+          "oklch(95% 0.085 82)"
+        ]
+      },
+      "red": {
+        "role": "secondary",
+        "displayName": "Broadcast Red",
+        "canonical": "oklch(54% 0.200 20)",
+        "tonalRamp": [
+          "oklch(15% 0.200 20)",
+          "oklch(27% 0.200 20)",
+          "oklch(39% 0.200 20)",
+          "oklch(51% 0.200 20)",
+          "oklch(63% 0.200 20)",
+          "oklch(75% 0.200 20)",
+          "oklch(87% 0.200 20)",
+          "oklch(95% 0.200 20)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(95% 0.014 78)",
+        "tonalRamp": [
+          "oklch(15% 0.014 78)",
+          "oklch(27% 0.014 78)",
+          "oklch(39% 0.014 78)",
+          "oklch(51% 0.014 78)",
+          "oklch(63% 0.014 78)",
+          "oklch(75% 0.014 78)",
+          "oklch(87% 0.014 78)",
+          "oklch(95% 0.014 78)"
+        ]
+      },
+      "paper-dim": {
+        "role": "neutral",
+        "displayName": "Paper Dim",
+        "canonical": "oklch(95% 0.014 78 / 0.42)",
+        "tonalRamp": [
+          "oklch(15% 0.014 78)",
+          "oklch(27% 0.014 78)",
+          "oklch(39% 0.014 78)",
+          "oklch(51% 0.014 78)",
+          "oklch(63% 0.014 78)",
+          "oklch(75% 0.014 78)",
+          "oklch(87% 0.014 78)",
+          "oklch(95% 0.014 78)"
+        ]
+      },
+      "paper-soft": {
+        "role": "neutral",
+        "displayName": "Paper Soft",
+        "canonical": "oklch(95% 0.014 78 / 0.6)",
+        "tonalRamp": [
+          "oklch(15% 0.014 78)",
+          "oklch(27% 0.014 78)",
+          "oklch(39% 0.014 78)",
+          "oklch(51% 0.014 78)",
+          "oklch(63% 0.014 78)",
+          "oklch(75% 0.014 78)",
+          "oklch(87% 0.014 78)",
+          "oklch(95% 0.014 78)"
+        ]
+      },
+      "green": {
+        "role": "tertiary",
+        "displayName": "Mic Green",
+        "canonical": "oklch(68% 0.163 152)",
+        "tonalRamp": [
+          "oklch(15% 0.163 152)",
+          "oklch(27% 0.163 152)",
+          "oklch(39% 0.163 152)",
+          "oklch(51% 0.163 152)",
+          "oklch(63% 0.163 152)",
+          "oklch(75% 0.163 152)",
+          "oklch(87% 0.163 152)",
+          "oklch(95% 0.163 152)"
+        ]
+      },
+      "unsure": {
+        "role": "tertiary",
+        "displayName": "Unsure Grey",
+        "canonical": "oklch(63% 0.000 90)",
+        "tonalRamp": [
+          "oklch(15% 0.000 90)",
+          "oklch(27% 0.000 90)",
+          "oklch(39% 0.000 90)",
+          "oklch(51% 0.000 90)",
+          "oklch(63% 0.000 90)",
+          "oklch(75% 0.000 90)",
+          "oklch(87% 0.000 90)",
+          "oklch(95% 0.000 90)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(90% 0.089 78 / 0.18)",
+        "tonalRamp": [
+          "oklch(15% 0.089 78)",
+          "oklch(27% 0.089 78)",
+          "oklch(39% 0.089 78)",
+          "oklch(51% 0.089 78)",
+          "oklch(63% 0.089 78)",
+          "oklch(75% 0.089 78)",
+          "oklch(87% 0.089 78)",
+          "oklch(95% 0.089 78)"
+        ]
+      },
+      "frame": {
+        "role": "neutral",
+        "displayName": "Frame",
+        "canonical": "oklch(21% 0.020 303)",
+        "tonalRamp": [
+          "oklch(15% 0.020 303)",
+          "oklch(27% 0.020 303)",
+          "oklch(39% 0.020 303)",
+          "oklch(51% 0.020 303)",
+          "oklch(63% 0.020 303)",
+          "oklch(75% 0.020 303)",
+          "oklch(87% 0.020 303)",
+          "oklch(95% 0.020 303)"
+        ]
+      },
+      "dead-a": {
+        "role": "tertiary",
+        "displayName": "Dead-Air Maroon A",
+        "canonical": "oklch(22% 0.040 10)",
+        "tonalRamp": [
+          "oklch(15% 0.040 10)",
+          "oklch(27% 0.040 10)",
+          "oklch(39% 0.040 10)",
+          "oklch(51% 0.040 10)",
+          "oklch(63% 0.040 10)",
+          "oklch(75% 0.040 10)",
+          "oklch(87% 0.040 10)",
+          "oklch(95% 0.040 10)"
+        ]
+      },
+      "dead-b": {
+        "role": "tertiary",
+        "displayName": "Dead-Air Maroon B",
+        "canonical": "oklch(18% 0.025 6)",
+        "tonalRamp": [
+          "oklch(15% 0.025 6)",
+          "oklch(27% 0.025 6)",
+          "oklch(39% 0.025 6)",
+          "oklch(51% 0.025 6)",
+          "oklch(63% 0.025 6)",
+          "oklch(75% 0.025 6)",
+          "oklch(87% 0.025 6)",
+          "oklch(95% 0.025 6)"
+        ]
+      },
+      "dead-text": {
+        "role": "tertiary",
+        "displayName": "Dead-Air Pink",
+        "canonical": "oklch(79% 0.121 12)",
+        "tonalRamp": [
+          "oklch(15% 0.121 12)",
+          "oklch(27% 0.121 12)",
+          "oklch(39% 0.121 12)",
+          "oklch(51% 0.121 12)",
+          "oklch(63% 0.121 12)",
+          "oklch(75% 0.121 12)",
+          "oklch(87% 0.121 12)",
+          "oklch(95% 0.121 12)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The title card's one line in the MC's voice; 240 px gutters, centred, caps via up()."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "A screen's name (CUT SHEET 72 px, GREEN ROOM 64 px); the bill's brand mark is the same voice at 40 px, +0.12em."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The lower-third's house name with the tier in gold; also the call-to-action voice at 56 / 46 / 42 px with the key in red."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Ledger numbers and per-set figures, tabular; the clock is Medium 44 px +0.06em, the verdict word ExtraBold 44 px +0.10em, bill choices SemiBold 44 px +0.03em."
+      },
+      "label": {
+        "displayName": "Small-caps label",
+        "purpose": "LIVE / REPLAY (30 px), the bit counter, the wide's caption and the MC byline (28 px), bill row names (28 px Medium +0.16em), hint keys (26 px Bold), strip tags (24 px Medium +0.06em)."
+      },
+      "quote": {
+        "displayName": "Quote",
+        "purpose": "The MC's debrief on the cut sheet, Atkinson Medium 36 px."
+      },
+      "lead": {
+        "displayName": "Lead",
+        "purpose": "The caption's reason, the cut sheet's subtitle, the MC's fix in gold; 26 px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Every other sentence at the 24 px floor: hints' labels, notes, ledger keys and explanations, credits. Measures 680–1000 px."
+      }
+    },
+    "shadows": [
+      {
+        "name": "text-broadcast",
+        "value": "0 2px 12px rgba(0,0,0,0.8)",
+        "purpose": "Under every line of type that sits on a photograph."
+      },
+      {
+        "name": "text-lower-third",
+        "value": "0 2px 18px rgba(0,0,0,0.7)",
+        "purpose": "The lower-third's house name, on the brightest part of a wide."
+      },
+      {
+        "name": "text-strip-tag",
+        "value": "0 1px 8px rgba(0,0,0,0.9)",
+        "purpose": "Labels on 150 px strip thumbnails."
+      },
+      {
+        "name": "live-glow",
+        "value": "36px circle #c81e3a at 0.35 behind the 18px LIVE dot",
+        "purpose": "The only glow in the system; absent on REPLAY."
+      }
+    ],
+    "motion": [
+      {
+        "name": "push-in-set",
+        "value": "scale 1.0 → 1.06, linear, over the set length (min 30000 ms)",
+        "purpose": "A live wide pushes in over the whole set; restarts when the director returns to the wide."
+      },
+      {
+        "name": "push-in-bill",
+        "value": "scale 1.0 → 1.04, linear, 90000 ms",
+        "purpose": "The bill's room preview."
+      },
+      {
+        "name": "hold-reaction",
+        "value": "scale 1.07, static",
+        "purpose": "A reaction shot holds tighter than the wide; a finale holds at 1.04, the green room at 1.03."
+      },
+      {
+        "name": "cut",
+        "value": "house-black cover for 40 ms, then lift",
+        "purpose": "Every shot change; a little over one 60 Hz frame so it survives a dropped frame. Never a crossfade."
+      },
+      {
+        "name": "light-pulse",
+        "value": "gold wash opacity 0.18 → 0, 400 ms, ease-out quad",
+        "purpose": "Fires on each positive reaction cut (keyed on the count of positive reactions)."
+      },
+      {
+        "name": "video-grace",
+        "value": "1000 ms",
+        "purpose": "If a clip's first frame has not arrived, the still plate takes over; poster shown until then."
+      },
+      {
+        "name": "clock-red",
+        "value": "last 30 s of a live set",
+        "purpose": "The lower-third's clock turns red."
+      },
+      {
+        "name": "grain",
+        "value": "512 px tile at 0.14 (0.10 on ledger screens)",
+        "purpose": "Film grain over every shot; tiled natively, a 4×3 grid of tiles on web."
+      },
+      {
+        "name": "sound-cues",
+        "value": "laugh <0.35 small, <0.7 medium, else big; applause <0.5 small, else big; snaps, cheer-big, murmur one each; heckle/silence none; room tone at 0.25 at open mic and club",
+        "purpose": "The crowd's sound, keyed by reaction kind and strength."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "comp",
+        "value": "1920x1080"
+      },
+      {
+        "name": "stick",
+        "value": "1280x720 (same composition via sp())"
+      }
+    ],
+    "safeArea": {
+      "x": "90px",
+      "top": "54px",
+      "bottom": "72px"
+    }
+  },
+  "components": [
+    {
+      "name": "Lower-Third",
+      "kind": "custom",
+      "refersTo": "lower-third",
+      "description": "One line over the room, a 420×4 red rule, the clock; never a box. Clock turns red in the last 30 s.",
+      "html": "<div class=\"ds-lt\"><div class=\"ds-lt-line\">THE BASEMENT · <span class=\"ds-lt-tier\">COMEDY CLUB</span></div><div class=\"ds-lt-rule\"></div><div class=\"ds-lt-clock\"><span class=\"ds-lt-time\">3:18</span><span class=\"ds-lt-note\">of a 5:00 set</span></div></div>",
+      "css": ".ds-lt{background:#07060a;padding:48px 90px;display:inline-block}.ds-lt-line{font-family:'BigShouldersDisplay-Bold',Impact,sans-serif;font-size:52px;line-height:1;letter-spacing:0.08em;text-transform:uppercase;color:#f5efe6;text-shadow:0 2px 18px rgba(0,0,0,0.7)}.ds-lt-tier{color:#ffd79a}.ds-lt-rule{width:420px;height:4px;background:#c81e3a;margin:14px 0 12px}.ds-lt-clock{display:flex;align-items:baseline;gap:16px}.ds-lt-time{font-family:'BigShouldersDisplay-Medium',Impact,sans-serif;font-size:44px;line-height:1;letter-spacing:0.06em;color:#ffd79a;font-variant-numeric:tabular-nums}.ds-lt-note{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;color:#b8995f}.ds-lt:hover .ds-lt-time{color:#c81e3a}"
+    },
+    {
+      "name": "Title Card",
+      "kind": "card",
+      "refersTo": "title-card",
+      "description": "House black, one line in the MC's voice, optional byline. Intro, heckle, between-bit line, the end.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-line\">GIVE IT UP FOR THE NEXT ACT</div><div class=\"ds-card-who\">The Basement · Comedy Club · the phone is counting you in</div></div>",
+      "css": ".ds-card{background:#07060a;padding:120px 240px;text-align:center}.ds-card-line{font-family:'BigShouldersDisplay-ExtraBold',Impact,sans-serif;font-size:88px;line-height:1.02;letter-spacing:0.04em;text-transform:uppercase;color:#f5efe6}.ds-card-who{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:28px;color:#b8995f;margin-top:26px}"
+    },
+    {
+      "name": "Live Mark",
+      "kind": "chip",
+      "refersTo": "live-mark",
+      "description": "Red dot with 35% glow, LIVE, then whose phone is the microphone and the words mode. Replay variant is gold-dim with no glow.",
+      "html": "<div class=\"ds-live\"><span class=\"ds-live-glow\"></span><span class=\"ds-live-dot\"></span><span class=\"ds-live-word\">LIVE</span><span class=\"ds-live-small\">mic on · Aman's phone · words on the phone</span></div>",
+      "css": ".ds-live{background:#07060a;padding:24px 32px;display:inline-flex;align-items:center;position:relative}.ds-live-glow{position:absolute;left:23px;width:36px;height:36px;border-radius:18px;background:#c81e3a;opacity:0.35}.ds-live-dot{width:18px;height:18px;border-radius:9px;background:#c81e3a;margin-right:14px;position:relative}.ds-live-word{font-family:'BigShouldersDisplay-SemiBold',Impact,sans-serif;font-size:30px;letter-spacing:0.14em;color:#f5efe6;margin-right:14px;text-shadow:0 2px 12px rgba(0,0,0,0.8)}.ds-live-small{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;color:#b8995f;text-shadow:0 2px 12px rgba(0,0,0,0.8)}"
+    },
+    {
+      "name": "Replay Mark",
+      "kind": "chip",
+      "refersTo": "replay-mark",
+      "description": "The recorded-set variant: nothing shows LIVE over a recording.",
+      "html": "<div class=\"ds-replay\"><span class=\"ds-replay-dot\"></span><span class=\"ds-replay-word\">REPLAY</span><span class=\"ds-replay-small\">recorded set · words on the phone</span></div>",
+      "css": ".ds-replay{background:#07060a;padding:24px 32px;display:inline-flex;align-items:center}.ds-replay-dot{width:18px;height:18px;border-radius:9px;background:#b8995f;margin-right:14px}.ds-replay-word{font-family:'BigShouldersDisplay-SemiBold',Impact,sans-serif;font-size:30px;letter-spacing:0.14em;color:#b8995f;margin-right:14px}.ds-replay-small{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;color:#b8995f}"
+    },
+    {
+      "name": "Director's Caption",
+      "kind": "custom",
+      "refersTo": "caption-what",
+      "description": "Top-left: the verdict word in gold over the measured reason in paper and the gold-dim 'more'.",
+      "html": "<div class=\"ds-cap\"><div class=\"ds-cap-what\">LAUGH</div><div class=\"ds-cap-why\">0.7 s after your line<span class=\"ds-cap-more\"> · the room's fourth tonight · cut to the floor</span></div></div>",
+      "css": ".ds-cap{background:#07060a;padding:40px 90px;display:inline-block}.ds-cap-what{font-family:'BigShouldersDisplay-ExtraBold',Impact,sans-serif;font-size:44px;line-height:1;letter-spacing:0.10em;text-transform:uppercase;color:#ffd79a;text-shadow:0 2px 12px rgba(0,0,0,0.8)}.ds-cap-why{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:26px;line-height:34px;color:#f5efe6;margin-top:10px;text-shadow:0 2px 12px rgba(0,0,0,0.8)}.ds-cap-more{color:#b8995f}"
+    },
+    {
+      "name": "Hints",
+      "kind": "nav",
+      "refersTo": "hint-key",
+      "description": "Remote hints as words, bottom-right: key in paper small caps, label in gold-dim.",
+      "html": "<div class=\"ds-hints\"><span class=\"ds-hint\"><span class=\"ds-hint-key\">OK</span><span class=\"ds-hint-label\">end set</span></span><span class=\"ds-hint\"><span class=\"ds-hint-key\">Back</span><span class=\"ds-hint-label\">stop</span></span></div>",
+      "css": ".ds-hints{background:#07060a;padding:24px 32px;display:inline-flex;align-items:baseline;gap:32px}.ds-hint{display:inline-flex;align-items:baseline}.ds-hint-key{font-family:'BigShouldersDisplay-Bold',Impact,sans-serif;font-size:26px;letter-spacing:0.10em;color:#f5efe6;margin-right:8px;text-shadow:0 2px 12px rgba(0,0,0,0.8)}.ds-hint-label{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;color:#b8995f;text-shadow:0 2px 12px rgba(0,0,0,0.8)}"
+    },
+    {
+      "name": "Call to Action",
+      "kind": "button",
+      "refersTo": "cta",
+      "description": "The one primary action per screen: condensed capitals with the key in red, alternatives beneath.",
+      "html": "<div class=\"ds-cta\"><div class=\"ds-cta-line\">PRESS <span class=\"ds-cta-key\">OK</span> TO GO LIVE</div><div class=\"ds-cta-small\">Back · green room · Up/Down · change venue</div></div>",
+      "css": ".ds-cta{background:#07060a;padding:32px 90px;display:inline-block}.ds-cta-line{font-family:'BigShouldersDisplay-ExtraBold',Impact,sans-serif;font-size:56px;line-height:1;letter-spacing:0.06em;text-transform:uppercase;color:#f5efe6}.ds-cta-key{color:#c81e3a}.ds-cta-small{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;color:#b8995f;margin-top:8px}.ds-cta:focus-visible .ds-cta-line,.ds-cta:hover .ds-cta-line{color:#ffd79a}"
+    },
+    {
+      "name": "Bill Row",
+      "kind": "input",
+      "refersTo": "bill-choice",
+      "description": "A running-order row: small-caps name, choices on one line; selected is paper, focused is gold with a 5 px red underline, unselected paper at 42%.",
+      "html": "<div class=\"ds-bill\"><div class=\"ds-bill-name\">VENUE</div><div class=\"ds-bill-choices\"><span class=\"ds-bill-choice\">OPEN MIC</span><span class=\"ds-bill-choice ds-bill-focused\">COMEDY CLUB</span><span class=\"ds-bill-choice\">THEATRE</span><span class=\"ds-bill-choice\">ARENA</span></div><div class=\"ds-bill-why\">A dark room of eighty who paid to be here. Hecklers after two dead bits.</div></div>",
+      "css": ".ds-bill{background:#07060a;padding:32px 90px;display:inline-block}.ds-bill-name{font-family:'BigShouldersDisplay-Medium',Impact,sans-serif;font-size:28px;letter-spacing:0.16em;color:#b8995f}.ds-bill-choices{display:flex;gap:30px;margin-top:10px}.ds-bill-choice{font-family:'BigShouldersDisplay-SemiBold',Impact,sans-serif;font-size:44px;line-height:1.1;letter-spacing:0.03em;color:rgba(245,239,230,0.42);border-bottom:5px solid transparent;padding-bottom:4px}.ds-bill-on{color:#f5efe6}.ds-bill-focused,.ds-bill-choice:hover,.ds-bill-choice:focus-visible{color:#ffd79a;border-bottom-color:#c81e3a;outline:none}.ds-bill-why{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;line-height:1.4;color:#b8995f;margin-top:10px;max-width:680px}"
+    },
+    {
+      "name": "Ledger Row",
+      "kind": "custom",
+      "refersTo": "ledger-number",
+      "description": "Measured, not judged: tabular numeral (gold when it cleared the house standard; 'not measured' in gold-dim sentence type otherwise), key, explanation.",
+      "html": "<div class=\"ds-ledger\"><div class=\"ds-ledger-row\"><span class=\"ds-ledger-n ds-ledger-good\">1.0</span><span class=\"ds-ledger-k\">landed per minute</span><span class=\"ds-ledger-v\">5 lines cleared the house standard · this room gave 5 laughs</span></div><div class=\"ds-ledger-row\"><span class=\"ds-ledger-n\">4.1 s</span><span class=\"ds-ledger-k\">longest dead air</span><span class=\"ds-ledger-v\">at 1:57 · past this room's patience of 3.5 s</span></div><div class=\"ds-ledger-row\"><span class=\"ds-ledger-n ds-ledger-none\">not measured</span><span class=\"ds-ledger-k\">words per minute</span><span class=\"ds-ledger-v\">words were off on the phone</span></div></div>",
+      "css": ".ds-ledger{background:#07060a;padding:32px 90px;width:1000px;box-sizing:border-box}.ds-ledger-row{display:flex;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,215,154,0.18)}.ds-ledger-n{width:200px;flex:none;font-family:'BigShouldersDisplay-Bold',Impact,sans-serif;font-size:46px;line-height:1.15;letter-spacing:0.02em;color:#f5efe6;font-variant-numeric:tabular-nums}.ds-ledger-good{color:#ffd79a}.ds-ledger-none{font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;letter-spacing:0;color:#b8995f}.ds-ledger-k{width:330px;flex:none;font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;color:#f5efe6}.ds-ledger-v{flex:1;font-family:'AtkinsonHyperlegibleNext-Regular',Arial,sans-serif;font-size:24px;line-height:1.3;color:#b8995f}"
+    },
+    {
+      "name": "Cut Sheet Strip",
+      "kind": "custom",
+      "refersTo": "strip-tag",
+      "description": "The set as an edit timeline: 150 px thumbnails 6 px apart; tags paper for wides, gold for cuts, pink on maroon stripes for dead air.",
+      "html": "<div class=\"ds-strip\"><div class=\"ds-frame\" style=\"flex:3\"><span class=\"ds-tag\">OPEN · WIDE</span></div><div class=\"ds-frame\" style=\"flex:1\"><span class=\"ds-tag ds-tag-gold\">LAUGH 1:13</span></div><div class=\"ds-frame ds-frame-dead\" style=\"flex:1\"><span class=\"ds-tag ds-tag-dead\">DEAD 4.1 S</span></div><div class=\"ds-frame\" style=\"flex:2\"><span class=\"ds-tag\"></span></div><div class=\"ds-frame\" style=\"flex:1\"><span class=\"ds-tag\">CLOSE</span></div></div>",
+      "css": ".ds-strip{background:#07060a;padding:24px 90px;display:flex;gap:6px;height:150px;box-sizing:content-box;width:900px}.ds-frame{position:relative;background:#1a1620;overflow:hidden;background-image:radial-gradient(circle at 50% 40%,#5a3a2a 0,#1a1620 70%)}.ds-frame-dead{background:repeating-linear-gradient(45deg,#2a1216 0 10px,#1a0c0f 10px 20px)}.ds-tag{position:absolute;left:10px;right:6px;bottom:8px;font-family:'BigShouldersDisplay-Medium',Impact,sans-serif;font-size:24px;letter-spacing:0.06em;text-transform:uppercase;color:#f5efe6;white-space:nowrap;overflow:hidden;text-shadow:0 1px 8px rgba(0,0,0,0.9)}.ds-tag-gold{color:#ffd79a}.ds-tag-dead{color:#ff9aa7}"
+    }
+  ],
+  "narrative": {
+    "northStar": "House-Right Camera",
+    "overview": "The television is the live director of the performer's own special. Every screen is a shot: a full-bleed photographic room (a still plate or a muted licensed clip), pushed in slowly over the length of a set, graded dark at the top and bottom, vignetted, and covered in fine film grain. Over the shot sits only what a broadcast would carry: a lower-third with a thin red rule, a LIVE mark, the director's caption, and the remote hints as words. Shots change by a hard cut (one black frame); nothing crossfades. When a laugh lands, the room cuts to a laughing face and the stage light hits the frame for 400 ms; when a line dies, the wide holds and the caption counts the silence.\n\nThe interface recedes into the broadcast vocabulary: condensed capitals (Big Shoulders Display) for venue names, verdict words and numerals; a hyperlegible sentence face (Atkinson Hyperlegible Next) for every explanation, never smaller than 24 px at 1920×1080 so it reads from 3 m. Secondary text is tinted from the gold; grey appears on screen only with its one meaning, \"unsure\", which is never counted against the performer. The honesty rules of the product are visual rules here: what was not measured is printed as \"not measured\" in gold-dim rather than shown as a zero, a recording says REPLAY rather than LIVE, and the CC BY credits ride on the bill.\n\nThe build is React Native for a 10-foot television (Android TV / Fire OS / Vega): Views, Images, Animated and video only, no SVG, no gradient library (gradients are stacked bands), no icon glyphs (the QR code, stripes, pitch trace and gradients are all made of Views). Every size in the code is a comp pixel at 1920×1080 passed through `sp()`, which scales it to the device.",
+    "keyCharacteristics": [
+      "Full-bleed photographic rooms with push-in, grade, vignette and 14% grain; the room is the layout.",
+      "Hard cuts (40 ms of house black), never crossfades.",
+      "Lower-third with a 420×4 red rule; never a box, never a panel, never glass.",
+      "Condensed tracked capitals for names and numbers; hyperlegible sentences at a 24 px floor.",
+      "Secondary text is gold-dim; grey means \"unsure\" and nothing else.",
+      "Red is reserved: LIVE, the red rule, the clock's last 30 s, the OK key in a call to action, the focused choice's underline.",
+      "Words instead of icons: \"OK end set\", \"Back stop\", never a glyph.",
+      "Everything measured is printed with its reason; anything not measured says so."
+    ],
+    "rules": [
+      {
+        "name": "The Tungsten Rule",
+        "body": "Secondary text is gold-dim, never grey; grey has exactly one meaning on screen: the phone was unsure, and an unsure thing never counts against the performer.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Red Rule",
+        "body": "Red marks what is live or what the remote must press: the LIVE dot, the red rule, the last 30 s of the clock, the OK key in a call to action, the focused choice's underline. It never decorates, never fills, never warns.",
+        "section": "colors"
+      },
+      {
+        "name": "The Not-Measured Rule",
+        "body": "A value the phone did not measure is printed as \"not measured\" in gold-dim sentence type at 24 px; it is never a zero, a dash, or an empty cell.",
+        "section": "colors"
+      },
+      {
+        "name": "The 24 px Floor Rule",
+        "body": "No text on the television is set below 24 px at 1920×1080. The smallest sizes are the sentence face at 24 and the display face at 24 (strip tags); nothing is \"fine print\".",
+        "section": "typography"
+      },
+      {
+        "name": "The Caller-Caps Rule",
+        "body": "The display face is uppercase by convention, applied to the string by `up()`; `textTransform` is never relied on, and the sentence face is never set in capitals.",
+        "section": "typography"
+      },
+      {
+        "name": "The Shadowed Over Photo Rule",
+        "body": "Any type that sits on a photographic shot carries the broadcast text shadow (0 2px 12px black at 80%; the lower-third widens it to 18px at 70%); type on house black carries none.",
+        "section": "typography"
+      },
+      {
+        "name": "The Photographic Depth Rule",
+        "body": "Depth comes from the grade, the vignette and the grain on the shot, never from a box, a blur, a glass pane or a drop shadow on a surface.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Light Pulse Rule",
+        "body": "On every positive reaction cut, a tungsten-gold wash covers the frame at 18% and decays to 0 over 400 ms (ease-out quad). It fires on the count of positive reactions, never on a timer.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do start every screen from a full-bleed photographic room (plate or muted clip) with its grade, the vignette and 14% grain; the ledger screens darken it (74% house black or the green room's 93 → 42% fade) rather than replacing it.",
+      "Do change shots with the 40 ms house-black cut; a wide pushes in 1.0 → 1.06 over the set, a reaction holds at 1.07.",
+      "Do write secondary text in gold-dim and reserve grey for \"unsure\"; print \"not measured\" instead of a zero.",
+      "Do keep every line of text at 24 px or larger at 1920×1080 and inside the 90 / 54 / 72 px safe margins, passed through `sp()`.",
+      "Do set the display face by family file name (`BigShouldersDisplay-Bold`) with em-based tracking via `track()`, and uppercase it with `up()`.",
+      "Do give every screen one call to action in condensed capitals with its key in red, and spell the remote as words in the hints.",
+      "Do mark a recording REPLAY in gold-dim; show LIVE, the red dot and the glow only on a live set.",
+      "Do put the broadcast text shadow under any type that sits on a photograph.",
+      "Do add a CREDITS.md row and embed provenance in the file before a new photo, clip or sound ships; credit CC BY items on the bill."
+    ],
+    "donts": [
+      "Don't draw a panel, a card, a glass pane, a box behind the lower-third, or a surface drop shadow; depth is the grade, the vignette and the grain.",
+      "Don't crossfade, slide or zoom between shots; the world cuts.",
+      "Don't use grey for secondary text, or any colour but gold-dim for it; grey means unsure.",
+      "Don't use red for anything other than LIVE, the red rule, the last 30 s of the clock, the OK key in a call to action and the focused choice's underline.",
+      "Don't use icons, glyphs or key caps where a word does the job; the only non-text marks are the status dots and the QR code.",
+      "Don't set gradient text, `fontWeight` on a static font file, or `textTransform`; weights are family names and caps are applied to the string.",
+      "Don't mount more than three plates at once or more than one moving plate; the stick has 1 GB.",
+      "Don't use SVG, a gradient library or a blur; gradients are stacked bands of house black, the QR code, stripes and pitch trace are Views.",
+      "Don't claim LIVE over a recording, show a scripted reaction, or print a value the phone did not measure."
+    ]
+  }
+}

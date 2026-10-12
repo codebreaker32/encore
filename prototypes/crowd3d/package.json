@@ -1,0 +1,17 @@
+{
+  "name": "crowd3d-prototype",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Encore live 3D audience prototype: asset pipeline for Rocketbox avatars",
+  "type": "module",
+  "scripts": {
+    "build:people": "node tools/build_people.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "meshoptimizer": "^0.22.0",
+    "sharp": "^0.35.5"
+  }
+}

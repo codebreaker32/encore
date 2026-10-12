@@ -1,0 +1,222 @@
+{
+ "crowd3d-v5-openmic-listen": {
+  "breakdown": {
+   "front": 30697,
+   "inst": {
+    "lod:Female_Adult_12": 6214,
+    "lod:Female_Adult_17": 3186,
+    "sil:Male_Adult_04": 3600,
+    "sil:Male_Adult_07": 2511,
+    "sil:Male_Adult_17": 2716,
+    "sil:Female_Adult_17": 4388,
+    "sil:Female_Adult_12": 3780,
+    "stand-drink-sil:Male_Adult_17": 1358,
+    "stand-drink-sil:Male_Adult_07": 837,
+    "stand-drink-sil:Female_Adult_04": 1354
+   },
+   "other": 3415
+  },
+  "venue": "openmic",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 35,
+  "triangles": 64056,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.6064999999962748,
+  "texMB": 27.86787923177083,
+  "dlMB": 3.3426780700683594,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Female_Adult_02",
+   "Male_Adult_06",
+   "Male_Adult_10",
+   "Male_Adult_12",
+   "Female_Adult_03"
+  ],
+  "errors": [],
+  "ms": 2224
+ },
+ "crowd3d-v5-openmic-laugh": {
+  "breakdown": {
+   "front": 30697,
+   "inst": {
+    "lod:Female_Adult_12": 6214,
+    "lod:Female_Adult_17": 3186,
+    "sil:Male_Adult_04": 3600,
+    "sil:Male_Adult_07": 2511,
+    "sil:Male_Adult_17": 2716,
+    "sil:Female_Adult_17": 4388,
+    "sil:Female_Adult_12": 3780,
+    "stand-drink-sil:Male_Adult_17": 1358,
+    "stand-drink-sil:Male_Adult_07": 837,
+    "stand-drink-sil:Female_Adult_04": 1354
+   },
+   "other": 3401
+  },
+  "venue": "openmic",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 34,
+  "triangles": 64042,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "close",
+  "cpuMs": 0.6452999999903842,
+  "texMB": 27.86787923177083,
+  "dlMB": 3.3426780700683594,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Female_Adult_02",
+   "Male_Adult_06",
+   "Male_Adult_10",
+   "Male_Adult_12",
+   "Female_Adult_03"
+  ],
+  "errors": [],
+  "ms": 1774
+ },
+ "crowd3d-v5-openmic-laugh-wide": {
+  "breakdown": {
+   "front": 30697,
+   "inst": {
+    "lod:Female_Adult_12": 6214,
+    "lod:Female_Adult_17": 3186,
+    "sil:Male_Adult_04": 3600,
+    "sil:Male_Adult_07": 2511,
+    "sil:Male_Adult_17": 2716,
+    "sil:Female_Adult_17": 4388,
+    "sil:Female_Adult_12": 3780,
+    "stand-drink-sil:Male_Adult_17": 1358,
+    "stand-drink-sil:Male_Adult_07": 837,
+    "stand-drink-sil:Female_Adult_04": 1354
+   },
+   "other": 3401
+  },
+  "venue": "openmic",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 34,
+  "triangles": 64042,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.5846000000067288,
+  "texMB": 27.86787923177083,
+  "dlMB": 3.3426780700683594,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Female_Adult_02",
+   "Male_Adult_06",
+   "Male_Adult_10",
+   "Male_Adult_12",
+   "Female_Adult_03"
+  ],
+  "errors": [],
+  "ms": 1664
+ },
+ "crowd3d-v5-openmic-preview": {
+  "breakdown": {
+   "front": 30697,
+   "inst": {
+    "lod:Female_Adult_12": 6214,
+    "lod:Female_Adult_17": 3186,
+    "sil:Male_Adult_04": 3600,
+    "sil:Male_Adult_07": 2511,
+    "sil:Male_Adult_17": 2716,
+    "sil:Female_Adult_17": 4388,
+    "sil:Female_Adult_12": 3780,
+    "stand-drink-sil:Male_Adult_17": 1358,
+    "stand-drink-sil:Male_Adult_07": 837,
+    "stand-drink-sil:Female_Adult_04": 1354
+   },
+   "other": 3401
+  },
+  "venue": "openmic",
+  "mode": "preview",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 25,
+  "triangles": 48817,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.2911999999920372,
+  "texMB": 27.86787923177083,
+  "dlMB": 3.3426780700683594,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Female_Adult_02",
+   "Male_Adult_06",
+   "Male_Adult_10",
+   "Male_Adult_12",
+   "Female_Adult_03"
+  ],
+  "errors": [],
+  "ms": 1433
+ },
+ "crowd3d-v5-openmic-after": {
+  "breakdown": {
+   "front": 30697,
+   "inst": {
+    "lod:Female_Adult_12": 6214,
+    "lod:Female_Adult_17": 3186,
+    "sil:Male_Adult_04": 3600,
+    "sil:Male_Adult_07": 2511,
+    "sil:Male_Adult_17": 2716,
+    "sil:Female_Adult_17": 4388,
+    "sil:Female_Adult_12": 3780,
+    "stand-drink-sil:Male_Adult_17": 1358,
+    "stand-drink-sil:Male_Adult_07": 837,
+    "stand-drink-sil:Female_Adult_04": 1354
+   },
+   "other": 3415
+  },
+  "venue": "openmic",
+  "mode": "after",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 35,
+  "triangles": 64056,
+  "front": 6,
+  "mid": 0,
+  "back": 26,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.5329000000060768,
+  "texMB": 27.86787923177083,
+  "dlMB": 3.3426780700683594,
+  "programs": 12,
+  "aa": false,
+  "cast": [
+   "Female_Adult_13",
+   "Female_Adult_02",
+   "Male_Adult_06",
+   "Male_Adult_10",
+   "Male_Adult_12",
+   "Female_Adult_03"
+  ],
+  "errors": [],
+  "ms": 1621
+ }
+}

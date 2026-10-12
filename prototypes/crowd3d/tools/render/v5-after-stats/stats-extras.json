@@ -1,0 +1,139 @@
+{
+ "crowd3d-v5-club-listen-false": {
+  "breakdown": {
+   "front": 32530,
+   "inst": {
+    "sil:Female_Adult_13": 3144,
+    "sil:Female_Adult_12": 2835,
+    "sil:Male_Adult_06": 2391,
+    "sil:Male_Adult_12": 2576,
+    "sil:Male_Adult_17": 2716,
+    "far:Male_Adult_10": 3850,
+    "far:Female_Adult_02": 5210,
+    "far:Female_Adult_12": 4912,
+    "far:Male_Adult_06": 3753,
+    "far:Male_Adult_17": 2485,
+    "far:Male_Adult_12": 2688,
+    "stand-drink-sil:Female_Adult_13": 1048
+   },
+   "other": 11377
+  },
+  "venue": "club",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 39,
+  "triangles": 81515,
+  "front": 6,
+  "mid": 0,
+  "back": 70,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.3715000000048895,
+  "texMB": 27.600830078124996,
+  "dlMB": 3.301555633544922,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Male_Adult_10",
+   "Male_Adult_04",
+   "Female_Adult_02",
+   "Female_Adult_03",
+   "Female_Adult_04",
+   "Male_Adult_07"
+  ],
+  "errors": [],
+  "ms": 1923
+ },
+ "crowd3d-v5-theatre-listen-false": {
+  "breakdown": {
+   "front": 32481,
+   "inst": {
+    "sil:Female_Adult_13": 2096,
+    "sil:Female_Adult_02": 1770,
+    "sil:Male_Adult_07": 2511,
+    "sil:Male_Adult_17": 2037,
+    "sil:Male_Adult_06": 1594,
+    "xfar:Male_Adult_12": 3515,
+    "xfar:Female_Adult_12": 9020,
+    "xfar:Male_Adult_10": 4347,
+    "xfar:Female_Adult_02": 6707,
+    "xfar:Male_Adult_06": 4370,
+    "xfar:Male_Adult_17": 4032
+   },
+   "other": 4795
+  },
+  "venue": "theatre",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 37,
+  "triangles": 79275,
+  "front": 6,
+  "mid": 0,
+  "back": 128,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.3528999999903608,
+  "texMB": 27.97408040364583,
+  "dlMB": 3.2637062072753906,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_04",
+   "Female_Adult_03",
+   "Male_Adult_10",
+   "Female_Adult_12",
+   "Male_Adult_04",
+   "Male_Adult_12"
+  ],
+  "errors": [],
+  "ms": 1742
+ },
+ "crowd3d-v5-club-listen-mirror0": {
+  "breakdown": {
+   "front": 32530,
+   "inst": {
+    "sil:Female_Adult_13": 3144,
+    "sil:Female_Adult_12": 2835,
+    "sil:Male_Adult_06": 2391,
+    "sil:Male_Adult_12": 2576,
+    "sil:Male_Adult_17": 2716,
+    "far:Male_Adult_10": 3850,
+    "far:Female_Adult_02": 5210,
+    "far:Female_Adult_12": 4912,
+    "far:Male_Adult_06": 3753,
+    "far:Male_Adult_17": 2485,
+    "far:Male_Adult_12": 2688,
+    "stand-drink-sil:Female_Adult_13": 1048
+   },
+   "other": 11377
+  },
+  "venue": "club",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 39,
+  "triangles": 81515,
+  "front": 6,
+  "mid": 0,
+  "back": 70,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.4024999999976717,
+  "texMB": 27.600830078124996,
+  "dlMB": 3.301555633544922,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Male_Adult_10",
+   "Male_Adult_04",
+   "Female_Adult_02",
+   "Female_Adult_03",
+   "Female_Adult_04",
+   "Male_Adult_07"
+  ],
+  "errors": [],
+  "ms": 1717
+ }
+}

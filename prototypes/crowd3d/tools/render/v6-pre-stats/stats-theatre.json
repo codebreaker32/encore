@@ -1,0 +1,247 @@
+{
+ "crowd3d-v6-pre-theatre-listen": {
+  "breakdown": {
+   "front": 31240,
+   "inst": {
+    "sil:Female_Adult_12": 1890,
+    "sil:Male_Adult_04": 1800,
+    "sil:Male_Adult_10": 1396,
+    "sil:Female_Adult_02": 1770,
+    "sil:Female_Adult_03": 2162,
+    "sil:Male_Adult_17": 1358,
+    "xfar:Male_Adult_12": 3700,
+    "xfar:Male_Adult_06": 4830,
+    "xfar:Male_Adult_17": 4480,
+    "xfar:Female_Adult_12": 8569,
+    "xfar:Male_Adult_10": 3726,
+    "xfar:Female_Adult_02": 6354
+   },
+   "other": 4907
+  },
+  "venue": "theatre",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 38,
+  "triangles": 78182,
+  "front": 6,
+  "mid": 0,
+  "back": 128,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.47630000000726436,
+  "texMB": 26.91573079427083,
+  "dlMB": 3.5230579376220703,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_04",
+   "Male_Adult_06",
+   "Female_Adult_13",
+   "Male_Adult_07",
+   "Female_Adult_17",
+   "Male_Adult_12"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1755
+ },
+ "crowd3d-v6-pre-theatre-laugh": {
+  "breakdown": {
+   "front": 31240,
+   "inst": {
+    "sil:Female_Adult_12": 1890,
+    "sil:Male_Adult_04": 1800,
+    "sil:Male_Adult_10": 1396,
+    "sil:Female_Adult_02": 1770,
+    "sil:Female_Adult_03": 2162,
+    "sil:Male_Adult_17": 1358,
+    "xfar:Male_Adult_12": 3700,
+    "xfar:Male_Adult_06": 4830,
+    "xfar:Male_Adult_17": 4480,
+    "xfar:Female_Adult_12": 8569,
+    "xfar:Male_Adult_10": 3726,
+    "xfar:Female_Adult_02": 6354
+   },
+   "other": 4893
+  },
+  "venue": "theatre",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 37,
+  "triangles": 78168,
+  "front": 6,
+  "mid": 0,
+  "back": 128,
+  "sprites": 0,
+  "shot": "close",
+  "cpuMs": 0.5133000001125039,
+  "texMB": 26.91573079427083,
+  "dlMB": 3.5230579376220703,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_04",
+   "Male_Adult_06",
+   "Female_Adult_13",
+   "Male_Adult_07",
+   "Female_Adult_17",
+   "Male_Adult_12"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 2034
+ },
+ "crowd3d-v6-pre-theatre-laugh-wide": {
+  "breakdown": {
+   "front": 31240,
+   "inst": {
+    "sil:Female_Adult_12": 1890,
+    "sil:Male_Adult_04": 1800,
+    "sil:Male_Adult_10": 1396,
+    "sil:Female_Adult_02": 1770,
+    "sil:Female_Adult_03": 2162,
+    "sil:Male_Adult_17": 1358,
+    "xfar:Male_Adult_12": 3700,
+    "xfar:Male_Adult_06": 4830,
+    "xfar:Male_Adult_17": 4480,
+    "xfar:Female_Adult_12": 8569,
+    "xfar:Male_Adult_10": 3726,
+    "xfar:Female_Adult_02": 6354
+   },
+   "other": 4893
+  },
+  "venue": "theatre",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 37,
+  "triangles": 78168,
+  "front": 6,
+  "mid": 0,
+  "back": 128,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.5577000000318513,
+  "texMB": 26.91573079427083,
+  "dlMB": 3.5230579376220703,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_04",
+   "Male_Adult_06",
+   "Female_Adult_13",
+   "Male_Adult_07",
+   "Female_Adult_17",
+   "Male_Adult_12"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1695
+ },
+ "crowd3d-v6-pre-theatre-preview": {
+  "breakdown": {
+   "front": 31240,
+   "inst": {
+    "sil:Female_Adult_12": 1890,
+    "sil:Male_Adult_04": 1800,
+    "sil:Male_Adult_10": 1396,
+    "sil:Female_Adult_02": 1770,
+    "sil:Female_Adult_03": 2162,
+    "sil:Male_Adult_17": 1358,
+    "xfar:Male_Adult_12": 3700,
+    "xfar:Male_Adult_06": 4830,
+    "xfar:Male_Adult_17": 4480,
+    "xfar:Female_Adult_12": 8569,
+    "xfar:Male_Adult_10": 3726,
+    "xfar:Female_Adult_02": 6354
+   },
+   "other": 4893
+  },
+  "venue": "theatre",
+  "mode": "preview",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 34,
+  "triangles": 72836,
+  "front": 6,
+  "mid": 0,
+  "back": 128,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.4129999999813737,
+  "texMB": 26.91573079427083,
+  "dlMB": 3.5230579376220703,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_04",
+   "Male_Adult_06",
+   "Female_Adult_13",
+   "Male_Adult_07",
+   "Female_Adult_17",
+   "Male_Adult_12"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1532
+ },
+ "crowd3d-v6-pre-theatre-after": {
+  "breakdown": {
+   "front": 31240,
+   "inst": {
+    "sil:Female_Adult_12": 1890,
+    "sil:Male_Adult_04": 1800,
+    "sil:Male_Adult_10": 1396,
+    "sil:Female_Adult_02": 1770,
+    "sil:Female_Adult_03": 2162,
+    "sil:Male_Adult_17": 1358,
+    "xfar:Male_Adult_12": 3700,
+    "xfar:Male_Adult_06": 4830,
+    "xfar:Male_Adult_17": 4480,
+    "xfar:Female_Adult_12": 8569,
+    "xfar:Male_Adult_10": 3726,
+    "xfar:Female_Adult_02": 6354
+   },
+   "other": 4907
+  },
+  "venue": "theatre",
+  "mode": "after",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 38,
+  "triangles": 78182,
+  "front": 6,
+  "mid": 0,
+  "back": 128,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.6151000000610949,
+  "texMB": 26.91573079427083,
+  "dlMB": 3.5230579376220703,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_04",
+   "Male_Adult_06",
+   "Female_Adult_13",
+   "Male_Adult_07",
+   "Female_Adult_17",
+   "Male_Adult_12"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1603
+ }
+}

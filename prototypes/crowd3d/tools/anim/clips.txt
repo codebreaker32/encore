@@ -1,0 +1,57 @@
+# Rocketbox animation clips used by the crowd (Assets/Animations/all_animations_max_motextr_<folder>/<clip>.max.fbx)
+# folder clip fps maxSeconds(0 = whole clip)
+# walks (root motion in xy), sitting down and standing up (xyz)
+xy m_walk_neutral_01 24 0
+xy m_walk_neutral_02 24 0
+xy f_walk_neutral_01 24 0
+xy f_walk_neutral_02 24 0
+xy m_walk_slow_01 24 0
+xy f_walk_slow_01 24 0
+xyz m_sit_down_chair_01 20 0
+xyz f_sit_down_chair_01 20 0
+xyz m_sit_stand_up_chair_01 20 0
+xyz f_sit_stand_up_chair_01 20 0
+# seated idle bases (looped with a crossfade)
+static m_sit_chair_idle_neutral_01 10 18
+static m_sit_chair_breathe_01 10 12
+static f_sit_chair_idle_neutral_01 10 18
+static f_sit_chair_breathe_01 10 12
+# seated fidgets (one-shots)
+static m_sit_chair_idle_look_around 12 0
+static f_sit_chair_idle_look_around 12 0
+static m_sit_chair_idle_touch_face 12 0
+static f_sit_chair_idle_touch_face 12 0
+static m_sit_chair_idle_touch_hair 12 0
+static f_sit_chair_idle_touch_hair 12 0
+static m_sit_chair_idle_scratch_head 12 0
+static f_sit_chair_idle_scratch_head 12 0
+static m_sit_chair_idle_cough 12 0
+static f_sit_chair_idle_cough 12 0
+static m_sit_chair_idle_yawn 12 0
+static f_sit_chair_idle_yawn 12 0
+static m_sit_chair_idle_roll_head 12 0
+static f_sit_chair_idle_roll_head 12 0
+static m_sit_chair_gestic_shrug_01 15 0
+static f_sit_chair_gestic_shrug_01 15 0
+static m_sit_chair_gestic_thoughtful 12 10
+static f_sit_chair_gestic_thoughtful 12 0
+# talking and listening (standing captures, layered onto the seated body: upper body only, additive)
+static m_gestic_talk_neutral_01 12 12
+static f_gestic_talk_neutral_01 12 12
+static m_gestic_talk_relaxed_01 12 12
+static f_gestic_talk_relaxed_01 12 12
+static m_gestic_talk_excited_01 12 12
+static f_gestic_talk_excited_01 12 12
+static m_gestic_listen_accept_01 15 0
+static f_gestic_listen_accept_01 15 0
+static m_gestic_listen_accept_02 15 0
+static f_gestic_listen_accept_02 15 0
+static m_gestic_listen_neutral_01 10 10
+static f_gestic_listen_neutral_01 10 10
+# laughter (torso and head, additive)
+static m_gestic_laugh_low 20 8
+static f_gestic_laugh_low 20 8
+static m_gestic_laugh_loud 20 8
+static f_gestic_laugh_loud 20 8
+static m_gestic_laugh_extreme 20 8
+static f_gestic_laugh_extreme 20 8

@@ -1,0 +1,150 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="world.css">
+<style>
+  /* Concept prototype: a live 2D crowd drawn only from simple shapes (ellipses, rounded bars, circles), every joint
+     angle computed in code. On the TV the same shapes would be native Views moved by Reanimated; the canvas here is a
+     preview of exactly those shapes. No photos, no video, no pre-drawn poses. */
+  #c { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
+  .grainov { position: absolute; inset: -40px; background: url("grain.png") repeat; background-size: 512px; opacity: .12; mix-blend-mode: overlay; pointer-events: none; }
+  .vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 75% 70% at 50% 46%, rgba(0,0,0,0) 55%, rgba(7,6,10,.72) 100%); }
+  .lowband { position: absolute; left: 0; right: 0; bottom: 0; height: 320px; pointer-events: none; background: linear-gradient(180deg, rgba(7,6,10,0), rgba(7,6,10,.72)); }
+  .cut { position: absolute; left: 90px; top: 54px; text-shadow: 0 2px 12px rgba(0,0,0,.85); }
+  .cut .what { font-family: var(--display); font-weight: 800; font-size: 44px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); line-height: 1; }
+  .cut .why { font-family: var(--text); font-size: 26px; color: var(--paper); margin-top: 10px; }
+  .cut .why span { color: var(--gold-dim); }
+</style></head>
+<body><div class="tv">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div class="lowband"></div><div class="vig"></div><div class="grainov"></div>
+  <div class="cut" id="cut"></div>
+  <div class="live"><i></i>LIVE <small>mic on · Aman's phone</small></div>
+  <div class="lower-third"><div class="venue">The Basement · <em>Comedy Club</em></div><div class="rule"></div><div class="clock">3:12 <small>of a 5:00 set</small></div></div>
+  <div class="hints"><span><b>OK</b>end set</span><span><b>Back</b>stop</span></div>
+</div>
+<script>
+const Q = new URLSearchParams(location.search);
+const MODE = Q.get('state') || 'listen';      // 'listen' | 'laugh' | 'cycle' (listens, laughs, settles: the live demo)
+let STATE = MODE === 'cycle' ? 'listen' : MODE, SINCE = 0;
+const T = parseFloat(Q.get('t') || '1.3');
+const STRENGTH = parseFloat(Q.get('s') || '0.85');
+document.getElementById('cut').innerHTML = STATE === 'laugh'
+  ? '<div class="what">Laugh</div><div class="why">0.6 s after your line <span>· the room\'s third tonight</span></div>'
+  : '<div class="what">Wide</div><div class="why">the room is listening <span>· bit 3, 41 s in</span></div>';
+
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = rng(20261011);
+const cv = document.getElementById('c'); const g = cv.getContext('2d');
+const W = 1920, H = 1080;
+
+const SKIN = ['#8d5524', '#c68642', '#e0ac69', '#f1c27d', '#6b3e26', '#a0673f', '#d9a07a', '#4a2c1d'];
+const HAIR = ['#111', '#2b1a12', '#3b2a1a', '#5a3a20', '#1a1a1a', '#8a6a3a', '#222'];
+const CLOTH = ['#1c2433', '#2e2020', '#232c22', '#342a2c', '#16161c', '#46382c', '#21253a', '#5a2626', '#26343c', '#2c2c2c', '#5c5046', '#7a5a3a'];
+const hex = (h) => { const n = h.length === 4 ? h.replace(/#(.)(.)(.)/, '#$1$1$2$2$3$3') : h; return [1, 3, 5].map((i) => parseInt(n.slice(i, i + 2), 16)); };
+// Colour by depth: far rows sink into the haze, the stage spill warms the near ones.
+const shade = (h, light, warm) => { const [r, gg, b] = hex(h); const k = light; return `rgb(${Math.round(Math.min(255, r * k + warm * 60))},${Math.round(Math.min(255, gg * k + warm * 34))},${Math.round(Math.min(255, b * k + warm * 8))})`; };
+
+// Camera: the wide holds the whole room; the laugh cut is a medium shot of the front tables.
+const camFor = (st) => (st === 'laugh' ? { s: 1.75, cx: 760, cy: 700 } : { s: 1, cx: W / 2, cy: H / 2 });
+let cam = camFor(STATE);
+
+// The room: rows of seats receding towards the back wall.
+const ROWS = [ { y: 520, sc: 0.32, n: 15 }, { y: 560, sc: 0.40, n: 13 }, { y: 610, sc: 0.50, n: 12 }, { y: 675, sc: 0.62, n: 10 }, { y: 760, sc: 0.78, n: 8 }, { y: 870, sc: 0.98, n: 7 } ];
+const people = [];
+let seed = 3;
+ROWS.forEach((row, ri) => {
+  const span = 1500 + ri * 120;
+  for (let i = 0; i < row.n; i++) {
+    if (R() < 0.07) continue;
+    const r = rng(seed++);
+    people.push({ ri, x: W / 2 - span / 2 + (i + 0.5) * (span / row.n) + (R() - 0.5) * 40, y: row.y + (R() - 0.5) * 12, sc: row.sc * (0.92 + R() * 0.16),
+      skin: SKIN[Math.floor(r() * SKIN.length)], hair: HAIR[Math.floor(r() * HAIR.length)], cloth: CLOTH[Math.floor(r() * CLOTH.length)],
+      hairStyle: r(), eager: r(), delay: 0.05 + r() * 0.45, style: r(), phase: r() * 6.28, idle: ['still', 'still', 'lean', 'drink', 'arms', 'phone', 'chin', 'lean', 'still'][Math.floor(r() * 9)] });
+  }
+});
+
+function capsule(x1, y1, x2, y2, w, color) { g.strokeStyle = color; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); }
+function ell(x, y, rx, ry, rot, color) { g.fillStyle = color; g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); g.fill(); }
+
+function drawPerson(p, now) {
+  const depth = p.ri / (ROWS.length - 1);            // 0 back … 1 front
+  const light = 0.32 + depth * 0.58;                 // far rows sink into the haze
+  const S = p.sc * 120;                              // body unit in pixels
+  // Arm angles are measured from hanging straight down: positive swings outward to the side, negative across the body.
+  // Each arm has an upper-arm angle (a) and an absolute forearm angle (f).
+  let lean = 0, tilt = (p.style - 0.5) * 0.2, open = 0.1, squint = 1, lift = 0;
+  let L = { a: 0.12, f: -0.35 }, Rr = { a: 0.12, f: -0.35 }, phone = false;
+  if (STATE === 'listen') {
+    tilt += Math.sin(now * 0.4 + p.phase) * 0.08;
+    if (p.idle === 'lean') { lean = 0.12; L = { a: 0.3, f: -1.25 }; Rr = { a: 0.3, f: -1.25 }; }
+    if (p.idle === 'drink') { Rr = { a: 0.2, f: -2.55 }; tilt -= 0.12; }
+    if (p.idle === 'arms') { L = { a: 0.15, f: -1.55 }; Rr = { a: 0.15, f: -1.45 }; }
+    if (p.idle === 'phone') { Rr = { a: 0.12, f: -1.95 }; tilt = 0.35; phone = true; }
+    if (p.idle === 'chin') { Rr = { a: 0.15, f: -2.9 }; tilt = 0.22; }
+  } else {
+    const reach = STRENGTH * 1.25 - (ROWS.length - 1 - p.ri) * 0.12 + (p.eager - 0.5) * 0.5;
+    const local = now - SINCE - p.delay - (ROWS.length - 1 - p.ri) * 0.08;   // the laugh spreads back through the room
+    const k = Math.max(0, Math.min(1, reach)) * Math.max(0, Math.min(1, local / 0.35));
+    const shake = Math.sin(now * 17 + p.phase) * 0.05 * k;
+    open = 0.1 + k; squint = 1 - 0.8 * k; lift = 0.06 * k + shake * 0.4;
+    if (p.style < 0.33) { tilt = -0.42 * k + shake; L = { a: 0.15, f: -0.75 }; Rr = { a: 0.15, f: -0.75 }; }                  // head back, hands on belly
+    else if (p.style < 0.6) { lean = 0.22 * k; tilt = 0.25 * k + shake; L = { a: 0.3, f: -1.05 }; Rr = { a: 0.35, f: -0.6 }; } // doubled over
+    else if (p.style < 0.85) { const clap = Math.sin(now * 14 + p.phase) * 0.12 * k; L = { a: 0.35, f: -1.95 - clap }; Rr = { a: 0.35, f: -1.95 + clap }; tilt = -0.15 * k; } // clapping
+    else { L = { a: 2.75 * k + 0.1, f: 2.95 * k }; Rr = { a: 0.12, f: -0.5 }; tilt = -0.3 * k; }                              // a hand in the air
+    if (p.idle === 'phone' && k < 0.3) phone = true;  // someone who missed the joke is still on their phone
+  }
+  const x = p.x, base = p.y - lift * S;
+  const cloth = shade(p.cloth, light, 0), skin = shade(p.skin, Math.min(1, light + 0.08), 0), hair = shade(p.hair, light, 0);
+  const rim = `rgba(150,160,255,${0.16 + depth * 0.22})`;
+  const sw = 0.62 * S, th = 0.95 * S, top = base - th + lean * 0.3 * S;
+  g.fillStyle = cloth; g.beginPath(); g.moveTo(x - sw * 0.5, top + 0.12 * S); g.quadraticCurveTo(x - sw * 0.52, top, x - sw * 0.3, top - 0.02 * S); g.lineTo(x + sw * 0.3, top - 0.02 * S);
+  g.quadraticCurveTo(x + sw * 0.52, top, x + sw * 0.5, top + 0.12 * S); g.lineTo(x + sw * 0.4, base); g.lineTo(x - sw * 0.4, base); g.closePath(); g.fill();
+  g.strokeStyle = rim; g.lineWidth = Math.max(1, S * 0.03); g.beginPath(); g.moveTo(x - sw * 0.5, top + 0.12 * S); g.quadraticCurveTo(x - sw * 0.52, top, x - sw * 0.3, top - 0.02 * S); g.stroke();
+  const hx = x + Math.sin(tilt) * 0.1 * S + lean * 0.15 * S, hy = top - 0.24 * S;
+  capsule(x, top + 0.02 * S, hx, hy + 0.1 * S, 0.11 * S, skin);
+  g.save(); g.translate(hx, hy); g.rotate(tilt);
+  ell(0, 0, 0.19 * S, 0.23 * S, 0, skin);
+  g.fillStyle = `rgba(255,214,160,${0.06 + depth * 0.16})`; g.beginPath(); g.ellipse(-0.05 * S, -0.03 * S, 0.1 * S, 0.13 * S, 0, 0, Math.PI * 2); g.fill(); // stage light on the face
+  if (p.hairStyle > 0.12) { g.fillStyle = hair; g.beginPath(); g.ellipse(0, -0.07 * S, 0.2 * S, 0.17 * S, 0, Math.PI, 0); g.fill(); if (p.hairStyle > 0.72) { g.fillRect(-0.2 * S, -0.07 * S, 0.06 * S, 0.24 * S); g.fillRect(0.14 * S, -0.07 * S, 0.06 * S, 0.24 * S); } }
+  if (depth > 0.25) {
+    const eye = '#1a0d0a';
+    [-0.07, 0.07].forEach((ex) => ell(ex * S, 0.0, 0.022 * S, 0.022 * S * Math.max(0.2, squint), 0, eye));
+    if (open > 0.4) { ell(0, 0.1 * S, 0.075 * S * (0.8 + open * 0.3), 0.045 * S * open, 0, '#5a1c1c'); g.fillStyle = '#e8ddd0'; g.fillRect(-0.05 * S, 0.075 * S, 0.1 * S, 0.018 * S); }
+    else { g.strokeStyle = '#4a1a1a'; g.lineWidth = Math.max(1, 0.018 * S); g.beginPath(); g.arc(0, 0.06 * S, 0.06 * S, 0.25 * Math.PI, 0.75 * Math.PI); g.stroke(); }
+  }
+  g.restore();
+  [[-1, L], [1, Rr]].forEach(([side, a]) => {
+    const sx = x + side * sw * 0.44, sy = top + 0.06 * S;
+    const ex = sx + side * Math.sin(a.a) * 0.36 * S, ey = sy + Math.cos(a.a) * 0.36 * S;
+    const hx2 = ex + side * Math.sin(a.f) * 0.32 * S, hy2 = ey + Math.cos(a.f) * 0.32 * S;
+    capsule(sx, sy, ex, ey, 0.11 * S, cloth); capsule(ex, ey, hx2, hy2, 0.095 * S, cloth); ell(hx2, hy2, 0.06 * S, 0.06 * S, 0, skin);
+    if (phone && side === 1) { g.fillStyle = 'rgba(159,194,255,.95)'; g.fillRect(hx2 - 0.05 * S, hy2 - 0.15 * S, 0.1 * S, 0.16 * S); g.fillStyle = 'rgba(159,194,255,.12)'; g.beginPath(); g.ellipse(hx2, hy2 - 0.1 * S, 0.3 * S, 0.3 * S, 0, 0, Math.PI * 2); g.fill(); }
+  });
+}
+
+function drawRoom() {
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#07060a'); bg.addColorStop(0.45, '#1a0d10'); bg.addColorStop(1, '#100a0c'); g.fillStyle = bg; g.fillRect(-W, -H, W * 3, H * 3);
+  for (let i = 0; i < 7; i++) { const bx = 240 + i * 240, by = 330 + (i % 2) * 20; const rad = g.createRadialGradient(bx, by, 0, bx, by, 60); rad.addColorStop(0, 'rgba(255,200,130,.55)'); rad.addColorStop(1, 'rgba(255,200,130,0)'); g.fillStyle = rad; g.fillRect(bx - 60, by - 60, 120, 120); }
+  const pool = g.createRadialGradient(W / 2, H * 1.05, 50, W / 2, H * 1.05, 900); pool.addColorStop(0, 'rgba(255,190,120,.30)'); pool.addColorStop(1, 'rgba(255,190,120,0)'); g.fillStyle = pool; g.fillRect(-W, -H, W * 3, H * 3);
+  const floor = g.createLinearGradient(0, 480, 0, H); floor.addColorStop(0, 'rgba(40,22,30,.0)'); floor.addColorStop(1, 'rgba(60,34,40,.5)'); g.fillStyle = floor; g.fillRect(0, 480, W, H - 480);
+}
+function drawTable(x, y, sc) {
+  const S = sc * 120; ell(x, y, 0.55 * S, 0.14 * S, 0, '#2a1a12'); ell(x, y - 0.03 * S, 0.55 * S, 0.12 * S, 0, '#3a2618');
+  g.fillStyle = 'rgba(255,180,80,.85)'; g.fillRect(x - 0.22 * S, y - 0.3 * S, 0.1 * S, 0.24 * S); g.fillRect(x + 0.1 * S, y - 0.27 * S, 0.1 * S, 0.21 * S);
+  g.fillStyle = 'rgba(255,240,200,.6)'; g.fillRect(x - 0.22 * S, y - 0.3 * S, 0.1 * S, 0.03 * S);
+}
+
+function frame(now) {
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#07060a'; g.fillRect(0, 0, W, H);
+  g.setTransform(cam.s, 0, 0, cam.s, W / 2 - cam.cx * cam.s, H / 2 - cam.cy * cam.s);
+  drawRoom();
+  ROWS.forEach((row, ri) => {
+    people.filter((p) => p.ri === ri).forEach((p) => drawPerson(p, now));
+    if (ri >= 3) for (let i = 0; i < row.n; i += 2) { const span = 1500 + ri * 120; drawTable(W / 2 - span / 2 + (i + 1) * (span / row.n), row.y + 70 * row.sc, row.sc); }
+    if (ri === 1) { const haze = g.createLinearGradient(0, 430, 0, 640); haze.addColorStop(0, 'rgba(11,8,16,.6)'); haze.addColorStop(1, 'rgba(11,8,16,0)'); g.fillStyle = haze; g.fillRect(-W, 430, W * 3, 210); }
+  });
+}
+let t0 = performance.now(), frames = 0;
+function cycle(now) { if (MODE !== 'cycle') return; const c = now % 9; const st = c < 4.5 ? 'listen' : 'laugh'; if (st !== STATE) { STATE = st; SINCE = now - (st === 'laugh' ? 0 : 0); cam = camFor(st); document.getElementById('cut').innerHTML = st === 'laugh' ? '<div class="what">Laugh</div><div class="why">0.6 s after your line <span>· the room\'s third tonight</span></div>' : '<div class="what">Wide</div><div class="why">the room is listening <span>· bit 3, 41 s in</span></div>'; } }
+function loop() { const now = Q.has('still') ? T : T + (performance.now() - t0) / 1000; cycle(now); frame(now); frames++; if (frames >= 1) document.body.dataset.ready = '1'; window.__people = people.length; if (!Q.has('still')) requestAnimationFrame(loop); }
+document.fonts.ready.then(loop);
+</script></body></html>

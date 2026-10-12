@@ -1,0 +1,646 @@
+Encore night test on the Android TV emulator, 2026-10-12 (times UTC): three scripted sets with words on, 3D room on
+Box: BOX=android (ap-southeast-1, c7i.2xlarge, KVM, no GPU). Emulator 37.2.12, system-images;android-34;android-tv;x86 r3, AVD encore_tv34 (1920x1080 @ 320 dpi), -gpu host, Xvfb 2560x1600, PulseAudio null sink.
+APK: ~/.cache/encore-apk/encore-release-2026-10-12-h-emu.apk, md5 fa9140ac6cda0bb24b00d81a06fb3429; built 11:43 on BOX=build (repo synced there about 10:05), x86+x86_64, Hermes bundle rebuilt (--rerun) 11:43:15, crowd page packed --tv (12.3 MB).
+Services on the box: relay (RELAY_DEBUG_ROOMS=1) and MC (instance role; MC_HUMOR_MODEL_DIR=~/models/humor-int8, uv sync --group humor).
+Phones: fake-phone --words scripts/{standup,poetry,speech}-demo.json, names Aman, Riya, Kabir (see 'name-taken').
+
+
+==== timeline, run1 (stand-up; the first poetry/speech attempt there had no phone: name-taken) ====
+11:56:18.594 launch
+11:56:26.965 deep link stage?crowd=3d
+11:56:39.042 room VRVX
+11:56:39.058 recorder started (standup)
+11:56:42.068 fake phone standup joins room VRVX with scripts/standup-demo.json
+11:56:52.074 screenshot standup-bill
+11:56:52.263 key KEYCODE_DPAD_CENTER
+11:56:52.773 OK: go live (standup)
+12:00:34.936 phone standup: live: "Rent, Parents and Other Utilities", 43 lines, ends at 221.1 s of a 300 s slot
+12:00:34.941 phone standup finished
+12:01:16.239 screenshot standup-cutsheet
+12:01:19.474 screenshot standup-cutsheet-2
+12:01:22.484 recorder stopped (standup)
+12:01:22.491 fake phone standup stopped
+12:01:22.508 recorder started (poetry)
+12:01:22.516 fake phone poetry joins room VRVX with scripts/poetry-demo.json
+12:01:25.678 key KEYCODE_DEL
+12:01:27.818 key KEYCODE_DPAD_RIGHT
+12:01:29.857 key KEYCODE_DPAD_UP
+12:01:31.140 key KEYCODE_DPAD_UP
+12:01:32.472 key KEYCODE_DPAD_RIGHT
+12:01:33.790 key KEYCODE_DPAD_RIGHT
+12:01:44.771 screenshot poetry-bill
+12:01:44.994 key KEYCODE_DPAD_CENTER
+12:01:45.505 OK: go live (poetry)
+12:07:17.205 phone poetry: 
+12:07:17.210 phone poetry finished
+12:07:58.199 screenshot poetry-cutsheet
+12:08:01.028 screenshot poetry-cutsheet-2
+12:08:04.042 recorder stopped (poetry)
+12:08:04.049 fake phone poetry stopped
+12:08:04.074 recorder started (speech)
+12:08:04.078 fake phone speech joins room VRVX with scripts/speech-demo.json
+12:08:07.280 key KEYCODE_DEL
+12:08:09.443 key KEYCODE_DPAD_RIGHT
+12:08:11.680 key KEYCODE_DPAD_UP
+12:08:13.081 key KEYCODE_DPAD_UP
+12:08:14.469 key KEYCODE_DPAD_RIGHT
+12:08:25.491 screenshot speech-bill
+12:08:25.705 key KEYCODE_DPAD_CENTER
+12:08:26.219 OK: go live (speech)
+
+
+==== timeline, run2 (poetry, speech, the remote's Back key) ====
+12:14:15.818 recorder started (poetry)
+12:14:15.824 fake phone poetry joins room VRVX with scripts/poetry-demo.json as Riya
+12:14:19.053 key KEYCODE_DPAD_RIGHT
+12:14:20.497 key KEYCODE_DPAD_RIGHT
+12:14:31.826 screenshot poetry-bill
+12:14:31.937 key KEYCODE_DPAD_CENTER
+12:14:32.442 OK: go live (poetry)
+12:15:42.792 phone poetry: live: "Monsoon, Mumbai", 11 lines, ends at 68.7 s of a 180 s slot
+12:15:42.797 phone poetry finished
+12:16:23.625 screenshot poetry-cutsheet
+12:16:26.344 screenshot poetry-cutsheet-2
+12:16:29.361 recorder stopped (poetry)
+12:16:29.370 fake phone poetry stopped
+12:16:29.385 recorder started (speech)
+12:16:29.390 fake phone speech joins room VRVX with scripts/speech-demo.json as Kabir
+12:16:32.456 key KEYCODE_DEL
+12:16:34.646 key KEYCODE_DPAD_RIGHT
+12:16:36.675 key KEYCODE_DPAD_UP
+12:16:38.093 key KEYCODE_DPAD_UP
+12:16:39.381 key KEYCODE_DPAD_RIGHT
+12:16:50.693 screenshot speech-bill
+12:16:50.949 key KEYCODE_DPAD_CENTER
+12:16:51.456 OK: go live (speech)
+12:18:01.856 phone speech: live: "The Lake", 11 lines, ends at 69.1 s of a 240 s slot
+12:18:01.864 phone speech finished
+12:18:42.984 screenshot speech-cutsheet
+12:18:46.104 screenshot speech-cutsheet-2
+12:18:49.115 recorder stopped (speech)
+12:18:49.124 fake phone speech stopped
+12:18:49.281 key KEYCODE_BACK
+12:18:52.323 focus after KEYCODE_BACK:  mCurrentFocus=Window{914543c u0 com.google.android.tvlauncher/com.google.android.tvlauncher.MainActivity}
+12:18:53.139 screenshot after-back
+12:18:53.144 done
+
+
+==== name-taken: the second phone named Aman was refused (relay keeps a departed player's seat and name; relay.ts join, 'name-taken') ====
+12:01:23.691 [phone] connecting
+12:01:23.715 [phone] closed
+12:08:05.271 [phone] connecting
+12:08:05.294 [phone] closed
+
+
+==== [mc-voice] traces (logcat, ReactNativeJS) ====
+10-12 11:56:44.693  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791806204142 generative +0ms slot 0 paused
+10-12 11:56:51.936  2978  3004 I ReactNativeJS: [mc-voice] queued mv575lk0:0 generative +0ms
+10-12 11:56:52.074  2978  3004 I ReactNativeJS: [mc-voice] playing mv575lk0:0 generative +138ms
+10-12 11:56:56.975  2978  3004 I ReactNativeJS: [mc-voice] ended mv575lk0:0 generative +5039ms
+10-12 12:00:39.905  2978  3004 I ReactNativeJS: [mc-voice] queued debrief:mv575lk0 generative +0ms
+10-12 12:00:39.921  2978  3004 I ReactNativeJS: [mc-voice] loading debrief:mv575lk0 generative +16ms slot 0 now
+10-12 12:00:40.503  2978  3004 I ReactNativeJS: [mc-voice] playing debrief:mv575lk0 generative +598ms
+10-12 12:00:41.439  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791806440855 generative +0ms slot 1 paused
+10-12 12:00:54.449  2978  3004 I ReactNativeJS: [mc-voice] ended debrief:mv575lk0 generative +14544ms
+10-12 12:14:18.282  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791807257701 generative +0ms slot 0 paused
+10-12 12:14:21.769  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791807261072 generative +0ms slot 0 paused
+10-12 12:14:31.651  2978  3004 I ReactNativeJS: [mc-voice] queued mv57sb8j:0 generative +0ms
+10-12 12:14:31.723  2978  3004 I ReactNativeJS: [mc-voice] playing mv57sb8j:0 generative +72ms
+10-12 12:14:40.269  2978  3004 I ReactNativeJS: [mc-voice] ended mv57sb8j:0 generative +8618ms
+10-12 12:15:44.842  2978  3004 I ReactNativeJS: [mc-voice] queued debrief:mv57sb8j generative +0ms
+10-12 12:15:44.845  2978  3004 I ReactNativeJS: [mc-voice] loading debrief:mv57sb8j generative +3ms slot 0 paused
+10-12 12:15:45.223  2978  3004 I ReactNativeJS: [mc-voice] playing debrief:mv57sb8j generative +381ms
+10-12 12:15:46.446  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791807345906 generative +0ms slot 1 paused
+10-12 12:16:00.569  2978  3004 I ReactNativeJS: [mc-voice] ended debrief:mv57sb8j generative +15727ms
+10-12 12:16:32.146  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791807391262 generative +0ms slot 0 paused
+10-12 12:16:41.057  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791807400064 generative +0ms slot 0 paused
+10-12 12:16:50.531  2978  3004 I ReactNativeJS: [mc-voice] queued mv57vaeb:0 generative +0ms
+10-12 12:16:50.610  2978  3004 I ReactNativeJS: [mc-voice] playing mv57vaeb:0 generative +79ms
+10-12 12:16:57.671  2978  3004 I ReactNativeJS: [mc-voice] ended mv57vaeb:0 generative +7140ms
+10-12 12:18:02.626  2978  3004 I ReactNativeJS: [mc-voice] queued debrief:mv57vaeb generative +0ms
+10-12 12:18:02.628  2978  3004 I ReactNativeJS: [mc-voice] loading debrief:mv57vaeb generative +2ms slot 0 paused
+10-12 12:18:04.344  2978  3004 I ReactNativeJS: [mc-voice] playing debrief:mv57vaeb generative +1718ms
+10-12 12:18:05.785  2978  3004 I ReactNativeJS: [mc-voice] loading warm:1791807485178 generative +0ms slot 1 paused
+10-12 12:18:18.007  2978  3004 I ReactNativeJS: [mc-voice] ended debrief:mv57vaeb generative +15381ms
+
+
+==== [crowd] view and audio lines ====
+10-12 11:56:20.149  2978  3004 I ReactNativeJS: [crowd] audio running
+10-12 11:56:23.204  2978  3004 I ReactNativeJS: [crowd] view 960×540 css · dpr 2 · inner 1920×1080 · canvas 960×540 css, 800×450 drawn
+10-12 12:01:28.223  2978  3004 I ReactNativeJS: [crowd] audio running
+10-12 12:01:30.707  2978  3004 I ReactNativeJS: [crowd] view 960×540 css · dpr 2 · inner 1920×1080 · canvas 960×540 css, 800×450 drawn
+10-12 12:16:34.853  2978  3004 I ReactNativeJS: [crowd] audio running
+10-12 12:16:36.889  2978  3004 I ReactNativeJS: [crowd] view 960×540 css · dpr 2 · inner 1920×1080 · canvas 960×540 css, 800×450 drawn
+
+
+==== Key presses the app saw ====
+10-12 11:56:51.935  2978  3004 I ReactNativeJS: Key pressed: Enter
+10-12 12:01:25.303  2978  3004 I ReactNativeJS: Key pressed: Back
+10-12 12:01:27.503  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:01:29.572  2978  3004 I ReactNativeJS: Key pressed: Up
+10-12 12:01:30.850  2978  3004 I ReactNativeJS: Key pressed: Up
+10-12 12:01:32.112  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:01:33.502  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:01:44.613  2978  3004 I ReactNativeJS: Key pressed: Enter
+10-12 12:08:06.893  2978  3004 I ReactNativeJS: Key pressed: Back
+10-12 12:08:09.102  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:08:11.314  2978  3004 I ReactNativeJS: Key pressed: Up
+10-12 12:08:12.705  2978  3004 I ReactNativeJS: Key pressed: Up
+10-12 12:08:14.138  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:08:25.307  2978  3004 I ReactNativeJS: Key pressed: Enter
+10-12 12:14:18.668  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:14:20.106  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:14:31.651  2978  3004 I ReactNativeJS: Key pressed: Enter
+10-12 12:16:32.173  2978  3004 I ReactNativeJS: Key pressed: Back
+10-12 12:16:34.329  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:16:36.397  2978  3004 I ReactNativeJS: Key pressed: Up
+10-12 12:16:37.719  2978  3004 I ReactNativeJS: Key pressed: Up
+10-12 12:16:39.098  2978  3004 I ReactNativeJS: Key pressed: Right
+10-12 12:16:50.531  2978  3004 I ReactNativeJS: Key pressed: Enter
+
+
+==== the remote's Back key (KEYCODE_BACK=4): window manager and focus ====
+10-12 12:18:48.972   726   776 V WindowManagerShell: Transition requested: android.os.BinderProxy@8032be3 TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=34 displayId=0 isRunning=false baseIn
+10-12 12:18:49.007   530   551 W ProcessStats: Tracking association SourceState{b9cd20d com.google.android.tvlauncher/10077 BTop #1720} whose proc state 2 is better than process ProcessState{125ea33 com.google.android.gm
+10-12 12:18:49.029  1250  3609 E ActivityThread: Failed to find provider info for tvlauncher.mic
+10-12 12:18:49.044   530  1232 I ActivityTaskManager: START u0 {flg=0x14000000 cmp=com.google.android.tvlauncher/.MainActivity (has extras)} with LAUNCH_SINGLE_TASK from uid 10077 (BAL_ALLOW_ALLOWLISTED_COMPONENT) result
+10-12 12:18:49.349   530  1232 I ImeTracker: com.google.android.tvlauncher:27e26d6e: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+10-12 12:18:49.349   530  1232 I ImeTracker: com.google.android.tvlauncher:27e26d6e: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-12 12:18:49.390  1054  1054 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1899 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel
+12:18:52.323 focus after KEYCODE_BACK:  mCurrentFocus=Window{914543c u0 com.google.android.tvlauncher/com.google.android.tvlauncher.MainActivity}
+
+
+==== MC service: every model line (intro, between, heckle, end, debrief) and judge call ====
+2026-10-12 11:45:31,303 INFO mc_agent.judge: judge: humour model loaded (/home/ubuntu/models/humor-int8)
+2026-10-12 11:45:31,761 INFO mc_agent.mc: warm-up: model connection open (zai.glm-5, ap-south-1) in 1.78s
+2026-10-12 11:45:31,770 INFO mc_agent.mc: warm-up: voices warm Kajal generative+neural, sarcastic Brian generative+neural, strict Stephen generative+neural, deadpan Matthew generative+neural
+2026-10-12 11:56:44,931 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.47s, tokens in=1075 out=23 (running totals)
+2026-10-12 11:56:44,932 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 11:56:44,934 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 54 characters
+2026-10-12 11:57:03,656 INFO mc_agent.judge: judge/standup line 1: 0.39 in 238 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:08,959 INFO mc_agent.judge: judge/standup line 2: 0.37 in 259 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:11,264 INFO mc_agent.judge: judge/standup line 3: 0.43 in 249 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:15,030 INFO mc_agent.judge: judge/standup line 4: 0.49 in 238 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:16,976 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.48s, tokens in=1054 out=30 (running totals)
+2026-10-12 11:57:16,976 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 11:57:25,364 INFO mc_agent.judge: judge/standup line 5: 0.12 in 241 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:29,214 INFO mc_agent.judge: judge/standup line 6: 0.54 in 212 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:34,272 INFO mc_agent.judge: judge/standup line 7: 0.62 in 234 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:39,698 INFO mc_agent.judge: judge/standup line 8: 0.46 in 248 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:46,697 INFO mc_agent.judge: judge/standup line 9: 0.43 in 223 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:49,506 INFO mc_agent.judge: judge/standup line 10: 0.39 in 235 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:57:54,484 INFO mc_agent.judge: judge/standup line 11: 0.76 in 233 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:03,017 INFO mc_agent.judge: judge/standup line 12: 0.17 in 232 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:06,926 INFO mc_agent.judge: judge/standup line 13: 0.35 in 232 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:11,185 INFO mc_agent.judge: judge/standup line 14: 0.29 in 225 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:14,137 INFO mc_agent.judge: judge/standup line 15: 0.49 in 198 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:16,967 INFO mc_agent.mc: line/heckle model call 1: mantle zai.glm-5 in 0.62s, tokens in=1170 out=37 (running totals)
+2026-10-12 11:58:16,971 INFO mc_agent.mc: line/heckle answered by the model (sarcastic)
+2026-10-12 11:58:20,678 INFO mc_agent.judge: judge/standup line 17: 0.04 in 234 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:23,263 INFO mc_agent.judge: judge/standup line 18: 0.15 in 350 ms (humor-roberta-large-int8)
+2026-10-12 11:58:24,548 INFO mc_agent.judge: judge/standup line 19: 0.15 in 354 ms (humor-roberta-large-int8)
+2026-10-12 11:58:32,774 INFO mc_agent.judge: judge/standup line 21: 0.15 in 350 ms (humor-roberta-large-int8)
+2026-10-12 11:58:36,160 INFO mc_agent.judge: judge/standup line 22: 0.25 in 350 ms (humor-roberta-large-int8)
+2026-10-12 11:58:41,109 INFO mc_agent.judge: judge/standup line 23: 0.21 in 352 ms (humor-roberta-large-int8)
+2026-10-12 11:58:43,195 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.85s, tokens in=1052 out=26 (running totals)
+2026-10-12 11:58:43,196 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 11:58:46,914 INFO mc_agent.judge: judge/standup line 24: 0.14 in 275 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:55,855 INFO mc_agent.judge: judge/standup line 25: 0.34 in 227 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:58:59,190 INFO mc_agent.judge: judge/standup line 26: 0.47 in 227 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:02,998 INFO mc_agent.judge: judge/standup line 27: 0.55 in 224 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:08,954 INFO mc_agent.judge: judge/standup line 28: 0.36 in 221 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:14,563 INFO mc_agent.judge: judge/standup line 29: 0.54 in 218 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:25,613 INFO mc_agent.judge: judge/standup line 30: 0.51 in 229 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:27,977 INFO mc_agent.judge: judge/standup line 31: 0.46 in 193 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:32,411 INFO mc_agent.judge: judge/standup line 32: 0.90 in 238 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:34,487 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.74s, tokens in=1054 out=38 (running totals)
+2026-10-12 11:59:34,488 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 11:59:40,333 INFO mc_agent.judge: judge/standup line 33: 0.55 in 219 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:43,592 INFO mc_agent.judge: judge/standup line 34: 0.84 in 226 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:48,270 INFO mc_agent.judge: judge/standup line 35: 0.43 in 242 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 11:59:57,477 INFO mc_agent.judge: judge/standup line 36: 0.29 in 234 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:02,809 INFO mc_agent.judge: judge/standup line 37: 0.57 in 250 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:06,932 INFO mc_agent.judge: judge/standup line 38: 0.74 in 227 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:16,773 INFO mc_agent.judge: judge/standup line 39: 0.29 in 278 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:20,770 INFO mc_agent.judge: judge/standup line 40: 0.30 in 248 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:22,582 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.55s, tokens in=1054 out=34 (running totals)
+2026-10-12 12:00:22,583 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 12:00:26,283 INFO mc_agent.judge: judge/standup line 41: 0.52 in 209 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:28,709 INFO mc_agent.judge: judge/standup line 42: 0.65 in 220 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:31,636 INFO mc_agent.judge: judge/standup line 43: 0.42 in 230 ms (humor-roberta-large-int8+mistral.ministral-3-8b-instruct)
+2026-10-12 12:00:35,578 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 0.74s, tokens in=1040 out=40 (running totals)
+2026-10-12 12:00:35,579 INFO mc_agent.mc: line/end answered by the model (sarcastic)
+2026-10-12 12:00:40,122 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 5.26s, tokens in=8145 out=161 (running totals)
+2026-10-12 12:00:40,125 INFO mc_agent.mc: debrief answered by the model (sarcastic)
+2026-10-12 12:00:40,127 INFO mc_agent.mc: debrief: voice Brian on generative with a neural fallback, 188 characters
+2026-10-12 12:00:41,678 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.54s, tokens in=1084 out=36 (running totals)
+2026-10-12 12:00:41,680 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:00:41,681 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 104 characters
+2026-10-12 12:14:18,543 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.52s, tokens in=1084 out=32 (running totals)
+2026-10-12 12:14:18,544 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:14:18,546 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 78 characters
+2026-10-12 12:14:20,576 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.67s, tokens in=1067 out=38 (running totals)
+2026-10-12 12:14:20,580 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:14:20,584 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 118 characters
+2026-10-12 12:14:22,013 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.63s, tokens in=1077 out=37 (running totals)
+2026-10-12 12:14:22,015 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:14:22,017 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 112 characters
+2026-10-12 12:14:40,542 INFO mc_agent.judge: judge/poetry line 1: 0.81 in 307 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:14:45,691 INFO mc_agent.judge: judge/poetry line 2: 0.91 in 288 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:14:47,698 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.59s, tokens in=1056 out=38 (running totals)
+2026-10-12 12:14:47,699 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 12:14:51,359 INFO mc_agent.judge: judge/poetry line 3: 0.81 in 275 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:14:56,266 INFO mc_agent.judge: judge/poetry line 4: 0.83 in 266 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:04,749 INFO mc_agent.judge: judge/poetry line 5: 1.00 in 268 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:09,903 INFO mc_agent.judge: judge/poetry line 6: 0.94 in 277 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:15,792 INFO mc_agent.judge: judge/poetry line 7: 0.80 in 272 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:23,085 INFO mc_agent.judge: judge/poetry line 8: 0.90 in 259 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:27,415 INFO mc_agent.judge: judge/poetry line 9: 0.90 in 319 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:33,732 INFO mc_agent.judge: judge/poetry line 10: 0.81 in 248 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:38,744 INFO mc_agent.judge: judge/poetry line 11: 0.94 in 285 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:15:40,735 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.57s, tokens in=1056 out=43 (running totals)
+2026-10-12 12:15:40,737 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 12:15:42,696 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 0.55s, tokens in=1041 out=39 (running totals)
+2026-10-12 12:15:42,698 INFO mc_agent.mc: line/end answered by the model (sarcastic)
+2026-10-12 12:15:45,095 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 2.94s, tokens in=7356 out=164 (running totals)
+2026-10-12 12:15:45,100 INFO mc_agent.mc: debrief answered by the model (sarcastic)
+2026-10-12 12:15:45,102 INFO mc_agent.mc: debrief: voice Brian on generative with a neural fallback, 196 characters
+2026-10-12 12:15:46,699 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.51s, tokens in=1078 out=37 (running totals)
+2026-10-12 12:15:46,702 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:15:46,703 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 98 characters
+2026-10-12 12:16:32,358 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.76s, tokens in=1078 out=38 (running totals)
+2026-10-12 12:16:32,360 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:16:32,362 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 97 characters
+2026-10-12 12:16:41,313 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.96s, tokens in=1092 out=60 (running totals)
+2026-10-12 12:16:41,316 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:16:41,318 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 76 characters
+2026-10-12 12:17:00,434 INFO mc_agent.judge: judge/speech line 1: 0.17 in 286 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:08,493 INFO mc_agent.judge: judge/speech line 2: 0.90 in 281 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:10,045 INFO mc_agent.judge: judge/speech line 3: 1.00 in 235 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:12,757 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 1.23s, tokens in=1075 out=31 (running totals)
+2026-10-12 12:17:12,760 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 12:17:18,791 INFO mc_agent.judge: judge/speech line 4: 1.00 in 267 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:23,937 INFO mc_agent.judge: judge/speech line 5: 0.80 in 275 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:29,657 INFO mc_agent.judge: judge/speech line 6: 0.75 in 258 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:37,253 INFO mc_agent.judge: judge/speech line 7: 0.88 in 253 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:42,811 INFO mc_agent.judge: judge/speech line 8: 1.00 in 261 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:50,303 INFO mc_agent.judge: judge/speech line 9: 0.45 in 274 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:55,094 INFO mc_agent.judge: judge/speech line 10: 0.90 in 313 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:17:57,998 INFO mc_agent.judge: judge/speech line 11: 0.15 in 230 ms (mistral.ministral-3-8b-instruct)
+2026-10-12 12:18:00,048 INFO mc_agent.mc: line/between model call 1: mantle zai.glm-5 in 0.56s, tokens in=1075 out=37 (running totals)
+2026-10-12 12:18:00,051 INFO mc_agent.mc: line/between answered by the model (sarcastic)
+2026-10-12 12:18:02,045 INFO mc_agent.mc: line/end model call 1: mantle zai.glm-5 in 0.60s, tokens in=1058 out=41 (running totals)
+2026-10-12 12:18:02,047 INFO mc_agent.mc: line/end answered by the model (sarcastic)
+2026-10-12 12:18:02,885 INFO mc_agent.mc: debrief model call 1: mantle zai.glm-5 in 1.42s, tokens in=7535 out=135 (running totals)
+2026-10-12 12:18:02,888 INFO mc_agent.mc: debrief answered by the model (sarcastic)
+2026-10-12 12:18:02,889 INFO mc_agent.mc: debrief: voice Brian on generative with a neural fallback, 177 characters
+2026-10-12 12:18:06,037 INFO mc_agent.mc: line/intro model call 1: mantle zai.glm-5 in 0.57s, tokens in=1093 out=36 (running totals)
+2026-10-12 12:18:06,039 INFO mc_agent.mc: line/intro answered by the model (sarcastic)
+2026-10-12 12:18:06,040 INFO mc_agent.mc: line/intro: voice Brian on generative with a neural fallback, 105 characters
+
+
+==== phone log, standup ====
+11:56:43.436 [phone] connecting
+11:56:43.469 [phone] joined room VRVX as Aman
+11:56:43.469 [phone] ready
+11:56:43.502 [tv] idle
+11:56:52.254 [tv] arm standup at club, 300 s, persona sarcastic
+11:56:52.348 [tv] hush for 1.5 s
+11:56:53.417 [tv] hush for 1.5 s
+11:56:53.711 [phone] live: "Rent, Parents and Other Utilities", 43 lines, ends at 221.1 s of a 300 s slot
+11:56:54.483 [tv] hush for 1.5 s
+11:56:55.532 [tv] hush for 1.5 s
+11:56:56.556 [tv] hush for 1.5 s
+11:57:03.396 [phone] setup  bit 1 · I rent a flat in Bengaluru, which means I have a landlord, and he has a plan.
+11:57:08.664 [phone] setup  bit 1 · Last November he promised he would fix the water heater by winter.
+11:57:08.909 [tv] hush for 3.3 s
+11:57:10.978 [phone] punch  bit 1 · He didn't say which winter.
+11:57:11.342 [tv] hush for 5.7 s
+11:57:14.752 [phone] tag    bit 1 · This winter, I'm hoping for global warming.
+11:57:15.084 [tv] hush for 3.8 s
+11:57:25.055 [phone] setup  bit 2 · My family has a group chat with forty-three people in it.
+11:57:25.371 [tv] hush for 3.3 s
+11:57:28.976 [phone] setup  bit 2 · In six years, nobody has asked a single question.
+11:57:34.012 [phone] punch  bit 2 · It's just good morning flowers, from uncles who have never bought a flower.
+11:57:34.306 [tv] hush for 3.3 s
+11:57:39.386 [phone] tag    bit 2 · At five in the morning. Uncle, the flowers aren't even awake.
+11:57:39.778 [tv] hush for 3.8 s
+11:57:46.429 [phone] setup  bit 3 · My dad only has three moods.
+11:57:49.239 [phone] punch  bit 3 · Hungry, cricket, and disappointed in me.
+11:57:49.542 [tv] hush for 3.8 s
+11:57:54.173 [phone] tag    bit 3 · On a good day, he manages all three at dinner.
+11:57:54.565 [tv] hush for 3.8 s
+11:58:02.745 [phone] setup  bit 4 · So yeah, I've been trying to get fit lately, I guess.
+11:58:06.295 [tv] hush for 7.0 s
+11:58:06.648 [phone] setup  bit 4 · There's a gym near my place, it's pretty big, they have machines.
+11:58:10.921 [phone] setup  bit 4 · Some days I go, some days I don't, you know how it is.
+11:58:13.894 [phone] setup  bit 4 · Anyway, the gym is fine, it's a gym.
+11:58:14.574 [phone] trail  bit 4 · uh
+11:58:20.399 [phone] setup  bit 5 · Um, what else, okay, traffic here is bad, right.
+11:58:22.853 [phone] setup  bit 5 · It takes forever to get anywhere, basically.
+11:58:24.128 [phone] setup  bit 5 · So that's traffic.
+11:58:24.807 [phone] trail  bit 5 · uh
+11:58:32.345 [phone] setup  bit 6 · I'm back on the dating apps, which are job portals with better lighting.
+11:58:35.717 [phone] setup  bit 6 · Every single profile says they love travelling.
+11:58:40.613 [phone] punch  bit 6 · Sir, you went to Goa once, in 2016, with your office.
+11:58:41.331 [tv] hush for 3.8 s
+11:58:46.553 [phone] flat   bit 6 · I mean, travelling is nice, I like trains too.
+11:58:55.537 [phone] setup  bit 7 · My mother got a smart speaker, and she treats it like a new daughter-in-law.
+11:58:58.857 [phone] setup  bit 7 · She tells it to play the news.
+11:58:59.256 [tv] hush for 3.3 s
+11:59:02.667 [phone] setup  bit 7 · She tells it to switch off the fan.
+11:59:03.062 [tv] hush for 3.3 s
+11:59:08.597 [phone] punch  bit 7 · She tells it nobody in this house listens to her. It says, okay.
+11:59:09.071 [tv] hush for 3.8 s
+11:59:14.182 [phone] tag    bit 7 · She's never been happier. She's thinking of moving in with it.
+11:59:14.705 [tv] hush for 3.3 s
+11:59:25.248 [phone] setup  bit 8 · My cousin quit his job to build an app that reminds you to drink water.
+11:59:27.633 [phone] setup  bit 8 · He has raised four crore.
+11:59:28.011 [tv] hush for 3.8 s
+11:59:32.015 [phone] punch  bit 8 · My grandmother has done that job for free since 1962.
+11:59:32.599 [tv] hush for 3.8 s
+11:59:39.937 [phone] setup  bit 9 · An Indian wedding has three days of events.
+11:59:43.188 [phone] setup  bit 9 · The haldi, the sangeet, and the wedding.
+11:59:43.610 [tv] hush for 3.3 s
+11:59:47.789 [phone] punch  bit 9 · And one uncle at all three, asking when I'm getting married.
+11:59:48.701 [tv] hush for 3.6 s
+11:59:57.059 [phone] setup  bit 10 · My sister just started a new job at a bank.
+12:00:02.302 [phone] setup  bit 10 · First day, she calls me, very excited, she's met her new boss.
+12:00:06.511 [phone] punch  bit 10 · It's my landlord. He promised her a promotion by winter.
+12:00:07.157 [tv] hush for 3.8 s
+12:00:16.255 [phone] setup  bit 11 · Last Sunday, India lost a final, right at dinner time.
+12:00:16.748 [tv] hush for 3.3 s
+12:00:20.291 [phone] punch  bit 11 · All three of my dad's moods, on one plate.
+12:00:21.197 [tv] hush for 3.6 s
+12:00:25.837 [phone] setup  bit 11 · Anyway, my landlord says I can stay another year.
+12:00:28.282 [phone] punch  bit 11 · He didn't say which year.
+12:00:28.983 [tv] hush for 5.7 s
+12:00:31.116 [phone] tag    bit 11 · You've been lovely. Goodnight!
+12:00:32.074 [tv] hush for 3.8 s
+12:00:34.808 [phone] finished
+
+
+==== crowd cues mapped to the scripted line before each, standup (cuemap.py) ====
+lines by role: {'setup': 25, 'punch': 10, 'tag': 5, 'trail': 2, 'flat': 1}
+hush leases before the first line (the intro voice): 5 ['11:56:52.348', '11:56:53.417', '11:56:54.483', '11:56:55.532', '11:56:56.556']
+23 crowd cues; the line before each, by scripted role: {'setup': 8, 'punch': 10, 'tag': 5}
+11:57:08.909 hush  3.3 s   0.2 s after  setup  bit  1  Last November he promised he would fix the water heater by winter.
+11:57:11.342 hush  5.7 s   0.4 s after  punch  bit  1  He didn't say which winter.
+11:57:15.084 hush  3.8 s   0.3 s after  tag    bit  1  This winter, I'm hoping for global warming.
+11:57:25.371 hush  3.3 s   0.3 s after  setup  bit  2  My family has a group chat with forty-three people in it.
+11:57:34.306 hush  3.3 s   0.3 s after  punch  bit  2  It's just good morning flowers, from uncles who have never bought a flower.
+11:57:39.778 hush  3.8 s   0.4 s after  tag    bit  2  At five in the morning. Uncle, the flowers aren't even awake.
+11:57:49.542 hush  3.8 s   0.3 s after  punch  bit  3  Hungry, cricket, and disappointed in me.
+11:57:54.565 hush  3.8 s   0.4 s after  tag    bit  3  On a good day, he manages all three at dinner.
+11:58:06.295 hush  7.0 s   3.5 s after  setup  bit  4  So yeah, I've been trying to get fit lately, I guess.
+11:58:41.331 hush  3.8 s   0.7 s after  punch  bit  6  Sir, you went to Goa once, in 2016, with your office.
+11:58:59.256 hush  3.3 s   0.4 s after  setup  bit  7  She tells it to play the news.
+11:59:03.062 hush  3.3 s   0.4 s after  setup  bit  7  She tells it to switch off the fan.
+11:59:09.071 hush  3.8 s   0.5 s after  punch  bit  7  She tells it nobody in this house listens to her. It says, okay.
+11:59:14.705 hush  3.3 s   0.5 s after  tag    bit  7  She's never been happier. She's thinking of moving in with it.
+11:59:28.011 hush  3.8 s   0.4 s after  setup  bit  8  He has raised four crore.
+11:59:32.599 hush  3.8 s   0.6 s after  punch  bit  8  My grandmother has done that job for free since 1962.
+11:59:43.610 hush  3.3 s   0.4 s after  setup  bit  9  The haldi, the sangeet, and the wedding.
+11:59:48.701 hush  3.6 s   0.9 s after  punch  bit  9  And one uncle at all three, asking when I'm getting married.
+12:00:07.157 hush  3.8 s   0.6 s after  punch  bit 10  It's my landlord. He promised her a promotion by winter.
+12:00:16.748 hush  3.3 s   0.5 s after  setup  bit 11  Last Sunday, India lost a final, right at dinner time.
+12:00:21.197 hush  3.6 s   0.9 s after  punch  bit 11  All three of my dad's moods, on one plate.
+12:00:28.983 hush  5.7 s   0.7 s after  punch  bit 11  He didn't say which year.
+12:00:32.074 hush  3.8 s   1.0 s after  tag    bit 11  You've been lovely. Goodnight!
+
+
+==== phone log, poetry ====
+12:14:16.989 [phone] connecting
+12:14:17.009 [phone] joined room VRVX as Riya
+12:14:17.009 [phone] ready
+12:14:17.036 [tv] idle
+12:14:31.933 [tv] arm poetry at theatre, 180 s, persona sarcastic
+12:14:31.999 [tv] hush for 1.5 s
+12:14:33.068 [tv] hush for 1.5 s
+12:14:33.421 [phone] live: "Monsoon, Mumbai", 11 lines, ends at 68.7 s of a 180 s slot
+12:14:34.079 [tv] hush for 1.5 s
+12:14:35.108 [tv] hush for 1.5 s
+12:14:36.179 [tv] hush for 1.5 s
+12:14:37.214 [tv] hush for 1.5 s
+12:14:38.263 [tv] hush for 1.5 s
+12:14:39.278 [tv] hush for 1.5 s
+12:14:40.192 [phone] line   bit 1 · The monsoon comes to Mumbai late at night,
+12:14:40.316 [tv] hush for 1.5 s
+12:14:40.557 [tv] hush for 3.1 s
+12:14:45.370 [phone] strong bit 1 · and every window keeps a square of light.
+12:14:45.731 [tv] hush for 3.1 s
+12:14:51.059 [phone] line   bit 1 · My mother sets a bucket by the stair,
+12:14:51.396 [tv] hush for 3.1 s
+12:14:55.965 [phone] strong bit 1 · my father talks to God about a chair.
+12:14:56.289 [tv] hush for 3.1 s
+12:15:04.427 [phone] line   bit 2 · The silver water sings along the street,
+12:15:04.779 [tv] hush for 3.1 s
+12:15:09.586 [phone] strong bit 2 · and slips inside the shoes of tired feet.
+12:15:09.944 [tv] hush for 3.1 s
+12:15:15.470 [phone] flat   bit 2 · We do not sleep. We are too busy listening.
+12:15:15.817 [tv] hush for 3.1 s
+12:15:22.789 [phone] line   bit 3 · But somewhere in the dark the city turns,
+12:15:23.152 [tv] hush for 3.1 s
+12:15:27.051 [phone] strong bit 3 · and every child who fell asleep returns.
+12:15:27.453 [tv] hush for 3.1 s
+12:15:33.432 [phone] line   bit 3 · The roof still leaks. My father still says soon.
+12:15:33.773 [tv] hush for 3.1 s
+12:15:38.426 [phone] strong bit 3 · We sleep beneath the bucket and the moon.
+12:15:38.793 [tv] hush for 3.1 s
+12:15:42.122 [phone] finished
+
+
+==== crowd cues mapped to the scripted line before each, poetry (cuemap.py) ====
+lines by role: {'line': 5, 'strong': 5, 'flat': 1}
+hush leases before the first line (the intro voice): 8 ['12:14:31.999', '12:14:33.068', '12:14:34.079', '12:14:35.108', '12:14:36.179', '12:14:37.214', '12:14:38.263', '12:14:39.278']
+12 crowd cues; the line before each, by scripted role: {'line': 6, 'strong': 5, 'flat': 1}
+12:14:40.316 hush  1.5 s   0.1 s after  line   bit  1  The monsoon comes to Mumbai late at night,
+12:14:40.557 hush  3.1 s   0.4 s after  line   bit  1  The monsoon comes to Mumbai late at night,
+12:14:45.731 hush  3.1 s   0.4 s after  strong bit  1  and every window keeps a square of light.
+12:14:51.396 hush  3.1 s   0.3 s after  line   bit  1  My mother sets a bucket by the stair,
+12:14:56.289 hush  3.1 s   0.3 s after  strong bit  1  my father talks to God about a chair.
+12:15:04.779 hush  3.1 s   0.4 s after  line   bit  2  The silver water sings along the street,
+12:15:09.944 hush  3.1 s   0.4 s after  strong bit  2  and slips inside the shoes of tired feet.
+12:15:15.817 hush  3.1 s   0.3 s after  flat   bit  2  We do not sleep. We are too busy listening.
+12:15:23.152 hush  3.1 s   0.4 s after  line   bit  3  But somewhere in the dark the city turns,
+12:15:27.453 hush  3.1 s   0.4 s after  strong bit  3  and every child who fell asleep returns.
+12:15:33.773 hush  3.1 s   0.3 s after  line   bit  3  The roof still leaks. My father still says soon.
+12:15:38.793 hush  3.1 s   0.4 s after  strong bit  3  We sleep beneath the bucket and the moon.
+
+
+==== phone log, speech ====
+12:16:30.586 [phone] connecting
+12:16:30.608 [phone] joined room VRVX as Kabir
+12:16:30.609 [phone] ready
+12:16:30.618 [tv] idle
+12:16:50.817 [tv] arm speech at arena, 240 s, persona sarcastic
+12:16:50.895 [tv] hush for 1.5 s
+12:16:51.967 [tv] hush for 1.5 s
+12:16:52.304 [phone] live: "The Lake", 11 lines, ends at 69.1 s of a 240 s slot
+12:16:53.009 [tv] hush for 1.5 s
+12:16:54.074 [tv] hush for 1.5 s
+12:16:55.058 [tv] hush for 1.5 s
+12:16:56.064 [tv] hush for 1.5 s
+12:16:57.066 [tv] hush for 1.5 s
+12:17:00.134 [phone] setup  bit 1 · Good evening, everyone, and thank you for coming out in the rain.
+12:17:08.156 [phone] setup  bit 1 · For twenty years, this neighbourhood has been told the lake cannot be saved and this town cannot change.
+12:17:09.789 [phone] strong bit 1 · That ends tonight.
+12:17:10.080 [tv] hush for 6.3 s
+12:17:18.495 [phone] strong bit 2 · We will clean it, plant it, and bring the birds home.
+12:17:18.809 [tv] hush for 6.3 s
+12:17:23.641 [phone] line   bit 2 · Some people ask, why should we bother?
+12:17:29.368 [phone] strong bit 2 · A lake is not something we own, but something we borrow.
+12:17:29.672 [tv] hush for 6.3 s
+12:17:36.964 [phone] line   bit 3 · Ask not what this lake can give you.
+12:17:42.509 [phone] strong bit 3 · Ask what you can give it, on Sunday, at seven.
+12:17:42.836 [tv] hush for 6.3 s
+12:17:49.972 [phone] flat   bit 3 · The meeting point is the main gate near the temple, and there will be tea.
+12:17:54.754 [phone] strong bit 3 · Let's show up. Let's get muddy. Let's get it done.
+12:17:55.130 [tv] hush for 6.3 s
+12:17:57.740 [phone] tag    bit 3 · Thank you.
+12:17:58.017 [tv] hush for 6.3 s
+12:18:01.407 [phone] finished
+
+
+==== crowd cues mapped to the scripted line before each, speech (cuemap.py) ====
+lines by role: {'setup': 2, 'strong': 5, 'line': 2, 'flat': 1, 'tag': 1}
+hush leases before the first line (the intro voice): 7 ['12:16:50.895', '12:16:51.967', '12:16:53.009', '12:16:54.074', '12:16:55.058', '12:16:56.064', '12:16:57.066']
+6 crowd cues; the line before each, by scripted role: {'strong': 5, 'tag': 1}
+12:17:10.080 hush  6.3 s   0.3 s after  strong bit  1  That ends tonight.
+12:17:18.809 hush  6.3 s   0.3 s after  strong bit  2  We will clean it, plant it, and bring the birds home.
+12:17:29.672 hush  6.3 s   0.3 s after  strong bit  2  A lake is not something we own, but something we borrow.
+12:17:42.836 hush  6.3 s   0.3 s after  strong bit  3  Ask what you can give it, on Sunday, at seven.
+12:17:55.130 hush  6.3 s   0.4 s after  strong bit  3  Let's show up. Let's get muddy. Let's get it done.
+12:17:58.017 hush  6.3 s   0.3 s after  tag    bit  3  Thank you.
+
+
+==== do laughs, snaps and applause sound different each time? (laughs.py: pairwise peak cross-correlation of the audio after each cue) ====
+-- stand-up laughs, 3.0 s windows
+22 windows of 3.0 s; level (dBFS) per window: -27 -26 -27 -29 -27 -26 -25 -26 -27 -29 -29 -27 -26 -27 -26 -27 -27 -26 -29 -26 -26 -27
+pairs: 231
+waveform peak cross-correlation: median 0.042, max 0.123, pairs over 0.5: 0
+envelope correlation: median 0.281, max 0.631, pairs over 0.8: 0
+most similar pair: 11:57:15.084 and 11:58:59.256 (waveform 0.123, envelope 0.259)
+-- control: one window against itself shifted 10 ms
+waveform peak cross-correlation: median 0.995, max 0.995, pairs over 0.5: 1
+envelope correlation: median 0.888, max 0.888, pairs over 0.8: 1
+most similar pair: 11:57:08.909 and 11:57:08.909b (waveform 0.995, envelope 0.888)
+-- poetry snaps, 2.5 s
+11 windows of 2.5 s; level (dBFS) per window: -25 -21 -22 -23 -24 -24 -26 -22 -22 -23 -24
+pairs: 55
+waveform peak cross-correlation: median 0.216, max 0.336, pairs over 0.5: 0
+envelope correlation: median 0.282, max 0.744, pairs over 0.8: 0
+most similar pair: 12:14:51.396 and 12:14:56.289 (waveform 0.336, envelope 0.645)
+-- speech applause, 4.0 s
+6 windows of 4.0 s; level (dBFS) per window: -27 -23 -25 -27 -23 -24
+pairs: 15
+waveform peak cross-correlation: median 0.033, max 0.054, pairs over 0.5: 0
+envelope correlation: median 0.641, max 0.813, pairs over 0.8: 1
+most similar pair: 12:17:18.809 and 12:17:58.017 (waveform 0.054, envelope 0.813)
+
+
+==== are the cues audible? level 3 s after each cue against 3 s before (prepost.py) ====
+-- stand-up laughs
+11:57:08.909 hush3.3   before  -28.9 dB  after  -27.3 dB  change  +1.7 dB
+11:57:11.342 hush5.7   before  -28.8 dB  after  -26.0 dB  change  +2.8 dB
+11:57:15.084 hush3.8   before  -26.3 dB  after  -26.9 dB  change  -0.6 dB
+11:57:25.371 hush3.3   before  -28.7 dB  after  -28.6 dB  change  +0.2 dB
+11:57:34.306 hush3.3   before  -29.1 dB  after  -26.7 dB  change  +2.4 dB
+11:57:39.778 hush3.8   before  -29.3 dB  after  -26.4 dB  change  +2.9 dB
+11:57:49.542 hush3.8   before  -28.9 dB  after  -25.0 dB  change  +3.8 dB
+11:57:54.565 hush3.8   before  -28.2 dB  after  -26.4 dB  change  +1.7 dB
+11:58:41.331 hush3.8   before  -28.7 dB  after  -26.6 dB  change  +2.1 dB
+11:58:59.256 hush3.3   before  -29.0 dB  after  -28.8 dB  change  +0.2 dB
+11:59:03.062 hush3.3   before  -28.8 dB  after  -28.6 dB  change  +0.2 dB
+11:59:09.071 hush3.8   before  -28.7 dB  after  -27.0 dB  change  +1.7 dB
+11:59:14.705 hush3.3   before  -29.0 dB  after  -25.9 dB  change  +3.1 dB
+11:59:28.011 hush3.8   before  -29.0 dB  after  -26.7 dB  change  +2.3 dB
+11:59:32.599 hush3.8   before  -28.1 dB  after  -26.0 dB  change  +2.1 dB
+11:59:43.610 hush3.3   before  -28.7 dB  after  -26.9 dB  change  +1.8 dB
+11:59:48.701 hush3.6   before  -28.6 dB  after  -26.5 dB  change  +2.1 dB
+12:00:07.157 hush3.8   before  -28.9 dB  after  -26.1 dB  change  +2.7 dB
+12:00:16.748 hush3.3   before  -28.8 dB  after  -28.7 dB  change  +0.1 dB
+12:00:21.197 hush3.6   before  -28.6 dB  after  -26.2 dB  change  +2.5 dB
+12:00:28.983 hush5.7   before  -28.7 dB  after  -25.7 dB  change  +3.1 dB
+12:00:32.074 hush3.8   before  -25.6 dB  after  -27.2 dB  change  -1.6 dB
+22 cues: change median +2.1 dB, min -1.6, max +3.8; louder by 3 dB or more: 3
+-- poetry snaps
+12:14:40.557 hush3.1   before  -24.5 dB  after  -25.8 dB  change  -1.3 dB
+12:14:45.731 hush3.1   before  -28.5 dB  after  -21.8 dB  change  +6.8 dB
+12:14:51.396 hush3.1   before  -24.5 dB  after  -22.4 dB  change  +2.1 dB
+12:14:56.289 hush3.1   before  -24.6 dB  after  -23.9 dB  change  +0.7 dB
+12:15:04.779 hush3.1   before -109.1 dB  after  -24.6 dB  change +84.5 dB
+12:15:09.944 hush3.1   before  -26.5 dB  after  -24.4 dB  change  +2.1 dB
+12:15:15.817 hush3.1   before  -42.6 dB  after  -27.1 dB  change +15.5 dB
+12:15:23.152 hush3.1   before -110.2 dB  after  -22.8 dB  change +87.4 dB
+12:15:27.453 hush3.1   before  -23.2 dB  after  -22.9 dB  change  +0.3 dB
+12:15:33.773 hush3.1   before  -72.7 dB  after  -23.7 dB  change +49.1 dB
+12:15:38.793 hush3.1   before  -26.5 dB  after  -25.1 dB  change  +1.4 dB
+11 cues: change median +2.1 dB, min -1.3, max +87.4; louder by 3 dB or more: 5
+-- speech applause
+12:17:10.080 hush6.3   before  -36.7 dB  after  -25.6 dB  change +11.1 dB
+12:17:18.809 hush6.3   before  -36.2 dB  after  -22.3 dB  change +13.9 dB
+12:17:29.672 hush6.3   before  -39.9 dB  after  -23.7 dB  change +16.2 dB
+12:17:42.836 hush6.3   before  -40.1 dB  after  -26.0 dB  change +14.0 dB
+12:17:55.130 hush6.3   before  -39.0 dB  after  -23.5 dB  change +15.5 dB
+12:17:58.017 hush6.3   before  -24.2 dB  after  -23.5 dB  change  +0.6 dB
+6 cues: change median +13.9 dB, min +0.6, max +16.2; louder by 3 dB or more: 5
+
+
+==== crashes and errors in logcat (FATAL EXCEPTION, ANR, Fatal signal, RenderProcessGone, ReactNativeJS E/W) ====
+logcat lines: 5734; matches: 0
+10-12 11:56:18.629  2978  3004 W ReactNativeJS: The app is running using the Legacy Architecture. The Legacy Architecture is deprecated and will be removed in a
+
+
+==== page render continuity: [crowd] fps reports (not a finding: software GPU) ====
+663 reports, mean 21.2187 fps, min 13, max 124
+longest gap between reports (s): 4.419
+
+
+==== still-picture check: ffmpeg freezedetect (n=-50dB, d=1.5 s, at 480x270) per recording, then PSNR between frames inside two flagged stretches ====
+-- standup.mkv
+freeze_start: 4.088	freeze_duration: 2.033
+freeze_start: 6.121	freeze_duration: 2.133
+freeze_start: 8.254	freeze_duration: 2.634
+freeze_start: 10.888	freeze_duration: 1.7
+freeze_start: 98.021	freeze_duration: 1.6
+freeze_start: 131.321	freeze_duration: 1.5
+freeze_start: 134.321	freeze_duration: 1.5
+freeze_start: 137.121	freeze_duration: 1.9
+freeze_start: 146.654	freeze_duration: 1.767
+freeze_start: 243.054	freeze_duration: 1.667
+freeze_start: 244.721	freeze_duration: 6.733
+freeze_start: 251.454	freeze_duration: 3.934
+-- poetry.mkv
+freeze_start: 6.088	freeze_duration: 1.7
+freeze_start: 9.021	freeze_duration: 6.933
+freeze_start: 90.921	freeze_duration: 1.867
+freeze_start: 92.788	freeze_duration: 7.133
+freeze_start: 101.154	freeze_duration: 1.8
+freeze_start: 104.454	freeze_duration: 3.467
+freeze_start: 107.921	freeze_duration: 7.133
+freeze_start: 117.021	freeze_duration: 2.333
+freeze_start: 120.354	freeze_duration: 2.867
+freeze_start: 123.221	
+-- speech.mkv
+freeze_start: 0.021	freeze_duration: 3.2
+freeze_start: 3.221	freeze_duration: 2.167
+freeze_start: 5.621	freeze_duration: 2.233
+freeze_start: 100.054	freeze_duration: 2.367
+freeze_start: 103.421	freeze_duration: 1.7
+freeze_start: 105.121	freeze_duration: 4.4
+freeze_start: 110.588	freeze_duration: 1.833
+freeze_start: 112.421	freeze_duration: 4.3
+freeze_start: 116.721	freeze_duration: 4.1
+freeze_start: 120.821	freeze_duration: 3.9
+freeze_start: 124.721	freeze_duration: 5.733
+freeze_start: 130.454	
+standup.mkv 131.4 s vs 132.7 s: PSNR average:30.015905 (identical renders would be far higher)
+standup.mkv 245.0 s vs 251.0 s: PSNR average:36.034120 (identical renders would be far higher)
+
+
+==== the take ====
+stream|codec_name=h264|width=1920|height=1080|r_frame_rate=30/1
+stream|codec_name=aac|r_frame_rate=0/0
+format|duration=279.833333|size=40395632|bit_rate=1154848
+recording t=0 is 11:56:39.06 (bill, before the phone joined); OK 11:56:52.26 (t=13.2); set ends 12:00:34.8 (t=235.8); cut sheet until t=279.8

@@ -1,0 +1,27 @@
+{
+  "agentRuntimeName": "encore_mc",
+  "description": "Encore MC: GLM-5 on Amazon Bedrock (OpenAI-compatible endpoint) and Amazon Polly; one fresh Strands agent per request",
+  "agentRuntimeArtifact": {
+    "codeConfiguration": {
+      "code": {
+        "s3": {
+          "bucket": "bedrock-agentcore-code-911167912118-ap-south-1",
+          "prefix": "encore-mc/encore-mc.zip",
+          "versionId": "set-by-agentcore.sh"
+        }
+      },
+      "runtime": "PYTHON_3_12",
+      "entryPoint": ["main.py"]
+    }
+  },
+  "roleArn": "arn:aws:iam::911167912118:role/encore-mc-runtime-role",
+  "networkConfiguration": { "networkMode": "PUBLIC" },
+  "protocolConfiguration": { "serverProtocol": "HTTP" },
+  "lifecycleConfiguration": { "idleRuntimeSessionTimeout": 3600, "maxLifetime": 28800 },
+  "environmentVariables": {
+    "MC_BACKEND": "local",
+    "MC_REGION": "ap-south-1"
+  },
+  "tags": { "project": "encore" },
+  "platformVersion": "V2"
+}

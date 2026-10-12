@@ -1,0 +1,147 @@
+{
+  "title": "Encore · choose the visual world for the performance screen",
+  "question": "The roll assigned Calling the Show. Keep it, take an alternate, or re-roll. Every card keeps your pinned rule: a photographic room owns the screen, no game HUD.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Calling the Show",
+      "kicker": "THE ROLL",
+      "lineage": "the stage manager's desk: prompt book, cue lights, house monitor, show report",
+      "thesis": "The TV is the stage manager's desk: the real house on the monitor, your set run as cues, and a show report afterwards that only records what happened.",
+      "palette": ["#0b0a0c", "#f2e7d3", "#d5262b", "#2fb463", "#8a7f6b"],
+      "materials": ["photographic house under stage light", "cue-light red and green", "prompt-book paper and pencil", "black masking fabric"],
+      "viewport": "Full-bleed photographic audience as the house feed; one baseline cue strip along the foot with STANDBY → GO states in cue-light colour; a small running clock top-left; nothing boxed.",
+      "risk": "Backstage jargon can read cold to a family on game night; the cue strip must stay to one line or it becomes the HUD you banned.",
+      "raised": [
+        { "from": "challenger-cracktro", "raise": "Nothing on the house is ever enclosed: cue text rides a baseline over the crowd, no boxes, rules or panels." },
+        { "from": "challenger-cape", "raise": "One pull changes everything: STANDBY → GO re-lights the whole house, instead of flipping a widget." },
+        { "from": "challenger-versailles", "raise": "The labour beneath the spectacle is shown: the show report lists every measured signal behind every reaction." },
+        { "from": "challenger-sheet", "raise": "The venue is a governing swatch: choosing Open Mic or Arena re-colours the house, the crowd and the MC's tone together, visibly." }
+      ],
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "house feed: photographic crowd", "x": 0, "y": 0, "w": 12, "h": 10 },
+        { "label": "running clock", "x": 0, "y": 0, "w": 2, "h": 1 },
+        { "label": "cue light", "x": 11, "y": 0, "w": 1, "h": 1, "accent": true },
+        { "label": "cue strip · STANDBY punchline → GO", "x": 0, "y": 9, "w": 12, "h": 1, "accent": true }
+      ] }
+    },
+    {
+      "id": "model-pick",
+      "label": "House-Right Camera",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "the audience cutaways of a filmed comedy special",
+      "thesis": "The TV behaves like the live director of a comedy special: wide room, reaction close-up, back to wide, cut on your laughs.",
+      "palette": ["#07060a", "#ffd79a", "#c81e3a", "#f5efe6"],
+      "materials": ["anamorphic photographic crowd", "warm key light", "lower-third type", "film grain"],
+      "viewport": "A cinematic wide of the room with shallow depth; reactions arrive as cuts to faces; a lower-third carries the set clock and nothing else.",
+      "risk": "Familiar: this is where most runs in this category land, a crowd film with lower-thirds; it wins on belief, not on surprise.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "wide shot of the room", "x": 0, "y": 0, "w": 12, "h": 10 },
+        { "label": "reaction cut (close-up)", "x": 7, "y": 2, "w": 5, "h": 5, "accent": true },
+        { "label": "lower third · set clock", "x": 0, "y": 8, "w": 5, "h": 1, "accent": true }
+      ] }
+    },
+    {
+      "id": "challenger-vu",
+      "label": "Meter Bridge",
+      "verdict": "competitive",
+      "lineage": "a VU-meter bridge across a recording desk",
+      "thesis": "The room's reaction read as ballistic needles behind glass that lean into the red together on the punchline.",
+      "palette": ["#f1e6cf", "#111111", "#c8202a", "#5a3b22"],
+      "materials": ["ivory meter faces behind glass", "walnut and steel desk", "photographic room beyond the glass"],
+      "viewport": "A row of real VU meters along the foot of the screen, the photographic house above them; every needle rests until the laugh, then the whole bridge leans right.",
+      "case": "Fuses well: laughter level becomes a true physical reading performers already trust; loses on audience identification for families, who do not read meters.",
+      "risk": "A desk of instruments can become a costume; the needles must obey real mass and damping or they read as a gauge widget.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-vu-meter-bridge-hero.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "photographic house", "x": 0, "y": 0, "w": 12, "h": 7 },
+        { "label": "VU meter bridge · 12 needles", "x": 0, "y": 7, "w": 12, "h": 3, "accent": true }
+      ] }
+    },
+    {
+      "id": "challenger-neon",
+      "label": "Marquee Program",
+      "verdict": "competitive",
+      "lineage": "a desert strip sign shop's neon program drawing",
+      "thesis": "Venues as a neon marquee: acts stacked as billed tenants, difficulty as the chase lamps, tonight's room behind the sign.",
+      "palette": ["#0a0b1a", "#f6e7c1", "#2ec4b6", "#ff4f7b"],
+      "materials": ["porcelain-enamel panels", "neon in two gas colours", "exposed lamp banks", "night ground"],
+      "viewport": "The venue sign fills the screen with your act as the top tenant and the arrow chase running at the chosen difficulty; the room is glimpsed behind it.",
+      "case": "Holds audience identification: every performer knows the club marquee; loses product clarity on the performance screen, where the sign hides the room.",
+      "risk": "Strong for the venue picker, wrong for the set itself; neon over a photographic crowd becomes decoration.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-desert-neon-sign-program-hero.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "neon marquee · act tenants", "x": 1, "y": 0, "w": 5, "h": 10, "accent": true },
+        { "label": "room behind the sign", "x": 6, "y": 0, "w": 6, "h": 10 }
+      ] }
+    },
+    {
+      "id": "challenger-cracktro",
+      "label": "Cracktro Scroller",
+      "verdict": "declined",
+      "lineage": "demoscene cracktro title screens",
+      "thesis": "Bitmap text riding baselines over a black void, rank as depth.",
+      "palette": ["#000000", "#e9e4d6", "#ffb000"],
+      "materials": ["emissive void", "bitmap face", "drifting dust fields"],
+      "viewport": "One ivory line of bitmap text over a void with dust drifting behind it.",
+      "case": "Performers and families do not identify with the demoscene, and a void cannot hold a real room.",
+      "kept": "Nothing is ever enclosed by a rule or a box.",
+      "risk": "Reads as a retro effect, not a venue.",
+      "hero": "https://impeccable.style/worlds/cards/operate-c-cracktro-scroller-queue-hero.webp"
+    },
+    {
+      "id": "challenger-cape",
+      "label": "Drawcord Cape",
+      "verdict": "declined",
+      "lineage": "a silk cape transformed by one drawcord",
+      "thesis": "A flat plane that one pull turns into ribs, gathers and volume.",
+      "palette": ["#0c0c0c", "#c9a227", "#4a4a4a"],
+      "materials": ["matte black silk", "gold drawcord", "graphite stitching"],
+      "viewport": "A black semicircle gathering into a pleated shell.",
+      "case": "An object from fashion, not from the performer's world; it cannot carry a photographic crowd.",
+      "kept": "One pull transforms the whole plane, never a widget.",
+      "risk": "Pure costume on this product.",
+      "hero": "https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-drawcord-transforming-cape-hero.webp"
+    },
+    {
+      "id": "challenger-versailles",
+      "label": "Bosquet Vistas",
+      "verdict": "declined",
+      "lineage": "the gardens of Versailles",
+      "thesis": "Axial vistas, concealed green theatres, fountains waking in sequence.",
+      "palette": ["#3f6b3a", "#cdb98a", "#b8902a", "#e8e8e8"],
+      "materials": ["clipped hedge", "raked gravel", "gilt bronze", "marble"],
+      "viewport": "A palace-terrace vista that breaks into secret theatres.",
+      "case": "Beautiful, but neither performers nor families identify with a royal garden, and it says nothing about a reacting room.",
+      "kept": "Show the labour beneath the spectacle.",
+      "risk": "Decorative grandeur with no product truth.",
+      "hero": "https://impeccable.style/worlds/cards/architecture-inhabitable-space-versailles-bosquet-vistas-hero.webp"
+    },
+    {
+      "id": "challenger-sheet",
+      "label": "Character Sheet",
+      "verdict": "declined",
+      "lineage": "an amateur character reference sheet",
+      "thesis": "Four views, named swatches, hand-lettered rules in the leftover space.",
+      "palette": ["#ff2d95", "#19c3ff", "#fff200", "#111111"],
+      "materials": ["clashing fills", "hard black outline", "tiled background"],
+      "viewport": "A creature in four views over a busy tiled ground.",
+      "case": "Illustrated and clashing: the opposite of the photographic realism you pinned.",
+      "kept": "One swatch governs every region it controls.",
+      "risk": "Cartoon, by definition out.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-devianart-character-sheet-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code", "toggle": false },
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "A full-bleed crowd photo under a dark gradient with a mood meter, a timer and a transcript panel, executed impeccably.",
+    "palette": ["#0f0f14", "#ffffff", "#7c5cff", "#34c759"],
+    "materials": ["stock crowd photo", "dark gradient scrim", "rounded glass panels", "Inter"],
+    "viewport": "Crowd behind a scrim; meter top-left, timer top-right, transcript and tips in a panel at the bottom.",
+    "risk": "Indistinguishable from every other AI-coach app by design."
+  },
+  "steer": true
+}

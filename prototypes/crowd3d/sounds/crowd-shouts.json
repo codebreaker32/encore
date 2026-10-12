@@ -1,0 +1,161 @@
+{
+ "file": "crowd-shouts.mp3",
+ "sampleRate": 44100,
+ "totalSec": 39.36687074829932,
+ "firstAudibleSample": 16443,
+ "clips": [
+  {
+   "id": "woo-0",
+   "src": "freesound-333421",
+   "kind": "woo",
+   "start": 0.25,
+   "dur": 3.4,
+   "startSample": 11025,
+   "samples": 149940
+  },
+  {
+   "id": "woo-1",
+   "src": "freesound-84525",
+   "kind": "woo",
+   "start": 3.95,
+   "dur": 3,
+   "startSample": 174195,
+   "samples": 132300
+  },
+  {
+   "id": "woo-2",
+   "src": "freesound-340364",
+   "kind": "woo",
+   "start": 7.25,
+   "dur": 0.7281632653061224,
+   "startSample": 319725,
+   "samples": 32112
+  },
+  {
+   "id": "woo-3",
+   "src": "freesound-539216",
+   "kind": "woo",
+   "start": 8.278163265306123,
+   "dur": 0.95,
+   "startSample": 365067,
+   "samples": 41895
+  },
+  {
+   "id": "yes-4",
+   "src": "freesound-416843",
+   "kind": "yes",
+   "start": 9.528163265306123,
+   "dur": 0.56,
+   "startSample": 420192,
+   "samples": 24696
+  },
+  {
+   "id": "yes-5",
+   "src": "freesound-340363",
+   "kind": "yes",
+   "start": 10.388163265306122,
+   "dur": 1.6135374149659865,
+   "startSample": 458118,
+   "samples": 71157
+  },
+  {
+   "id": "yes-6",
+   "src": "freesound-99636",
+   "kind": "yes",
+   "start": 12.30170068027211,
+   "dur": 1.5817687074829931,
+   "startSample": 542505,
+   "samples": 69756
+  },
+  {
+   "id": "yes-7",
+   "src": "freesound-715792",
+   "kind": "yes",
+   "start": 14.183469387755101,
+   "dur": 1.5071655328798186,
+   "startSample": 625491,
+   "samples": 66466
+  },
+  {
+   "id": "yes-8",
+   "src": "freesound-521965",
+   "kind": "yes",
+   "start": 15.990634920634921,
+   "dur": 0.8,
+   "startSample": 705187,
+   "samples": 35280
+  },
+  {
+   "id": "nice-9",
+   "src": "freesound-46189",
+   "kind": "nice",
+   "start": 17.09063492063492,
+   "dur": 1.2694784580498866,
+   "startSample": 753697,
+   "samples": 55984
+  },
+  {
+   "id": "whistle-10",
+   "src": "freesound-763915",
+   "kind": "whistle",
+   "start": 18.66011337868481,
+   "dur": 2.6,
+   "startSample": 822911,
+   "samples": 114660
+  },
+  {
+   "id": "whistle-11",
+   "src": "freesound-763915",
+   "kind": "whistle",
+   "start": 21.560113378684807,
+   "dur": 2.6,
+   "startSample": 950801,
+   "samples": 114660
+  },
+  {
+   "id": "boo-12",
+   "src": "freesound-752707",
+   "kind": "boo",
+   "start": 24.460113378684806,
+   "dur": 2.244875283446712,
+   "startSample": 1078691,
+   "samples": 98999
+  },
+  {
+   "id": "boo-13",
+   "src": "freesound-264378",
+   "kind": "boo",
+   "start": 27.00498866213152,
+   "dur": 4,
+   "startSample": 1190920,
+   "samples": 176400
+  },
+  {
+   "id": "boo-14",
+   "src": "freesound-264378",
+   "kind": "boo",
+   "start": 31.30498866213152,
+   "dur": 4,
+   "startSample": 1380550,
+   "samples": 176400
+  },
+  {
+   "id": "groan-15",
+   "src": "freesound-124996",
+   "kind": "groan",
+   "start": 35.60498866213152,
+   "dur": 1.9969160997732427,
+   "startSample": 1570180,
+   "samples": 88064
+  },
+  {
+   "id": "groan-16",
+   "src": "freesound-547589",
+   "kind": "groan",
+   "start": 37.90190476190476,
+   "dur": 1.1649659863945578,
+   "startSample": 1671474,
+   "samples": 51375
+  }
+ ]
+}

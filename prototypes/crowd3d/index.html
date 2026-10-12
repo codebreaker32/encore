@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encore crowd test</title>
+<!-- Everything is local and relative (three.js r160 in vendor/, the Encore overlay from docs/mockups in overlay/),
+     so this folder can ship as app assets. -->
+<link rel="stylesheet" href="overlay/world.css">
+<style>
+  html, body { background: #07060a; }
+  #c { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
+  /* grain, vignette and the lower-third band are drawn inside the WebGL frame (crowd.js finalPass): no CSS blend layers */
+  .cut { position: absolute; left: 90px; top: 54px; text-shadow: 0 2px 12px rgba(0,0,0,.85); }
+  .cut .what { font-family: var(--display); font-weight: 800; font-size: 44px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); line-height: 1; }
+  .cut .why { font-family: var(--text); font-size: 26px; color: var(--paper); margin-top: 10px; }
+  .cut .why span { color: var(--gold-dim); }
+  /* host mode: the TV app draws its own lower-third, LIVE mark and captions */
+  body.host .lower-third, body.host .live, body.host .hints, body.host .cut { display: none; }
+  #hud { position: absolute; left: 12px; top: 8px; font: 15px/1.2 ui-monospace, "DejaVu Sans Mono", monospace; color: #cfc6b4; background: rgba(0,0,0,.45); padding: 3px 8px; border-radius: 3px; white-space: nowrap; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/build/three.module.min.js",
+  "three/addons/": "./vendor/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div class="tv">
+  <canvas id="c" width="1280" height="720"></canvas>
+  <div class="cut" id="cut"></div>
+  <div class="live"><i></i>LIVE <small>mic on · test</small></div>
+  <div class="lower-third"><div class="venue">The Basement · <em>Comedy Club</em></div><div class="rule"></div><div class="clock">3:12 <small>of a 5:00 set</small></div></div>
+  <div class="hints"><span><b>OK</b>laugh</span><span><b>M</b>dead air</span></div>
+  <div id="hud">loading…</div>
+</div>
+<script type="module" src="crowd.js"></script>
+</body>
+</html>

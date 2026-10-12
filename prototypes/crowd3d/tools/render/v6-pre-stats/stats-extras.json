@@ -1,0 +1,151 @@
+{
+ "crowd3d-v6-pre-club-listen-false": {
+  "breakdown": {
+   "front": 32115,
+   "inst": {
+    "sil:Female_Adult_17": 2194,
+    "sil:Female_Adult_13": 1048,
+    "sil:Male_Adult_06": 2391,
+    "sil:Male_Adult_07": 2511,
+    "sil:Female_Adult_04": 4062,
+    "sil:Male_Adult_12": 1288,
+    "far:Male_Adult_10": 3465,
+    "far:Female_Adult_02": 4689,
+    "far:Female_Adult_12": 6140,
+    "far:Male_Adult_17": 3550,
+    "far:Male_Adult_12": 2352,
+    "far:Male_Adult_06": 2919,
+    "stand-drink-sil:Male_Adult_07": 837
+   },
+   "other": 11009
+  },
+  "venue": "club",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 39,
+  "triangles": 80570,
+  "front": 6,
+  "mid": 0,
+  "back": 67,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.3724999999813736,
+  "texMB": 26.221232096354164,
+  "dlMB": 3.572263717651367,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_02",
+   "Male_Adult_10",
+   "Female_Adult_03",
+   "Male_Adult_04",
+   "Female_Adult_12",
+   "Male_Adult_17"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1859
+ },
+ "crowd3d-v6-pre-theatre-listen-false": {
+  "breakdown": {
+   "front": 31240,
+   "inst": {
+    "sil:Female_Adult_12": 1890,
+    "sil:Male_Adult_04": 1800,
+    "sil:Male_Adult_10": 1396,
+    "sil:Female_Adult_02": 1770,
+    "sil:Female_Adult_03": 2162,
+    "sil:Male_Adult_17": 1358,
+    "xfar:Male_Adult_12": 3700,
+    "xfar:Male_Adult_06": 4830,
+    "xfar:Male_Adult_17": 4480,
+    "xfar:Female_Adult_12": 8569,
+    "xfar:Male_Adult_10": 3726,
+    "xfar:Female_Adult_02": 6354
+   },
+   "other": 4907
+  },
+  "venue": "theatre",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 38,
+  "triangles": 78182,
+  "front": 6,
+  "mid": 0,
+  "back": 128,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.3619999999627472,
+  "texMB": 26.91573079427083,
+  "dlMB": 3.5230579376220703,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_04",
+   "Male_Adult_06",
+   "Female_Adult_13",
+   "Male_Adult_07",
+   "Female_Adult_17",
+   "Male_Adult_12"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1691
+ },
+ "crowd3d-v6-pre-club-listen-mirror0": {
+  "breakdown": {
+   "front": 32115,
+   "inst": {
+    "sil:Female_Adult_17": 2194,
+    "sil:Female_Adult_13": 1048,
+    "sil:Male_Adult_06": 2391,
+    "sil:Male_Adult_07": 2511,
+    "sil:Female_Adult_04": 4062,
+    "sil:Male_Adult_12": 1288,
+    "far:Male_Adult_10": 3465,
+    "far:Female_Adult_02": 4689,
+    "far:Female_Adult_12": 6140,
+    "far:Male_Adult_17": 3550,
+    "far:Male_Adult_12": 2352,
+    "far:Male_Adult_06": 2919,
+    "stand-drink-sil:Male_Adult_07": 837
+   },
+   "other": 11009
+  },
+  "venue": "club",
+  "mode": "live",
+  "preset": "tv",
+  "res": "960x540",
+  "calls": 39,
+  "triangles": 80570,
+  "front": 6,
+  "mid": 0,
+  "back": 67,
+  "sprites": 0,
+  "shot": "wide",
+  "cpuMs": 0.3753999999044464,
+  "texMB": 26.221232096354164,
+  "dlMB": 3.572263717651367,
+  "programs": 13,
+  "aa": false,
+  "cast": [
+   "Female_Adult_02",
+   "Male_Adult_10",
+   "Female_Adult_03",
+   "Male_Adult_04",
+   "Female_Adult_12",
+   "Male_Adult_17"
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "ms": 1669
+ }
+}

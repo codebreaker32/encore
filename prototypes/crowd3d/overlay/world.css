@@ -1,0 +1,53 @@
+/* Encore · House-Right Camera world · comps at 1920×1080 */
+@font-face { font-family: "Big Shoulders"; src: url("fonts/BigShouldersDisplay.ttf") format("truetype"); font-weight: 100 900; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegibleNext.ttf") format("truetype"); font-weight: 200 800; }
+
+:root {
+  --house: #07060a;
+  --gold: #ffd79a;
+  --gold-dim: #b8995f;
+  --red: #c81e3a;
+  --paper: #f5efe6;
+  --display: "Big Shoulders", "DejaVu Sans Condensed", sans-serif;
+  --text: "Atkinson", "DejaVu Sans", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--house); color: var(--paper); font-family: var(--text); }
+::selection { background: var(--red); color: var(--paper); }
+
+.tv { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--house); }
+
+/* the shot: a photograph with push-in, grain and vignette */
+.shot { position: absolute; inset: 0; overflow: hidden; }
+.shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); filter: saturate(.92) contrast(1.06); }
+.shot .grade { position: absolute; inset: 0; background:
+  radial-gradient(ellipse 70% 60% at 50% 45%, rgba(255,215,154,.10), rgba(0,0,0,0) 60%),
+  linear-gradient(180deg, rgba(7,6,10,.15) 0%, rgba(7,6,10,0) 30%, rgba(7,6,10,0) 65%, rgba(7,6,10,.55) 100%); }
+.shot .vignette { position: absolute; inset: 0; box-shadow: inset 0 0 260px 60px rgba(0,0,0,.65); }
+.shot .grain { position: absolute; inset: -40px; background: url("grain.png") repeat; background-size: 512px; opacity: .14; mix-blend-mode: overlay; }
+
+/* the lower-third: one line over the room, a thin red rule beneath, never a box */
+.lower-third { position: absolute; left: 90px; bottom: 72px; }
+.lower-third .venue { font-family: var(--display); font-weight: 700; font-size: 52px; letter-spacing: .08em; text-transform: uppercase; line-height: 1; color: var(--paper); text-shadow: 0 2px 18px rgba(0,0,0,.7); }
+.lower-third .venue em { font-style: normal; color: var(--gold); }
+.lower-third .rule { width: 420px; height: 4px; background: var(--red); margin: 14px 0 12px; }
+.lower-third .clock { font-family: var(--display); font-weight: 500; font-size: 44px; letter-spacing: .06em; color: var(--gold); font-variant-numeric: tabular-nums; line-height: 1; }
+.lower-third .clock small { font-family: var(--text); font-size: 24px; letter-spacing: 0; color: var(--gold-dim); margin-left: 16px; }
+
+/* live mark, top-right */
+.live { position: absolute; right: 90px; top: 54px; display: flex; align-items: center; gap: 14px; font-family: var(--display); font-weight: 600; font-size: 30px; letter-spacing: .14em; color: var(--paper); text-shadow: 0 2px 14px rgba(0,0,0,.7); }
+.live i { width: 18px; height: 18px; border-radius: 50%; background: var(--red); box-shadow: 0 0 18px rgba(200,30,58,.9); }
+.live small { font-family: var(--text); font-size: 22px; letter-spacing: .02em; color: var(--gold-dim); text-transform: none; }
+
+/* title card: one line of the MC's voice on black */
+.title-card { position: absolute; inset: 0; background: var(--house); display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 240px; }
+.title-card .line { font-family: var(--display); font-weight: 800; font-size: 88px; letter-spacing: .04em; text-transform: uppercase; color: var(--paper); line-height: 1.02; }
+.title-card .who { margin-top: 26px; font-family: var(--text); font-size: 28px; color: var(--gold-dim); }
+
+/* remote hints: quiet, bottom-right, words not icons */
+.hints { position: absolute; right: 90px; bottom: 72px; display: flex; gap: 32px; font-family: var(--text); font-size: 24px; color: var(--gold-dim); text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+.hints b { font-family: var(--display); font-weight: 700; font-size: 26px; letter-spacing: .1em; color: var(--paper); margin-right: 8px; }
+
+.h-display { font-family: var(--display); text-transform: uppercase; letter-spacing: .06em; line-height: 1; }
+.muted { color: var(--gold-dim); }

@@ -1,0 +1,19 @@
+{
+  "extends": "@tsconfig/react-native/tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "@amazon-devices/react-native-kepler"], /* Override "jest", "react-native" from @tsconfig/react-native */
+    /* shared-ui is typechecked through this app (TypeScript 4.8): resolve its React/RN peers and the sample's untyped modules here. */
+    "baseUrl": ".",
+    "paths": {
+      "react": ["node_modules/@types/react"],
+      "react/jsx-runtime": ["node_modules/@types/react/jsx-runtime"],
+      "react-native": ["node_modules/react-native"],
+      "react-native-pixel-perfect": ["src/types/modules.d.ts"],
+      "react-native-keyevent": ["src/types/modules.d.ts"],
+      "mitt": ["node_modules/mitt"],
+      "@amazon-devices/*": ["node_modules/@amazon-devices/*"],
+      "@strumble/shared-ui": ["../../packages/shared-ui/src/index.ts"]
+    }
+  },
+  "include": ["src", "index.js", "test", "../../packages/shared-ui/src/encore/**/*.vega.tsx"],
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  body { background: #0f1a12; }
+  .park { position: absolute; inset: 0; background: linear-gradient(#0f1a12 0%, #16271b 55%, #1d3523 100%); }
+  .it { position: absolute; left: 90px; top: 110px; width: 520px; height: 520px; }
+  .face { position: absolute; left: 60px; top: 40px; width: 400px; height: 400px; border-radius: 50%; background: #ffcf6b; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .face .e { position: absolute; top: 140px; width: 70px; height: 90px; background: #fff; border-radius: 50%; } .face .e:after { content: ""; position: absolute; left: 22px; top: 30px; width: 30px; height: 44px; background: #111; border-radius: 50%; }
+  .face .e.a { left: 90px; } .face .e.b { left: 240px; }
+  .face .brow { position: absolute; top: 110px; width: 90px; height: 16px; background: #5a3a10; border-radius: 8px; } .face .brow.a { left: 80px; transform: rotate(18deg); } .face .brow.b { left: 230px; transform: rotate(-18deg); }
+  .face .mouth { position: absolute; left: 140px; top: 280px; width: 120px; height: 60px; border-radius: 0 0 60px 60px; background: #111; }
+  .it .lab { position: absolute; left: 60px; top: 460px; width: 400px; text-align: center; font-size: 34px; font-weight: 800; color: #ffe9a8; }
+  .lane { position: absolute; left: 700px; right: 90px; top: 150px; }
+  .lane .lab { font-size: 22px; color: #9fc0a6; letter-spacing: 3px; text-transform: uppercase; }
+  .track { position: relative; height: 130px; margin-top: 16px; border-radius: 16px; background: #22402a; }
+  .track .finish { position: absolute; right: 0; top: 0; bottom: 0; width: 36px; background: repeating-linear-gradient(45deg, #fff 0 12px, #111 12px 24px); border-radius: 0 16px 16px 0; }
+  .runner { position: absolute; top: 20px; width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: #10221a; }
+  .r1 { left: 62%; background: #7cf29c; } .r2 { left: 41%; background: #9fc8ff; } .r3 { left: 55%; background: #ffb340; box-shadow: 0 0 0 8px rgba(255,80,80,.5); }
+  .names { display: flex; gap: 14px; margin-top: 18px; }
+  .names span { padding: 8px 16px; border-radius: 999px; font-size: 22px; border: 2px solid #3a5a42; color: #c9e0ce; }
+  .caught { position: absolute; left: 700px; right: 90px; top: 480px; padding: 28px 32px; border-radius: 22px; background: #5a1e1e; border: 3px solid #ff6b6b; }
+  .caught .big { font-size: 72px; font-weight: 800; color: #ffb3b3; line-height: 1; }
+  .caught .sub { font-size: 26px; color: #ffd9d9; margin-top: 10px; }
+  .wob { height: 90px; margin-top: 16px; position: relative; }
+  .wob svg { width: 100%; height: 90px; }
+  .round { position: absolute; left: 90px; top: 54px; font-size: 22px; color: #9fc0a6; letter-spacing: 3px; text-transform: uppercase; }
+  .score { position: absolute; right: 90px; top: 54px; font-size: 26px; color: #c9e0ce; }
+</style></head>
+<body><div class="tv">
+  <div class="park">
+    <div class="round">Statues · red light green light · round 3</div>
+    <div class="score">Riya 2 · Aman 1 · Anil 0</div>
+    <div class="it"><div class="face"><div class="brow a"></div><div class="brow b"></div><div class="e a"></div><div class="e b"></div><div class="mouth"></div></div><div class="lab">RED LIGHT · it's looking</div></div>
+    <div class="lane"><div class="lab">The carpet · start to finish</div>
+      <div class="track"><div class="finish"></div><div class="runner r2">R</div><div class="runner r3">AN</div><div class="runner r1">A</div></div>
+      <div class="names"><span>● Riya · phone in pocket</span><span>● Aman · phone in pocket</span><span>● Anil · phone in pocket</span></div>
+    </div>
+    <div class="caught"><div class="big">ANIL MOVED</div><div class="sub">a knee wobble 0.4 s after it turned · back to the start · the wobble, as the phone felt it:</div>
+      <div class="wob"><svg viewBox="0 0 1000 90" preserveAspectRatio="none"><polyline fill="none" stroke="#ffb3b3" stroke-width="4" points="0,60 100,60 200,58 300,60 400,61 500,59 560,60 600,20 630,75 660,25 690,70 720,40 760,60 850,59 1000,60"/></svg></div></div>
+  </div>
+  <div class="footer"><span>STATUES · phones stay in pockets as body sensors · judged on the shared clock, so slow Wi-Fi is never a disadvantage</span><span><span class="key">OK</span>next round &nbsp; <span class="key">◀ ▶</span>freeze dance &nbsp; <span class="key">Back</span>end</span></div>
+</div></body></html>
