@@ -1,0 +1,228 @@
+== r1
+13:52:12.408 launch
+13:52:57.757 key DPAD_RIGHT (venue row)
+13:53:11.808 key DPAD_RIGHT (venue row)
+13:53:25.842 key DPAD_RIGHT (venue row)
+13:53:39.902 key DPAD_RIGHT (venue row)
+13:53:53.950 key DPAD_LEFT (venue row)
+13:54:07.991 key DPAD_LEFT (venue row)
+mostly	13:52:58.067	13:52:59.300	1.27s	frames 1417-1454	yavg_min 15.2	mostly-001417.jpg
+mostly	13:53:12.200	13:53:13.933	1.77s	frames 1841-1893	yavg_min 15.0	mostly-001841.jpg
+mostly	13:53:26.300	13:53:27.900	1.63s	frames 2264-2312	yavg_min 15.4	mostly-002264.jpg
+mostly	13:53:40.333	13:53:42.067	1.77s	frames 2685-2737	yavg_min 15.6	mostly-002685.jpg
+mostly	13:53:54.333	13:53:55.867	1.57s	frames 3105-3151	yavg_min 15.4	mostly-003105.jpg
+mostly	13:54:08.367	13:54:09.633	1.30s	frames 3526-3564	yavg_min 15.0	mostly-003526.jpg
+sbl	13:52:58.067	13:52:59.300	1.27s	frames 1417-1454	yavg_min 15.2	sbl-001417.jpg
+sbl	13:53:12.200	13:53:13.933	1.77s	frames 1841-1893	yavg_min 15.0	sbl-001841.jpg
+sbl	13:53:26.300	13:53:27.900	1.63s	frames 2264-2312	yavg_min 15.4	sbl-002264.jpg
+sbl	13:53:40.333	13:53:42.067	1.77s	frames 2685-2737	yavg_min 15.6	sbl-002685.jpg
+sbl	13:53:54.333	13:53:55.867	1.57s	frames 3105-3151	yavg_min 15.4	sbl-003105.jpg
+sbl	13:54:08.367	13:54:09.633	1.30s	frames 3526-3564	yavg_min 15.0	sbl-003526.jpg
+== r2
+14:00:09.308 launch
+14:00:12.150 key DPAD_RIGHT (during load)
+14:00:13.477 key DPAD_RIGHT (during load)
+14:00:14.773 key DPAD_RIGHT (during load)
+           TOTAL PSS:   184224            TOTAL RSS:   336776      TOTAL SWAP (KB):        0
+14:00:56.389 key DPAD_LEFT after kill
+mostly	14:00:12.367	14:00:12.400	0.07s	frames 149-150	yavg_min 20.8	mostly-000149.jpg
+mostly	14:00:15.033	14:00:15.067	0.07s	frames 229-230	yavg_min 20.8	mostly-000229.jpg
+mostly	14:00:56.800	14:00:58.100	1.33s	frames 1482-1521	yavg_min 15.1	mostly-001482.jpg
+sbl	14:00:56.800	14:00:58.100	1.33s	frames 1482-1521	yavg_min 15.1	sbl-001482.jpg
+== sets/s1-standup-club
+14:04:40.070 launch
+14:05:16.908 key ENTER (start standup at club)
+14:09:01.830 phone p: live: "Rent, Parents and Other Utilities", 43 lines, ends at 219.1 s of a 300 s slot / 1 finished
+14:09:01.840 phone finished
+14:09:21.890 key BACK (to the green room)
+14:09:28.929 key BACK (to the cut sheet)
+14:09:34.972 key BACK (to the green room)
+14:09:41.015 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   173431            TOTAL RSS:   325276      TOTAL SWAP (KB):        0
+mostly	14:09:41.367	14:09:42.800	1.47s	frames 9082-9125	yavg_min 12.9	mostly-009082.jpg
+sbl	14:09:41.367	14:09:42.800	1.47s	frames 9082-9125	yavg_min 12.9	sbl-009082.jpg
+== sets/s2-standup-theatre
+14:10:03.809 launch
+14:10:24.210 key DPAD_RIGHT (venue)
+14:10:40.938 key ENTER (start standup at theatre)
+14:14:24.836 phone p: live: "Rent, Parents and Other Utilities", 43 lines, ends at 219.1 s of a 300 s slot / 1 finished
+14:14:24.837 phone finished
+14:14:44.911 key BACK (to the green room)
+14:14:51.954 key BACK (to the cut sheet)
+14:14:58.001 key BACK (to the green room)
+14:15:04.038 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   178982            TOTAL RSS:   331088      TOTAL SWAP (KB):        0
+black	14:14:12.733	14:14:13.067	0.37s	frames 7510-7520	yavg_min 11.9	black-007510.jpg
+mostly	14:10:24.500	14:10:25.933	1.47s	frames 664-707	yavg_min 12.9	mostly-000664.jpg
+mostly	14:15:04.467	14:15:06.067	1.63s	frames 9062-9110	yavg_min 12.7	mostly-009062.jpg
+sbl	14:10:24.500	14:10:25.933	1.47s	frames 664-707	yavg_min 12.9	sbl-000664.jpg
+sbl	14:15:04.467	14:15:06.067	1.63s	frames 9062-9110	yavg_min 12.7	sbl-009062.jpg
+== sets/s3-standup-arena
+14:15:26.817 launch
+14:15:47.297 key DPAD_RIGHT (venue)
+14:15:47.932 key DPAD_RIGHT (venue)
+14:16:04.691 key ENTER (start standup at arena)
+14:19:48.617 phone p: live: "Rent, Parents and Other Utilities", 43 lines, ends at 219.1 s of a 300 s slot / 1 finished
+14:19:48.625 phone finished
+14:20:08.665 key BACK (to the green room)
+14:20:15.731 key BACK (to the cut sheet)
+14:20:21.795 key BACK (to the green room)
+14:20:27.857 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   183638            TOTAL RSS:   336020      TOTAL SWAP (KB):        0
+mostly	14:15:47.800	14:15:50.467	2.70s	frames 672-752	yavg_min 12.7	mostly-000672.jpg
+sbl	14:15:47.800	14:15:50.467	2.70s	frames 672-752	yavg_min 12.7	sbl-000672.jpg
+== sets/s4-standup-openmic
+14:20:50.695 launch
+14:21:11.072 key DPAD_LEFT (venue)
+14:21:27.576 key ENTER (start standup at openmic)
+14:25:11.460 phone p: live: "Rent, Parents and Other Utilities", 43 lines, ends at 219.1 s of a 300 s slot / 1 finished
+14:25:11.464 phone finished
+14:25:31.529 key BACK (to the green room)
+14:25:38.579 key BACK (to the cut sheet)
+14:25:44.632 key BACK (to the green room)
+14:25:50.684 key BACK (to the cut sheet)
+14:25:55.743 key ENTER (next set from the cut sheet)
+14:25:55.757 phone p: live: "Rent, Parents and Other Utilities", 43 lines, ends at 219.1 s of a 300 s slot / 1 finished
+14:26:17.804 key BACK (to the green room)
+14:26:23.845 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   173053            TOTAL RSS:   325136      TOTAL SWAP (KB):        0
+mostly	14:21:11.333	14:21:12.933	1.63s	frames 662-710	yavg_min 13.0	mostly-000662.jpg
+mostly	14:25:56.067	14:26:00.567	4.53s	frames 9204-9339	yavg_min 13.9	mostly-009204.jpg
+mostly	14:26:24.233	14:26:25.700	1.50s	frames 10049-10093	yavg_min 12.9	mostly-010049.jpg
+sbl	14:21:11.333	14:21:12.933	1.63s	frames 662-710	yavg_min 13.0	sbl-000662.jpg
+sbl	14:26:24.233	14:26:25.700	1.50s	frames 10049-10093	yavg_min 12.9	sbl-010049.jpg
+== sets/s5-poetry-theatre
+14:26:46.646 launch
+14:27:07.050 key DPAD_RIGHT (venue)
+14:27:19.113 key DPAD_UP
+14:27:19.764 key DPAD_RIGHT (act)
+14:27:20.485 key DPAD_RIGHT (act)
+14:27:21.220 key DPAD_DOWN
+14:27:25.666 key ENTER (start poetry at theatre)
+14:28:39.992 phone p: live: "Monsoon, Mumbai", 11 lines, ends at 68.7 s of a 180 s slot / 1 finished
+14:28:39.996 phone finished
+14:29:00.053 key BACK (to the green room)
+14:29:07.121 key BACK (to the cut sheet)
+14:29:13.172 key BACK (to the green room)
+14:29:19.219 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   168331            TOTAL RSS:   320160      TOTAL SWAP (KB):        0
+black	14:27:54.633	14:27:55.667	1.07s	frames 2082-2113	yavg_min 11.9	black-002082.jpg
+black	14:27:56.033	14:28:02.300	6.30s	frames 2124-2312	yavg_min 11.8	black-002124.jpg
+mostly	14:27:07.367	14:27:08.767	1.43s	frames 664-706	yavg_min 12.9	mostly-000664.jpg
+mostly	14:27:25.800	14:27:25.867	0.10s	frames 1217-1219	yavg_min 14.1	mostly-001217.jpg
+mostly	14:27:54.300	14:27:55.733	1.47s	frames 2072-2115	yavg_min 11.9	mostly-002072.jpg
+mostly	14:27:56.033	14:28:02.300	6.30s	frames 2124-2312	yavg_min 11.8	mostly-002124.jpg
+mostly	14:29:19.367	14:29:21.200	1.87s	frames 4624-4679	yavg_min 12.4	mostly-004624.jpg
+sbl	14:27:07.367	14:27:08.767	1.43s	frames 664-706	yavg_min 12.9	sbl-000664.jpg
+sbl	14:29:19.600	14:29:21.200	1.63s	frames 4631-4679	yavg_min 12.4	sbl-004631.jpg
+== sets/s6-speech-arena
+14:29:42.022 launch
+14:30:02.445 key DPAD_RIGHT (venue)
+14:30:03.071 key DPAD_RIGHT (venue)
+14:30:15.118 key DPAD_UP
+14:30:15.809 key DPAD_RIGHT (act)
+14:30:16.542 key DPAD_RIGHT (act)
+14:30:17.295 key DPAD_RIGHT (act)
+14:30:18.026 key DPAD_DOWN
+14:30:22.708 key ENTER (start speech at arena)
+14:31:34.012 phone p: live: "The Lake", 11 lines, ends at 69 s of a 240 s slot / 1 finished
+14:31:34.019 phone finished
+14:31:54.066 key BACK (to the green room)
+14:32:01.277 key BACK (to the cut sheet)
+14:32:07.331 key BACK (to the green room)
+14:32:13.376 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   170051            TOTAL RSS:   322204      TOTAL SWAP (KB):        0
+mostly	14:30:02.767	14:30:05.233	2.50s	frames 665-739	yavg_min 12.7	mostly-000665.jpg
+sbl	14:30:02.767	14:30:05.233	2.50s	frames 665-739	yavg_min 12.7	sbl-000665.jpg
+== sets/s7-singing-openmic
+14:32:36.145 launch
+14:32:56.534 key DPAD_LEFT (venue)
+14:33:08.582 key DPAD_UP
+14:33:09.222 key DPAD_RIGHT (act)
+14:33:09.954 key DPAD_DOWN
+14:33:14.521 key ENTER (start singing at openmic)
+14:33:59.572 key ENTER (end the set)
+14:34:19.632 key BACK (to the green room)
+14:34:26.670 key BACK (to the cut sheet)
+14:34:32.712 key BACK (to the green room)
+14:34:38.755 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   164356            TOTAL RSS:   316776      TOTAL SWAP (KB):        0
+mostly	14:32:56.833	14:32:58.500	1.70s	frames 663-713	yavg_min 13.0	mostly-000663.jpg
+sbl	14:32:56.833	14:32:58.500	1.70s	frames 663-713	yavg_min 13.0	sbl-000663.jpg
+== fix-r3
+15:06:57.177 launch
+15:07:01.022 key DPAD_RIGHT (during the first load)
+15:07:21.212 qemu_rss_mb 4587
+15:07:21.215 key DPAD_RIGHT (venue row)
+15:07:35.278 qemu_rss_mb 4612
+15:07:35.282 key DPAD_RIGHT (venue row)
+15:07:49.344 qemu_rss_mb 4718
+15:07:49.350 key DPAD_RIGHT (venue row)
+15:08:03.402 qemu_rss_mb 4720
+15:08:03.405 key DPAD_LEFT (venue row)
+15:08:17.478 qemu_rss_mb 4724
+15:08:33.777 qemu_rss_mb 4728
+           TOTAL PSS:   191112            TOTAL RSS:   338568      TOTAL SWAP (KB):        0
+mostly	15:07:01.300	15:07:01.333	0.07s	frames 181-182	yavg_min 20.8	mostly-000181.jpg
+mostly	15:07:21.533	15:07:21.567	0.07s	frames 788-789	yavg_min 19.9	mostly-000788.jpg
+mostly	15:07:35.567	15:07:35.600	0.07s	frames 1209-1210	yavg_min 20.2	mostly-001209.jpg
+== fix-s4
+15:09:39.076 launch
+15:09:59.459 key DPAD_LEFT (venue)
+15:10:15.966 key ENTER (start standup at openmic)
+15:14:01.928 phone p: live: "Rent, Parents and Other Utilities", 43 lines, ends at 219.1 s of a 300 s slot / 1 finished
+15:14:01.931 phone finished
+15:14:22.006 key BACK (to the green room)
+15:14:29.052 key BACK (to the cut sheet)
+15:14:35.097 key BACK (to the green room)
+15:14:41.150 key BACK (to the cut sheet)
+15:14:46.215 key ENTER (next set from the cut sheet)
+15:18:33.125 second set finished
+15:18:55.172 key BACK (to the green room)
+15:19:01.232 key DPAD_RIGHT (to the bill)
+           TOTAL PSS:   197599            TOTAL RSS:   349476      TOTAL SWAP (KB):        0
+mostly	15:09:59.667	15:09:59.700	0.07s	frames 660-661	yavg_min 18.0	mostly-000660.jpg
+mostly	15:14:48.367	15:14:51.067	2.73s	frames 9321-9402	yavg_min 13.8	mostly-009321.jpg
+mostly	15:19:01.433	15:19:01.467	0.07s	frames 16913-16914	yavg_min 17.8	mostly-016913.jpg
+== forced setups (crowdtest, state=laugh, 11 s in)
+file yavg dark<20 p50 p90 bandR bandRstd nb
+arena-0.png 23.6 0.72 7 78 14.2 25.9 14.9
+arena-1.png 22.3 0.74 7 70 16.9 28.5 22.8
+arena-2.png 40.2 0.46 26 101 26.1 32.6 36.7
+arena-3.png 48.6 0.28 43 104 39.8 33.3 50.0
+arena-4.png 31.1 0.62 6 98 31.4 46.7 41.4
+arena-5.png 59.4 0.21 51 127 54.6 39.2 66.1
+arena-6.png 39.5 0.41 31 93 27.0 30.3 34.2
+arena-7.png 39.4 0.41 30 93 43.5 36.8 49.3
+arena-8.png 42.1 0.55 13 133 59.0 68.5 38.7
+arena-9.png 39.5 0.41 31 93 27.0 30.3 34.1
+club-0.png 32.9 0.57 17 85 8.9 7.8 14.4
+club-1.png 35.1 0.52 19 94 42.6 46.2 50.6
+club-2.png 29.2 0.61 16 77 8.8 9.5 12.5
+club-3.png 50.3 0.44 24 156 44.6 53.6 56.6
+club-4.png 37.1 0.47 22 96 66.2 65.2 52.3
+club-5.png 26.3 0.67 15 75 9.1 12.5 15.0
+club-6.png 28.6 0.67 13 81 4.6 5.4 7.1
+club-7.png 37.8 0.47 20 101 12.4 7.5 41.5
+club-8.png 23.0 0.68 9 65 4.0 8.7 12.6
+club-9.png 23.0 0.68 9 65 4.0 8.7 12.7
+openmic-0.png 62.9 0.36 36 156 25.0 31.0 48.3
+openmic-1.png 56.4 0.31 40 129 67.0 50.0 119.4
+openmic-2.png 67.8 0.37 37 178 33.7 39.8 78.4
+openmic-3.png 68.6 0.27 47 157 122.9 63.3 90.2
+openmic-4.png 46.0 0.48 21 131 55.0 60.7 21.1
+openmic-5.png 38.4 0.54 18 117 6.2 7.2 8.0
+openmic-6.png 31.4 0.58 16 96 20.3 27.7 26.5
+openmic-7.png 30.6 0.62 13 96 4.9 7.4 5.9
+openmic-8.png 29.0 0.60 15 89 9.9 12.9 18.2
+openmic-9.png 29.0 0.60 15 89 9.9 12.9 18.2
+theatre-0.png 35.2 0.57 16 106 10.1 11.0 12.5
+theatre-1.png 30.8 0.62 14 94 20.6 30.2 25.7
+theatre-2.png 54.6 0.42 31 151 40.4 45.1 100.4
+theatre-3.png 16.8 0.74 3 51 7.3 11.3 9.0
+theatre-4.png 18.6 0.79 5 63 2.5 6.7 3.1
+theatre-5.png 19.7 0.78 8 63 4.4 5.2 6.0
+theatre-6.png 20.5 0.78 8 67 23.9 36.3 28.9
+theatre-7.png 20.0 0.77 5 68 2.2 5.3 8.0
+theatre-8.png 35.8 0.55 17 103 11.5 10.9 20.4
+theatre-9.png 18.6 0.79 5 63 2.5 6.7 3.1

@@ -1,0 +1,18 @@
+{
+ "file": "crowd-openmic.mp3",
+ "sampleRate": 44100,
+ "totalSec": 5.8,
+ "firstAudibleSample": 11063,
+ "clips": [
+  {
+   "id": "sparse-0",
+   "src": "freesound-763965",
+   "kind": "sparse",
+   "level": 0.3,
+   "start": 0.25,
+   "dur": 5.25,
+   "startSample": 11025,
+   "samples": 231525
+  }
+ ]
+}

@@ -11,6 +11,7 @@ import { Hints } from '../world/Hints';
 import { Live } from '../world/Live';
 import { LowerThird } from '../world/LowerThird';
 import { PitchTrace } from '../world/PitchTrace';
+import { Plate } from '../world/Plate';
 import { prefetchClips } from '../world/prefetch';
 import { TitleCard } from '../world/TitleCard';
 import { VideoPlate } from '../world/VideoPlate';
@@ -183,11 +184,18 @@ export function LiveScreen({
   return (
     <View style={[styles.root, stage && styles.onStage]}>
       {state.phase === 'armed' ? (
-        armedIntro ? (
-          <TitleCard line={armedIntro} who={`${venue.house} · ${venue.name}`} over={stage} />
-        ) : (
-          <TitleCard line={`${venue.house} · ${venue.name}`} over={stage} />
-        )
+        <>
+          {/* The intro card never blacks the picture out: over the room's plate while the 3D room isn't showing (crowd
+              off, or the stage still building this room after a venue change: 4.5 s of black on the emulator when OK on
+              the cut sheet started the next set one room up, black-screen hunt 2026-10-13), over the room itself
+              otherwise. */}
+          {stage ? null : <Plate id={lastWide.current} grade="wide" />}
+          {armedIntro ? (
+            <TitleCard line={armedIntro} who={`${venue.house} · ${venue.name}`} over />
+          ) : (
+            <TitleCard line={`${venue.house} · ${venue.name}`} over />
+          )}
+        </>
       ) : (
         <>
           {base}

@@ -1,4 +1,4 @@
-// Six successive laughs in host mode (index.html?host=1), each with the TV's reaction cut and its cut-sheet snapshot
+// Successive laughs (six by default) in host mode (index.html?host=1), each with the TV's reaction cut and its cut-sheet snapshot
 // 700 ms after the cut, so the strip can be checked for repeats (tools/render/phash.py).
 //   node laughstrip.mjs <url> <outdir> [venue] [laughs=6] [gap seconds=9]
 // Writes <outdir>/thumb-<n>.jpg (the page's own 320×180 thumbs), close-<n>.png (the screen 1 s into each close-up) and
@@ -31,7 +31,7 @@ try {
   for (let i = 0; i < 40; i++) await tick(drive());
   const caught = [];
   for (let k = 0; k < N; k++) {
-    const s = [0.8, 0.55, 0.9, 0.45, 0.75, 0.65][k % 6], t0 = t;
+    const s = [0.8, 0.55, 0.9, 0.45, 0.75, 0.65, 0.95, 0.5][k % 8], t0 = t;
     await post({ type: 'cue', id: s < 0.7 ? 'laugh-medium' : 'laugh-big', strength: s });
     let cutAt = null;
     for (let i = 0; i < GAP * 10; i++) {

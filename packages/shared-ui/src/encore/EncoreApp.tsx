@@ -543,11 +543,13 @@ export function EncoreApp({
   // The live 3D room, where it runs: one stage under every screen, so the venue never reloads between them. Its WebView
   // is created only after the bill has painted (useStageMount: creating it on the first frame put Chromium's start-up on
   // the window's focus path, and a cold disk made that an ANR), and the screens keep their photographic plates until
-  // the page has drawn its first frames, so the wait shows the plate, never black.
+  // the page has drawn its first frames, so the wait shows the plate, never black. The same holds after the first
+  // ready: from a venue change until the page has rebuilt that room, during any page reload, and after the WebView's
+  // renderer is lost, the stage reports itself not visible and the plate of the wanted room shows (stageGate.ts).
   const stageWanted = (crowd3d === undefined ? config.crowd3d : crowd3d) && CROWD_STAGE_AVAILABLE;
   const stageMounted = useStageMount(stageWanted);
   const [stageVisible, setStageVisible] = useState(false);
-  const onStageVisible = useCallback(() => setStageVisible(true), []);
+  const onStageVisible = useCallback((visible?: boolean) => setStageVisible(visible !== false), []);
   useEffect(() => {
     if (!stageMounted) setStageVisible(false);
   }, [stageMounted]);

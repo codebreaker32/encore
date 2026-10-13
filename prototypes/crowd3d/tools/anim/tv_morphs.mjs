@@ -12,11 +12,15 @@ import path from 'node:path';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
 const dir = path.resolve(here, '../../people');
-// The TV set: 8 shapes, the same count (and float morph texture, vertices × 16 B each in three r160) as before.
+// The TV set (float morph texture, vertices × 16 B a shape in three r160).
 // Symmetric pairs become one shape (the sum of the left and right deltas: a blink, a squint, both cheeks, the upper
 // lip); the smile keeps its two sides for smirks. people.js Face writes left/right values onto a merged shape.
-const FINAL = ['eyeBlink', 'browInnerUp', 'cheekSquint', 'mouthSmileLeft', 'mouthSmileRight', 'jawOpen', 'eyeSquint', 'mouthUpperUp'];
-const SUM = { eyeBlink: ['eyeBlinkLeft', 'eyeBlinkRight'], cheekSquint: ['cheekSquintLeft', 'cheekSquintRight'], eyeSquint: ['eyeSquintLeft', 'eyeSquintRight'], mouthUpperUp: ['mouthUpperUpLeft', 'mouthUpperUpRight'] };
+// Expressions round (faces-v1): 9 shapes. The eye squint and the cheek raise always move together on these faces (a
+// Duchenne smile or a laugh), so they are one shape, 'duchenne' (0.8 × the squint + the cheeks), which frees a slot;
+// with one more (about 0.2 MB of morph texture a venue) the sceptic's one brow up (the left outer brow) and pressed
+// lips are on the TV too.
+const FINAL = ['eyeBlink', 'browInnerUp', 'duchenne', 'mouthSmileLeft', 'mouthSmileRight', 'jawOpen', 'mouthUpperUp', 'browOuterUpLeft', 'mouthPress'];
+const SUM = { eyeBlink: ['eyeBlinkLeft', 'eyeBlinkRight'], duchenne: [['eyeSquintLeft', 0.8], ['eyeSquintRight', 0.8], 'cheekSquintLeft', 'cheekSquintRight'], mouthUpperUp: ['mouthUpperUpLeft', 'mouthUpperUpRight'], mouthPress: ['mouthPressLeft', 'mouthPressRight'] };
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const names = process.argv.slice(2).length ? process.argv.slice(2) : fs.readdirSync(dir).filter((f) => f.endsWith('.tv.glb')).map((f) => f.slice(0, -7));
 for (const name of names) {
@@ -39,7 +43,7 @@ for (const name of names) {
       prim.listTargets().forEach((t) => prim.removeTarget(t));
       for (const n of FINAL) {
         const arr = new Float32Array(a.length);
-        for (const part of SUM[n] || [n]) { const src = delta(part); for (let i = 0; i < arr.length; i++) arr[i] += src[i]; }
+        for (const part of SUM[n] || [n]) { const [pn, w] = Array.isArray(part) ? part : [part, 1], src = delta(pn); for (let i = 0; i < arr.length; i++) arr[i] += w * src[i]; }
         for (let i = 0; i < arr.length; i++) if (Math.abs(arr[i]) < 2e-5) arr[i] = 0; // as build_people: sparse-friendly
         prim.addTarget(tv.createPrimitiveTarget(n).setAttribute('POSITION', tv.createAccessor().setType('VEC3').setArray(arr).setBuffer(buf)));
       }

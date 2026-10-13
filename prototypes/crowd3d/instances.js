@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { Rig, Person, noise } from './people.js';
-import { joints, fixArms, armCollisions, refreshFit } from './anatomy.js';
+import { joints, fixArms, armCollisions, refreshFit, limbs, guardElbows } from './anatomy.js';
 import { ANIM, newPose, sample, sampleCycle, applyPose, bonesOf, family, meanPose } from './anim.js';
 
 // Captured moves baked per avatar type (anim.js clips): a walk cycle, sitting down, and three idle gestures, as
@@ -56,9 +56,9 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
   const typeName = (() => { let nm = ''; gltfScene.traverse((o) => { if (!nm && /_Adult_/.test(o.name)) nm = o.name; }); return nm; })();
   const audit = (label, seated) => {
     rig.seatChanged(); model.updateMatrixWorld(true);
-    if (rig.fit && rig.fit.ok) { refreshFit(rig.fit); joints(p, true); fixArms(p, seated); joints(p, true); model.updateMatrixWorld(true); }
+    if (rig.fit && rig.fit.ok) { refreshFit(rig.fit); joints(p, true); fixArms(p, seated); joints(p, true); guardElbows(p, false); model.updateMatrixWorld(true); }
     const left = [];
-    if (rig.fit && rig.fit.ok) { refreshFit(rig.fit); joints(p, false, left); armCollisions(p, left, { seated }); }
+    if (rig.fit && rig.fit.ok) { refreshFit(rig.fit); joints(p, false, left); armCollisions(p, left, { seated }); limbs(p, left, { seated, standing: !seated && (stand || !!(p.loco && p.loco.stand >= 1 && !p.loco.walk)), resting: !!p._resting, rest: p._restKind || '', cheer: (p._cheerW || 0) > 0.05, bounce: (p._cheerW || 0) > 0.3 }); }
     if (left.length) BAKE_REPORT.push({ type: typeName, stand, pose: label, left: left.map((x) => x.joint || x.what).join(', ') });
   };
   const bake = (force, loco = null) => {
@@ -107,6 +107,7 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
       const pose = newPose(), frames = [];
       let frameNo = 0;
       const at = (fn, seated = true) => { fn(); audit('frame ' + frameNo++, seated); return readSkin(); };
+      const atRaw = (fn) => { fn(); frameNo++; return readSkin(); };
       // the seated rest pose, to add the laugh captures to
       const ab = bonesOf(rig), restQ = ab.map((b) => (b ? b.quaternion.clone() : null)), restRoot = ab[0].position.clone(), restModel = model.position.clone();
       for (let f = 0; f < MOVES.walk; f++) frames.push(at(() => { applyPose(rig, sampleCycle(walkC, f / MOVES.walk, pose)); model.position.set(0, 0, 0); }, false));
@@ -115,7 +116,8 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
       // where the capture's seated hips land against the baked rest pose's: shift the capture onto them
       applyPose(rig, sample(sitC, sitC.dur, pose)); model.position.set(0, 0, 0); model.updateMatrixWorld(true);
       const off = hip.clone().sub(pos(rig.b.lThigh).add(pos(rig.b.rThigh)).multiplyScalar(0.5));
-      for (let f = 0; f < MOVES.sit; f++) frames.push(at(() => {
+      // (the last sit-down frame is drawn as the seated rest pose itself, re-based below: it is the rest that is checked)
+      for (let f = 0; f < MOVES.sit; f++) frames.push((f === MOVES.sit - 1 ? atRaw : at)(() => {
         sample(sitC, (f / (MOVES.sit - 1)) * sitC.dur, pose);
         pose[ANIM.NB * 4 + 2] *= STAND_OFF / Math.max(0.2, sitC.standZ || STAND_OFF);
         applyPose(rig, pose); model.position.copy(off).multiplyScalar(smooth01(f / (MOVES.sit - 1)));
@@ -153,6 +155,10 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
             if (D) qd.slerp(qI, 1 - (HEAD.test(b.name) ? D.head : /Spine/.test(b.name) ? D.spine : 1));
             b.quaternion.premultiply(qd);
           });
+          // (the thighs hang from Spine in these rigs: the laugh's spine turn is taken back out of them, so the knees stay
+          // where the seated rest has them; the limbs rules)
+          { const si = ab.findIndex((x) => x && x.name === 'Bip01_Spine');
+            if (si >= 0) { const D = new THREE.Quaternion().copy(ab[si].quaternion).invert().multiply(restQ[si]); for (const x of ab) if (x && /_Thigh$/.test(x.name)) x.quaternion.premultiply(D); } }
           ab[0].position.copy(restRoot); model.position.copy(restModel);
         }));
       }
@@ -524,7 +530,7 @@ export class InstancedCrowd {
         const walker = L && L.x !== undefined, inSeat = !L || L.hidden;
         let body = 0, best = null, bestScore = 0;
         for (let e = 0; e < room.events.length; e++) {
-          const r = t.response(room.events[e], now, room.spread, room.vocab);
+          const r = t.response(room.events[e], now, room.spread, room.vocab, room.venueId);
           if (!r) continue;
           let sc = r.body;
           for (let j = 0; j < r.gestures.length; j++) sc += r.gestures[j].w;

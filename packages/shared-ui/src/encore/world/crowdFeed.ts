@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { crowdDrive, type ActId, type CrowdDrive, type SetState, type ShotKind, type VenueId } from '@strumble/crowd';
 import { cueFor, type SoundId } from './sounds';
+import { venuePostDelay } from './stageGate';
 
 /** What the room is doing: arriving before the set (the bill), the set itself, or emptying after it. */
 export type CrowdMode = 'preview' | 'live' | 'after';
@@ -29,7 +30,9 @@ export type CrowdMessage =
  */
 export type CrowdReport =
   /** `view`: the page's viewport, density and canvas size, logged once so a mis-fitted stage shows in logcat. */
-  | { type: 'ready'; view?: string }
+  | { type: 'ready'; view?: string; load?: unknown }
+  /** The page's load phases (seconds since its script started), logged so a slow TV start shows where it went. */
+  | { type: 'load'; line?: string }
   | { type: 'stats'; fps: number; ms: number; calls: number; tris: number }
   | { type: 'audio'; state: 'running' | 'suspended' | 'unavailable' }
   /** A frame of this set's room, as a small JPEG data URI, for the cut sheet's strip. */
@@ -46,7 +49,7 @@ export function parseReport(data: unknown): CrowdReport | null {
   }
   const m = msg as { type?: unknown } | null;
   if (!m || typeof m !== 'object') return null;
-  return m.type === 'ready' || m.type === 'stats' || m.type === 'audio' || m.type === 'thumb'
+  return m.type === 'ready' || m.type === 'stats' || m.type === 'audio' || m.type === 'thumb' || m.type === 'load'
     ? (m as CrowdReport)
     : null;
 }
@@ -103,10 +106,24 @@ export function useCrowdFeed(
     if (ready) post({ type: 'mode', mode });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, epoch, mode]);
+  // A different room reloads the page (see stageGate.ts): on the bill the post waits for the selection to rest, so
+  // scrolling through the rooms reloads it once; a fresh page (a new epoch) and the live and after screens get it at once.
+  const venueEpoch = useRef<number | null>(null);
   useEffect(() => {
-    if (ready) post({ type: 'venue', venue, act });
+    if (!ready) return undefined;
+    const delay = venuePostDelay(mode, venueEpoch.current !== epoch);
+    const send = () => {
+      venueEpoch.current = epoch;
+      post({ type: 'venue', venue, act });
+    };
+    if (delay <= 0) {
+      send();
+      return undefined;
+    }
+    const t = setTimeout(send, delay);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, epoch, venue, act]);
+  }, [ready, epoch, venue, act, mode]);
   const shotKey = state ? `${state.config.setId}:${state.shot.kind}:${state.shot.from}` : '';
   useEffect(() => {
     if (!ready || !state) return undefined;

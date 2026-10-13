@@ -40,7 +40,7 @@ const REACTS: Record<string, string> = { laugh: 'laughs', snap: 'snaps', applaus
 
 /** CC BY material carries its credit on the bill (plates/CREDITS.md, sounds/CREDITS.md); the rest is Unsplash / Pexels. */
 const CREDITS =
-  'Photos: S Pakhrin, Linda Marie, ACU Library (CC BY 2.0) · Crowd sounds, freesound.org: lonemonk, kevp888 (CC BY 4.0), Tomlija, alphahog (CC BY 3.0) · MC voice: Amazon Polly';
+  'Photos: S Pakhrin, Linda Marie, ACU Library (CC BY 2.0) · Crowd sounds, freesound.org: lonemonk, kevp888, bpayri, Valerie-Vivegnis, Federico_Casazza, mokasza, pfranzen (CC BY 4.0), Tomlija, alphahog (CC BY 3.0) · MC voice: Amazon Polly';
 
 /**
  * Tonight's bill: the room you'll face is live on the left; the running order on the right; OK goes live.
@@ -291,6 +291,7 @@ const styles = StyleSheet.create({
   credits: {
     position: 'absolute',
     left: edge.x,
+    right: edge.x, // (wraps inside the screen: without it the line ran off the right edge on the TV)
     bottom: sp(24),
     fontFamily: text.regular,
     fontSize: sp(24),

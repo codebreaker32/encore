@@ -1,0 +1,108 @@
+{
+ "file": "crowd-theatre.mp3",
+ "sampleRate": 44100,
+ "totalSec": 33.7,
+ "firstAudibleSample": 11388,
+ "clips": [
+  {
+   "id": "ripple-0",
+   "src": "freesound-438401",
+   "kind": "ripple",
+   "level": 0.5,
+   "start": 0.25,
+   "dur": 4,
+   "startSample": 11025,
+   "samples": 176400
+  },
+  {
+   "id": "ripple-1",
+   "src": "freesound-438401",
+   "kind": "ripple",
+   "level": 0.55,
+   "start": 4.55,
+   "dur": 4,
+   "startSample": 200655,
+   "samples": 176400
+  },
+  {
+   "id": "ripple-2",
+   "src": "freesound-438401",
+   "kind": "ripple",
+   "level": 0.5,
+   "start": 8.85,
+   "dur": 4,
+   "startSample": 390285,
+   "samples": 176400
+  },
+  {
+   "id": "ripple-3",
+   "src": "freesound-438401",
+   "kind": "ripple",
+   "level": 0.45,
+   "start": 13.15,
+   "dur": 3.4,
+   "startSample": 579915,
+   "samples": 149940
+  },
+  {
+   "id": "ripple-4",
+   "src": "freesound-678668",
+   "kind": "ripple",
+   "level": 0.25,
+   "start": 16.85,
+   "dur": 1.2,
+   "startSample": 743085,
+   "samples": 52920
+  },
+  {
+   "id": "ripple-5",
+   "src": "freesound-678669",
+   "kind": "ripple",
+   "level": 0.3,
+   "start": 18.35,
+   "dur": 2,
+   "startSample": 809235,
+   "samples": 88200
+  },
+  {
+   "id": "ripple-6",
+   "src": "freesound-678670",
+   "kind": "ripple",
+   "level": 0.3,
+   "start": 20.65,
+   "dur": 2.05,
+   "startSample": 910665,
+   "samples": 90405
+  },
+  {
+   "id": "ripple-7",
+   "src": "freesound-242244",
+   "kind": "ripple",
+   "level": 0.35,
+   "start": 23,
+   "dur": 1.8,
+   "startSample": 1014300,
+   "samples": 79380
+  },
+  {
+   "id": "applause-8",
+   "src": "freesound-807725",
+   "kind": "applause",
+   "level": 0.6,
+   "start": 25.1,
+   "dur": 4,
+   "startSample": 1106910,
+   "samples": 176400
+  },
+  {
+   "id": "applause-9",
+   "src": "freesound-807725",
+   "kind": "applause",
+   "level": 0.65,
+   "start": 29.4,
+   "dur": 4,
+   "startSample": 1296540,
+   "samples": 176400
+  }
+ ]
+}

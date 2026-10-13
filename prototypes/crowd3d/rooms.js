@@ -133,6 +133,8 @@ function buildTheatre(scene, rows, P, visible, depthFor = () => 1) {
 
 export const THEATRE = {
   id: 'theatre', title: 'The Playhouse · <em>Theatre</em>', frontRows: 3, layout: layoutTheatre, build: buildTheatre, seatH: 0.45, room: TH,
+  previewKey: 0.8, previewWiden: 2.6, // (the stage key while the room fills, the bill: stronger and wider)
+  closeDimEmissive: 0.25, // (the stage lip's unlit strip crossed the side angles as a bright diagonal line)
   performer: [0.3, 2.55, -1.6],
   cast: ['Female_Adult_04', 'Male_Adult_07', 'Female_Adult_03', 'Male_Adult_12', 'Female_Adult_17', 'Male_Adult_17'], // (not F13 beside F04: two near-identical blondes in the front row)
   cam: { pos: [0.8, 2.85, -3.0], look: [-0.2, 0.5, 10], mm: 32 },
@@ -144,7 +146,7 @@ export const THEATRE = {
   emptyShare: 0.06, // a few empty seats through the back rows
   closeDimRoom: true, // the raked seats behind the front row would fill a close-up with red
   light: {
-    hemi: 0.22, sky: 0x2a3040, ground: 0x120a08,
+    hemi: 0.22, sky: 0x2a3040, ground: 0x120a08, hemiHouse: 3.6, // (the house lights: the bill's room came out darkest of the four, 0.047 mean luma)
     key: { pos: [-2.8, 6.0, -1.0], target: [0.5, 0.6, 3.6], intensity: 380, angle: 0.8, penumbra: 1, decay: 2 },
     rim: { dir: [0, 0.21, 0.98], color: 0xd8e0ff, k: 0.8 }, fill: { dir: [0, -0.3, -0.95], color: 0xffc8a8, k: 0.45, house: 3 },
   },

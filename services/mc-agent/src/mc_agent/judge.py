@@ -142,15 +142,25 @@ def _unit(value: Any) -> float | None:
     return min(1.0, max(0.0, x))
 
 
+def _dim_pattern(name: str) -> re.Pattern[str]:
+    return re.compile(r'"' + re.escape(name) + r'"\s*:\s*(-?\d+(?:\.\d+)?)')
+
+
 def parse(act: JudgeAct, raw: str) -> tuple[dict[str, float], str | None]:
     """The act's dimensions from the model's JSON (fences and stray text around it are ignored). ValueError when
     any dimension is missing or not a number: a partial verdict is no verdict."""
     match = FIRST_OBJECT.search(raw or "")
-    if not match:
-        raise ValueError("the judge returned no JSON")
-    data = json.loads(match.group(0))
+    try:
+        data = json.loads(match.group(0)) if match else None
+    except ValueError:
+        data = None
     if not isinstance(data, dict):
-        raise ValueError("the judge returned no JSON object")
+        # The answer is capped at JUDGE_MAX_TOKENS, and a three-dimension act plus its reason can run past it, which
+        # cuts the JSON off before its closing brace (poetry on the emulator, 2026-10-12: 3 of 11 lines). The numbers
+        # come first, so they are read from the cut-off text; the unfinished reason is dropped.
+        data = {name: float(m.group(1)) for name in DIMS[act] if (m := _dim_pattern(name).search(raw or ""))}
+        if not data:
+            raise ValueError("the judge returned no JSON")
     dims: dict[str, float] = {}
     for name in DIMS[act]:
         x = _unit(data.get(name))
@@ -285,8 +295,8 @@ def verdict(req: JudgeRequest, model: str | None = None, timeout_s: float | None
             humor_future.cancel()
             log.info("judge/standup line %d: humour model missed (%s)", req.line_id, type(err).__name__)
     if dims is None and humor_pct is None:
-        log.info("judge/%s line %d: unavailable (%s) after %.0f ms", req.act, req.line_id, gone.reason,
-                 (time.monotonic() - start) * 1000)
+        log.info("judge/%s line %d: unavailable (%s%s) after %.0f ms", req.act, req.line_id, gone.reason,
+                 f": {gone.detail}" if gone.detail else "", (time.monotonic() - start) * 1000)
         return {"unavailable": gone.model_dump(exclude_none=True)}
     if req.act == "standup":
         llm_pct = llm_percentile(combine(req.act, dims), mid) if dims is not None else None

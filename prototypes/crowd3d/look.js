@@ -36,7 +36,7 @@ const VENUES = {
   // looking down into the pit, so the floor crowd fills the lower half of the frame instead of a thin band at the
   // rail; the stage light reaches 20 m into the pit and the lower tiers with falloff, faces show to 22 m. The dark is
   // for the upper ring only. tools/render/aliveprobe.mjs checks that at least 40% of the frame is lit crowd.)
-  arena: { fog: { color: 0x0b0d16 }, haze: null, phones: 0, exits: [], spriteFall: 40, spriteGain: 3.6, spriteWash: 0.036, phonesOn: 0.12, spriteRim: 2, spriteNear: [22, 8], frontRows: 1, depthFrom: 1, depthSlope: 0.1, depthFloor: 0.6,
+  arena: { closeDim: 0.7, fog: { color: 0x0b0d16 }, haze: null, phones: 0, exits: [], spriteFall: 40, spriteGain: 3.6, spriteWash: 0.036, phonesOn: 0.12, spriteRim: 2, spriteNear: [22, 8], frontRows: 1, depthFrom: 1, depthSlope: 0.1, depthFloor: 0.6,
     cam: { pos: [0.8, 6.5, -5], look: [0, 0.4, 30], mm: 24 } },
 };
 

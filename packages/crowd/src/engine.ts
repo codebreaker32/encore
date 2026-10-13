@@ -609,7 +609,8 @@ function finish(state: SetState, at: number): SetState {
   s = { ...s, pending: [] };
   for (const cand of pending) {
     const line = lineById(s, cand.lineId);
-    s = decide(s, cand.lineId, Math.max(0, now - (line ? line.t1 : now)), true, true);
+    // the set ended before the estimate's deadline: `early` like a next line, never counted as the model being late
+    s = decide(s, cand.lineId, Math.max(0, now - (line ? line.t1 : now)), true, true, false, true);
   }
   s = recordPauses(s, now);
   s = closePhrase(s, now, true);
@@ -665,7 +666,7 @@ const JUDGE_HEARD: Record<ActId, string> = {
 
 function judgeClause(act: ActId, judge: number | 'late' | 'unavailable' | 'early', bonus: number): string {
   if (judge === 'late') return "the MC's model was too late (timing and patterns only)";
-  if (judge === 'early') return "your next line came before the MC's model answered (timing and patterns only)";
+  if (judge === 'early') return "the room decided before the MC's model answered (your next line or the set's end came first; timing and patterns only)";
   if (judge === 'unavailable') return "the MC's model was unavailable (timing and patterns only)";
   return bonus > 0
     ? `${JUDGE_HEARD[act]} (the MC's model, an estimate)`

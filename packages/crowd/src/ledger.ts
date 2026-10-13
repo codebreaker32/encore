@@ -164,7 +164,7 @@ export function contentRow(record: SetRecord): LedgerRow {
     .filter((x) => x.n > 0)
     .sort((a, b) => b.n - a.n);
   const model = c.judge
-    ? `the MC's model read ${c.judge.inTime} in time${c.judge.missed ? `, ${c.judge.missed} late` : ''} (an estimate)`
+    ? `the MC's model read ${c.judge.inTime} in time${c.judge.missed ? `, ${c.judge.missed} not in time` : ''} (an estimate)`
     : '';
   const detail = (rest: { f: ContentFeature; n: number }[]) =>
     [...rest.slice(0, 2).map((x) => featureCount(x.f, x.n)), model].filter(Boolean).join(' · ');

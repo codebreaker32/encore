@@ -23,6 +23,11 @@
 //                  vsyncs instead of comparing rAF times). tv defaults (P.fast):
 //                  vlit, opaque crowd bodies with alpha on the near rows' hair cards only, no beams, 800×450; undo
 //                  them with lambert, alpha, haze and &res=540
+//                  Arena (round 7, tools/render/tv-sweep.md): nosprites, nostands, noglows, nosky, nophones (parts
+//                  out), nosort, imphalf, floor30, rows4, rows3, mediump, fan9 (candidates), overdraw (every
+//                  surface a flat 1/16 grey added up, depth test on; overdrawall: off; tools/render/overdraw.mjs).
+//                  oldsetups: the six front mid shots instead of each venue's coverage (director.js); setupsee: every
+//                  setup adds what it sees to the build.
 //   &res=360       draw at 640×360 (also 450, 540, 720, 1080)
 //   &log=1&label=  console.log a '[crowd] sweep <label> …' line with fps, p50, p90, max, calls and tris every 2 s (the
 //                  TV sweep: tools/render/tv-sweep.md); the same numbers go out as the stats message
@@ -47,7 +52,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { Rig, Face, Person, rng, noise, pruneEmptyMorphs, initMotion, laughRank } from './people.js';
+import { Rig, Face, Person, rng, noise, pruneEmptyMorphs, initMotion, laughRank, laughCast } from './people.js';
 import { bakeType, InstancedCrowd } from './instances.js';
 import { seatYaw, setPerformer, CLUB } from './venue.js';
 import { THEATRE, OPENMIC } from './rooms.js';
@@ -55,6 +60,7 @@ import { ARENA } from './arena.js';
 import { makeTraffic } from './traffic.js';
 import { CrowdSound, cueFor } from './sound.js';
 import { applyLook } from './look.js';
+import { buildSetups, pickSetup, PACE } from './director.js';
 
 const Q = new URLSearchParams(location.search);
 const PRESET_NAME = ['low', 'high', 'tv'].includes(Q.get('preset')) ? Q.get('preset') : ['low', 'high', 'tv'].includes(Q.get('q')) ? Q.get('q') : 'low';
@@ -82,6 +88,7 @@ const V = VENUES[VENUE_ID];
 const P = { ...PRESETS[PRESET_NAME], ...(V.presets[PRESET_NAME] || {}) };
 const LOOK = applyLook(Q.get('look') || 'stage', V, VENUE_ID, P); // the stage's-eye look (look.js); &look=classic: the old one
 if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows3')) P.rows = 3; // (the arena's old three 3D rows)
+if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows4')) P.rows = 4; // (round 7: between the two)
 // &ab=types4: at most four avatar types per instanced band (fewer draws: a page-JS diagnostic for the TV)
 if (new Set((Q.get('ab') || '').split(',')).has('types4')) P.inst = P.inst.map((b) => ({ ...b, types: Math.min(b.types, 4) }));
 P.mic = Q.get('mic') === '1'; // the performer's mic stand in the foreground: off (it read as a ball in front of the tables)
@@ -157,7 +164,7 @@ const display = (h) => (HEJL ? new THREE.Color().setRGB(((h >> 16) & 255) / 255,
 // ---------- renderer, scene, cameras ----------
 const canvas = document.getElementById('c');
 const AA = Q.has('noaa') ? false : Q.has('aa') ? true : !!P.aa;
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: AA, stencil: false, powerPreference: 'high-performance', preserveDrawingBuffer: CAPTURE });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: AA, stencil: false, precision: ab('mediump') ? 'mediump' : 'highp', powerPreference: 'high-performance', preserveDrawingBuffer: CAPTURE });
 const CTX_AA = !!(renderer.getContext().getContextAttributes() || {}).antialias; // asked once, never per frame
 let RH = drawHeight(RES), RW = Math.round((RH * 16) / 9); // (changed only by &ab=dynres, on a cut)
 renderer.setPixelRatio(1);
@@ -195,39 +202,74 @@ const camOf = (s) => { const c = new THREE.PerspectiveCamera(s.fov, 16 / 9, 0.05
 let shot = '', cutAt = 0, cuts = 0, finaleCamAt = null;
 // the wide and its two reaction variants from the same place (house right and house left halves of the room on 40 mm:
 // inside the wide's own view, so they need no extra seats or furniture)
-const WIDE0 = { look: SHOTS.wide.look.clone(), fov: SHOTS.wide.fov };
+const WIDE0 = { pos: SHOTS.wide.pos.clone(), look: SHOTS.wide.look.clone(), fov: SHOTS.wide.fov };
 let wideAt = 0, heldOn = null, closeOn = null;
 function useWide(k) {
   wideAt = k;
+  SHOTS.wide.pos.copy(WIDE0.pos);
   SHOTS.wide.fov = k ? fovFor(40) : WIDE0.fov;
   const d = WIDE0.look.clone().sub(SHOTS.wide.pos), a = k === 0 ? 0 : (k === 1 ? -1 : 1) * THREE.MathUtils.degToRad(11);
   SHOTS.wide.look.copy(SHOTS.wide.pos).add(d.applyAxisAngle(UPW_, a));
 }
 const UPW_ = new THREE.Vector3(0, 1, 0);
-function cut(name) {
-  if (name === shot) return;
+/** The setup on screen as the reaction shot (null on the wide and the heckler), and how it is lit. */
+let curSetup = null, curFog = null;
+function cut(name, setupIdx = -1) {
+  if (name === shot && setupIdx < 0) return;
   shot = name;
   cutAt = room.now;
   cuts++;
-  if (scene.fog) [scene.fog.near, scene.fog.far] = FOG[name] || FOG.wide;
-  renderer.toneMappingExposure = EXPOSURE * ((V.exposure && V.exposure[name]) ?? 1); // a uniform: no recompile
-  // the close-ups are exposed for the pair: everyone behind them falls dark and reads by their rims
   if (name === 'wide' && wideAt) useWide(0);
-  showCloseLod(name !== 'wide');
-  if (name === 'close' && CLOSES.length) { const i = pickClose(); useClose(i); closeLog.unshift(i); closeLog.length = Math.min(closeLog.length, 4); }
-  const dim = name === 'wide' ? 1 : V.closeDim ?? 0.25;
-  // (the near rows sit beside the subjects in a mid shot: they keep most of their light, or large bodies read as
-  // faceless dummies; everyone else stays above pure black)
-  for (const m of crowdMats) m.color.setScalar(name === 'wide' ? 1 : m.userData.near ? Math.max(dim, 0.85) : Math.max(dim, 0.2));
-  // the front people behind the subject too (the pair in a close-up, the heckler in theirs)
-  for (const [m, who] of frontBgMats) m.color.setScalar(name === 'wide' || (name === 'heckler' && who.heckler) || (name === 'close' && who.focus) ? 1 : dim);
-  // (a close-up or mid shot: the stage spill opens wider, so the front rows beside and in front of the subjects are lit
-  // people rather than big dark shapes; the wide keeps the narrow pool)
-  if (V.closeKeyWiden) { key.angle = name === 'wide' ? K.angle : Math.min(1.25, K.angle * V.closeKeyWiden); key.penumbra = name === 'wide' ? K.penumbra ?? 0.75 : 0.8; }
-  if (V.closeDimRoom && roomMat) roomMat.color.setScalar(name === 'wide' ? 1 : 0.4);
+  curSetup = null;
+  if (name === 'close' && CLOSES.length) {
+    const i = setupIdx >= 0 ? setupIdx : pickClose();
+    useClose(i); usedSetup(i);
+    curSetup = CLOSES[i];
+  }
+  applyShotLight();
   if (DYNRES) dynamicRes();
   placeCamera(room.now);
   captionFor();
+}
+let featuredCut = -1;
+/** A reaction shot that shows one person laughing hard: their voice a little forward in the mix (sound.js feature). */
+function featureVoice(S) {
+  if (!S || !S.seats.length || S.size === 'wide') return false;
+  let best = null;
+  for (const r of laughRank()) if (r.person.src && S.seats.includes(r.person.src) && (!best || r.score > best.score)) best = r;
+  if (!best || best.score < 0.45) return false;
+  let type = best.score > 0.7 ? 'roar' : 'giggle', gender = isWoman(best.name || '') ? 'f' : 'm';
+  const me = laughCast().people.find((q) => q.person === best.person); // (the cast's own laugh type for this person)
+  if (me) { type = me.type; gender = me.gender; }
+  const v = new THREE.Vector3(best.person.src.x, eyesAt(best.person.src), best.person.src.z).project(camOf(S));
+  return sound.feature({ gender, type, level: best.score, pan: v.x * 0.35 });
+}
+/** The shot's light: 'wide' (the wide, or a setup lit as the room is) or the reaction shot's light. */
+// (a setup of the house, with no front people of its own, is lit as the wide is, whatever its `lit`: the reaction
+// light dims everyone it isn't about, which on a house shot is everyone; the black-screen hunt, 2026-10-13. It keeps
+// the reaction shot's wider spill.)
+const houseShot = () => shot === 'close' && curSetup && !curSetup.seats.length;
+const litNow = () => (shot === 'wide' || (shot === 'close' && curSetup && (curSetup.lit === 'wide' || !curSetup.seats.length)) ? 'wide' : shot);
+function applyShotLight() {
+  const lit = litNow(), wideLit = lit === 'wide', spill = !wideLit || (houseShot() && curSetup.lit === 'close');
+  curFog = wideLit ? FOG.wide : FOG[lit] || FOG.wide;
+  // (a setup further from its people than the reaction shots' 2.5-4 m pushes the close-up haze back with it)
+  if (!wideLit && curSetup && curSetup.fogAt) curFog = [curFog[0] + curSetup.fogAt, curFog[1] + curSetup.fogAt];
+  if (scene.fog) [scene.fog.near, scene.fog.far] = curFog;
+  renderer.toneMappingExposure = EXPOSURE * ((V.exposure && V.exposure[lit]) ?? 1); // a uniform: no recompile
+  // the close-ups are exposed for the pair: everyone behind them falls dark and reads by their rims
+  showCloseLod(!wideLit);
+  const dim = wideLit ? 1 : V.closeDim ?? 0.25;
+  // (the near rows sit beside the subjects in a mid shot: they keep most of their light, or large bodies read as
+  // faceless dummies; everyone else stays above pure black)
+  for (const m of crowdMats) m.color.setScalar(wideLit ? 1 : m.userData.near ? Math.max(dim, 0.85) : Math.max(dim, 0.2));
+  // the front people behind the subject too (the pair in a close-up, the heckler in theirs)
+  for (const [m, who] of frontBgMats) m.color.setScalar(wideLit || (lit === 'heckler' && who.heckler) || (lit === 'close' && who.focus) ? 1 : dim);
+  // (a close-up or mid shot: the stage spill opens wider, so the front rows beside and in front of the subjects are lit
+  // people rather than big dark shapes; the wide keeps the narrow pool)
+  if (V.closeKeyWiden) { key.angle = !spill ? K.angle : Math.min(1.25, K.angle * ((curSetup && curSetup.keyWiden) || V.closeKeyWiden)); key.penumbra = !spill ? K.penumbra ?? 0.75 : 0.8; } // (a setup may open the spill wider still, for people at the row ends)
+  if (V.closeDimRoom && roomMat) roomMat.color.setScalar(wideLit ? 1 : 0.4);
+  if (V.closeDimEmissive && emissiveMat) emissiveMat.color.setScalar(wideLit ? 1 : V.closeDimEmissive);
 }
 /**
  * &ab=dynres: on a cut, never mid-shot, step the drawing size down (540 → 450 → 360) while p90 over the last 120
@@ -267,11 +309,16 @@ function placeCamera(now) {
     const back = finaleCamAt !== null ? smooth01((now - finaleCamAt) / 5) : 0;
     camera.position.addScaledVector(_fwd, 0.5 * live - 0.7 * back);
   }
-  // Close-ups are locked off (no drift, no zoom creep), so the faces can be read; the wide only breathes.
-  const amp = (V.drift || 1) * (shot === 'wide' ? 0.0007 : 0), sd = cuts * 7.31 + 3;
+  // Close-ups are locked off (no drift, no zoom creep), so the faces can be read; the wide only breathes. A setup may
+  // track slowly sideways at a locked speed, or (the open mic) breathe like a handheld camera held still, and tilt.
+  const S = shot === 'close' ? curSetup : null;
+  _look.copy(s.look);
+  if (S && S.track) { const tt = Math.min(Math.max(0, now - cutAt), 14); camera.position.addScaledVector(S.track, tt); _look.addScaledVector(S.track, tt); }
+  const amp = shot === 'wide' ? (V.drift || 1) * 0.0007 : S ? S.drift : 0, sd = cuts * 7.31 + 3;
   camera.position.addScaledVector(_right, noise(sd + 2, now * 0.17) * 2.4 * amp).addScaledVector(_up, noise(sd + 3, now * 0.11) * 2.4 * amp);
-  _look.copy(s.look).addScaledVector(_right, noise(sd, now * 0.21) * amp * dist).addScaledVector(_up, noise(sd + 1, now * 0.14) * amp * dist);
+  _look.addScaledVector(_right, noise(sd, now * 0.21) * amp * dist).addScaledVector(_up, noise(sd + 1, now * 0.14) * amp * dist);
   camera.lookAt(_look);
+  if (S && S.roll) camera.rotateZ(S.roll);
   const bill = HOST && room.mode === 'preview';
   if (bill && !(camera.view && camera.view.enabled)) camera.setViewOffset(1.3 * RW, RH, 0.3 * RW, 0, RW, RH);
   if (!bill && camera.view && camera.view.enabled) { camera.clearViewOffset(); camera.aspect = RW / RH; }
@@ -355,6 +402,8 @@ function vlitFrame() {
 }
 function lightLevels() {
   key.intensity = KEY * room.key;
+  // (a venue's bill: the stage spill opened wider while the room fills, V.previewWiden, so it isn't a dark room)
+  if (V.previewWiden && V.closeKeyWiden && litNow() === 'wide' && !houseShot()) key.angle = room.mode === 'preview' ? Math.min(1.25, K.angle * V.previewWiden) : K.angle;
   hemi.intensity = LT.hemi + (LT.hemiHouse ?? 1.6) * room.house; // the house lights: a visible cool top light after the set
   hemi.color.copy(HEMI_SKY).lerp(LAST_CALL_SKY, room.lastCall);
   peopleLight.uRimColor.value.copy(RIM.color).multiplyScalar(RIM.k * (0.35 + 0.65 * room.key));
@@ -409,19 +458,83 @@ function viewport() {
   const d = document.documentElement;
   return { w: d.clientWidth || innerWidth, h: d.clientHeight || innerHeight };
 }
+const PREVIEW_KEY = num('previewkey', V.previewKey ?? 0.45); // the stage key while the room fills (the bill)
+let pendingVenue = null; // (a venue change waiting for this frame to be kept: see onMessage)
+/** The held frame of the previous venue gives way to this room (its first frame is on the canvas). */
+function holdOff() {
+  const img = document.getElementById('hold');
+  if (img && img.style.display !== 'none') { img.style.display = 'none'; img.removeAttribute('src'); }
+  try { sessionStorage.removeItem('encore-hold'); } catch (e) { /* none */ }
+}
+let stageFit = '';
 function fitStage() {
   const tv = document.querySelector('.tv');
   const v = viewport();
-  const k = Math.min(v.w / 1920, v.h / 1080);
+  // the stage fills the viewport edge to edge: a viewport up to 12% off 16:9 is filled by scaling each axis on its
+  // own (a few per cent of stretch, never a band of page background down one side, seen on the TV in APK o); only a
+  // shape further off than that is letterboxed
+  const kx = v.w / 1920, ky = v.h / 1080, k = Math.min(kx, ky);
+  const fill = Math.abs(kx / ky - 1) < 0.12;
+  const t = fill ? (Math.abs(kx - 1) > 0.001 || Math.abs(ky - 1) > 0.001 ? `scale(${kx}, ${ky})` : '') : Math.abs(k - 1) > 0.001 ? `scale(${k})` : '';
   tv.style.transformOrigin = '0 0';
-  tv.style.transform = Math.abs(k - 1) > 0.001 ? `scale(${k})` : '';
+  if (t !== stageFit) { tv.style.transform = t; stageFit = t; }
 }
 addEventListener('resize', fitStage);
+if (window.visualViewport) visualViewport.addEventListener('resize', fitStage);
 fitStage();
+setInterval(fitStage, 2000); // (a WebView laid out again without a resize event still gets refitted)
 
 // ---------- loading helpers ----------
 const loader = new GLTFLoader();
-const load = (url) => new Promise((res, rej) => loader.load(url, res, undefined, rej));
+/**
+ * Load-phase timing (the TV took 35 s to its first ready, the box 5.6 s): phase marks in ms since the page's time
+ * origin, and each GLB's fetch and parse. At the first frame one `[crowd] load …` line goes to the console and to the
+ * host (report type 'load'; also the ready message's `load`).
+ */
+const LOADT = { marks: [], files: [], urls: new Set(), bake: 0, inst: 0, t: () => Math.round(performance.now()) };
+const tmark = (name) => LOADT.marks.push([name, LOADT.t()]);
+tmark('script');
+/**
+ * Every file the room needs, fetched once, at most five at a time, from script start: the tv pack ships
+ * people/prefetch-tv.json (tools/render/manifest.mjs: each venue's GLBs and textures, the room's first and the front
+ * people's slow .tv files last), and every load() and texture takes its bytes from here, so nothing is fetched twice.
+ */
+const fileBytes = new Map(); // url → Promise<ArrayBuffer>
+const fetchQueue = [];
+let fetchActive = 0;
+function pumpFetches() {
+  while (fetchActive < 5 && fetchQueue.length) {
+    const job = fetchQueue.shift();
+    fetchActive++;
+    new THREE.FileLoader().setResponseType('arraybuffer').loadAsync(job.url).then(job.res, job.rej).finally(() => { fetchActive--; pumpFetches(); });
+  }
+}
+function fetchBytes(url) {
+  if (!fileBytes.has(url)) fileBytes.set(url, new Promise((res, rej) => { fetchQueue.push({ url, res, rej }); pumpFetches(); }));
+  return fileBytes.get(url);
+}
+/** A texture from the shared bytes (a blob URL for the image decoder). */
+async function loadTexture(url) {
+  const buf = await fetchBytes(url);
+  const u = URL.createObjectURL(new Blob([buf], { type: url.endsWith('.png') ? 'image/png' : 'image/jpeg' }));
+  try { return await texLoader.loadAsync(u); } finally { URL.revokeObjectURL(u); }
+}
+const PREFETCH = PRESET_NAME === 'tv' && !Q.has('noprefetch') ? fetch('people/prefetch-tv.json').then((r) => r.json()).then((m) => { for (const u of m[VENUE_ID] || []) fetchBytes(u); return true; }).catch(() => false) : Promise.resolve(false);
+async function load(url) {
+  const t0 = performance.now();
+  const buf = await fetchBytes(url);
+  const t1 = performance.now();
+  const g = await loader.parseAsync(buf, url.slice(0, url.lastIndexOf('/') + 1));
+  LOADT.files.push([url.replace(/^people\//, ''), Math.round(t1 - t0), Math.round(performance.now() - t1), Math.round(buf.byteLength / 1024)]);
+  LOADT.urls.add(url);
+  return g;
+}
+function loadLine() {
+  const m = LOADT.marks.map(([n, t]) => `${n} ${(t / 1000).toFixed(1)}`).join(' · ');
+  const f = LOADT.files.slice().sort((a, b) => b[1] + b[2] - a[1] - a[2]);
+  const sum = (k) => LOADT.files.reduce((a, x) => a + x[k], 0);
+  return `[crowd] load ${VENUE_ID} · s since start: ${m} · ${f.length} glb, fetch ${(sum(1) / 1000).toFixed(1)} s, parse ${(sum(2) / 1000).toFixed(1)} s (summed), ${(sum(3) / 1024).toFixed(1)} MB · crowd bake ${(LOADT.bake / 1000).toFixed(1)} s, crowd build ${(LOADT.inst / 1000).toFixed(1)} s · slowest ${f.slice(0, 4).map((x) => `${x[0]} ${x[1]}+${x[2]} ms`).join(', ')}`;
+}
 const texLoader = new THREE.TextureLoader();
 
 /** Seat frame: origin on the floor under the seat, +Z towards the stage. */
@@ -583,7 +696,7 @@ const SIL_COST = { Male_Adult_12: 644, Male_Adult_17: 679, Male_Adult_10: 698, M
 const people = []; // Person (front, and middle on low/high)
 const crowdMats = []; // materials of everyone behind the front row (dimmed in close-ups)
 const frontBgMats = new Map(); // front materials → the person wearing them (dimmed behind a close-up's subject)
-let roomMat = null; // the room's merged furniture (dimmed in close-ups where the rake fills the background)
+let roomMat = null, emissiveMat = null; // (emissive: the room's unlit strips and signs, dimmed in a venue's close-ups where V.closeDimEmissive says) // the room's merged furniture (dimmed in close-ups where the rake fills the background)
 const crowds = []; // InstancedCrowd
 const stats = { front: 0, mid: 0, back: 0, sprites: 0 };
 let closeTable = null, traffic = null;
@@ -607,36 +720,56 @@ window.__faceProbe = () => {
 const CLOSES = [];
 let closeAt = 0;
 const closeLog = []; // the setups used, most recent first
+const _fp = new THREE.Vector3();
+/** Whether a seat's head is inside a setup's frame (with a margin). */
+function inFrame(S, s, margin = 1.1) {
+  if (!S.cam) S.cam = camOf(S);
+  _fp.set(s.x, eyesAt(s), s.z).project(S.cam);
+  return _fp.z < 1 && Math.abs(_fp.x) < margin && Math.abs(_fp.y) < margin;
+}
 function useClose(i) {
   const S = CLOSES[i];
   if (!S) return;
   closeAt = i;
   SHOTS.close.pos.copy(S.pos); SHOTS.close.look.copy(S.look); SHOTS.close.fov = S.fov;
+  // everyone the frame shows keeps the light (a lit setup never has dark front people near the lens), the subjects
+  // first; a wide-lit setup lights everyone as the wide does
   const set = new Set(S.seats);
-  for (const p of people) if (p.kind === 'front') p.focus = set.has(p.src);
+  for (const p of people) if (p.kind === 'front') p.focus = set.has(p.src) || S.lit === 'wide' || inFrame(S, p.src);
 }
+/** Each setup's featured people: the cut number they were last featured in (pickSetup damps them for a few cuts). */
+const featured = new Map();
+let setupCuts = 0, lastSize = null;
+/** The laugh being cut to: its strength (the TV's reaction, or the demo's &s=). */
+let cutStrength = S;
 /**
- * The next reaction setup: never the last one (nor the one before, with four or more), preferring whoever is laughing
- * most visibly now (laughRank from people.js, over the setup's people), then the setup unused longest.
+ * The next reaction setup (director.js pickSetup): never one of the last three, preferring whoever is laughing most
+ * visibly now (laughRank from people.js) unless they were just featured, a change of shot size, and on a big laugh
+ * a wider setup. size 'wide' picks among the wide setups only (the wide's own variants).
  */
-function pickClose() {
+function pickClose(size = null) {
   const forced = num('setup', -1);
-  if (forced >= 0 && forced < CLOSES.length) return forced;
+  if (forced >= 0 && forced < CLOSES.length && !size) return forced;
   const n = CLOSES.length;
-  if (n < 2) return 0;
+  if (n < 2 && !size) return 0;
   const vis = new Map();
   for (const r of laughRank()) if (r.person.src) vis.set(r.person.src, r.score);
-  let best = -1, bestV = -Infinity;
-  for (let i = 0; i < n; i++) {
-    if (closeLog[0] === i || (n > 3 && closeLog[1] === i)) continue;
-    const age = closeLog.indexOf(i);
-    const v = Math.max(0, ...CLOSES[i].seats.map((s) => vis.get(s) || 0)) + (age < 0 ? 0.3 : 0.05 * age);
-    if (v > bestV) { bestV = v; best = i; }
-  }
-  return best < 0 ? (closeAt + 1) % n : best;
+  const i = pickSetup({ setups: CLOSES, history: closeLog, vis, featured, strength: cutStrength, n: setupCuts, size, lastSize });
+  if (i < 0) return size ? -1 : (closeAt + 1) % n;
+  return i;
+}
+/** Book-keeping for a setup that went on screen. */
+function usedSetup(i) {
+  const S = CLOSES[i];
+  setupCuts++;
+  closeLog.unshift(i); closeLog.length = Math.min(closeLog.length, 6);
+  lastSize = S.size;
+  for (const s of S.seats) featured.set(s, setupCuts);
 }
 
+let motionReady = Promise.resolve(false);
 async function buildRoom() {
+  let addLod = null;
   const rows = V.layout(ROWS, P.balcony);
   // the pair the reaction shot frames: the front table nearest the centre line, or the two front-row places nearest it
   const tables = V.tables ? V.tables(rows) : [];
@@ -674,7 +807,12 @@ async function buildRoom() {
   };
   CLOSES.length = 0;
   const side = (pr) => (pr === frontPairs[0] ? 'centre' : pr[0].x > frontPairs[0][0].x ? 'house right' : 'house left'); // (+x is house right)
-  if (V.midShots) { // &look=stage: mid shots of the front people (the groups on 40 mm, all six on 35 mm), no faces filling the frame
+  if (V.midShots && !ab('oldsetups')) {
+    // the stage look: each venue's own coverage (director.js), 8-10 setups of different sizes and angles, camera
+    // poses only (&ab=oldsetups: the six front mid shots from before)
+    const pair = (ss, mm, k, label, sx) => ({ ...setup(ss, mm, k, label, sx), guard: true });
+    CLOSES.push(...buildSetups({ venue: VENUE_ID, rows, frontPairs, tables, eyesAt, fovFor, pair }));
+  } else if (V.midShots) { // &look=stage: mid shots of the front people (the groups on 40 mm, all six on 35 mm), no faces filling the frame
     // (each from house right and from house left: six compositions, so laughs close together or a long set rarely
     // repeat a frame)
     for (const sx of [1, -1]) {
@@ -685,6 +823,8 @@ async function buildRoom() {
     frontPairs.forEach((pr) => CLOSES.push(setup(pr, V.closeMm || 75, 1, side(pr))));
     for (const pr of frontPairs.slice(1)) CLOSES.push(setup([...frontPairs[0], ...pr], 50, 1.5, 'group ' + side(pr)));
   }
+  // (the older setups: mid shots in the reaction light, picked as before)
+  for (const S of CLOSES) Object.assign(S, { size: S.size || 'mid', lit: S.lit || 'close', w: S.w ?? 1, roll: S.roll || 0, drift: S.drift || 0, track: S.track || null, guard: S.guard ?? !S.size, fogAt: Math.max(0, S.pos.distanceTo(S.look) - 3.2) });
   const hkSeat = rows[0].seats.filter((s) => s.x < closeTable.x - 0.5 && Math.abs(s.x - closeTable.x) < 2).sort((a, b) => b.x - a.x)[0];
   if (hkSeat) {
     const he = new THREE.Vector3(hkSeat.x, eyesAt(hkSeat), hkSeat.z);
@@ -707,21 +847,25 @@ async function buildRoom() {
   };
   const headTop = (s) => new THREE.Vector3(s.x, eyesAt(s) + 0.15, s.z);
   const handsAt = (s) => new THREE.Vector3(s.x, s.standing ? eyesAt(s) - 0.5 : s.y + (s.cabaret ? 0.78 : 0.66), s.z - (s.cabaret ? 0.45 : 0.22)); // (on the table, in a lap, on the rail)
-  for (const S of CLOSES) guard(S, S.seats.map(headTop), S.seats.length === 2 ? S.seats.map(handsAt) : []);
+  for (const S of CLOSES) if (S.guard) guard(S, S.seats.map(headTop), S.seats.length === 2 ? S.seats.map(handsAt) : []);
   if (hkSeat) guard(SHOTS.heckler, [headTop(hkSeat)], [handsAt(hkSeat)]);
   useClose(Math.max(0, Math.min(CLOSES.length - 1, num('setup', 0))));
   viewCams.length = 1;
   if (hkSeat) viewCams.push(camOf(SHOTS.heckler));
-  for (const S of CLOSES) viewCams.push(camOf(S));
+  // (what gets built follows the wide and the reaction-lit setups; a wide-lit setup shows what those built, so the new
+  // coverage adds no people or furniture: &ab=setupsee lets every setup add what it sees)
+  for (const S of CLOSES) if (S.lit === 'close' || ab('setupsee')) viewCams.push(camOf(S));
   P.lampFix = !ab('oldlamps'); // (the lamps' glows in front of their lenses: see venue.js)
   // (arena.js: the sprite tiers. tv default since round 4: outline sprites, nearest first, no upper ring: 51 ms p50 vs 81;
   // &ab=quadsprites, &ab=alltiers bring back the quads and the full bowl)
   const tvArena = !!P.fast;
-  P.arenaAB = { sort: ab('spritesort') || (tvArena && !ab('quadsprites')), few: ab('fewtiers') || (tvArena && !ab('alltiers')), shape: ab('spriteshape') || (tvArena && !ab('quadsprites')), imp: !ab('noimpostor'), pills: ab('pillsprites'), pillImp: ab('pillimpostors') }; // (imp: the far stands as impostor blocks wherever fewtiers leaves them out)
+  P.arenaAB = { fan9: ab('fan9'), nosprites: ab('nosprites'), nostands: ab('nostands'), noglows: ab('noglows'), nosky: ab('nosky'), nophones: ab('nophones'), imphalf: ab('imphalf'), floor30: ab('floor30'), sort: (ab('spritesort') || (tvArena && !ab('quadsprites'))) && !ab('nosort'), few: ab('fewtiers') || (tvArena && !ab('alltiers')), shape: ab('spriteshape') || (tvArena && !ab('quadsprites')), imp: !ab('noimpostor'), pills: ab('pillsprites'), pillImp: ab('pillimpostors') }; // (imp: the far stands as impostor blocks wherever fewtiers leaves them out)
+  tmark('setups');
   const venue = V.build(scene, rows, P, (s) => visibleFromShots(s, 1.2), depthFor);
+  tmark('venue geometry');
   const lookGlows = LOOK && LOOK.extras(rows, { eyesAt, seen: (s) => visibleFromShots(s) });
   if (lookGlows) { Object.assign(lookGlows.material.uniforms, { scale: venue.points.material.uniforms.scale, time: venue.points.material.uniforms.time }); scene.add(lookGlows); }
-  scene.traverse((o) => { if (o.name === 'room') roomMat = o.material; });
+  scene.traverse((o) => { if (o.name === 'room') roomMat = o.material; if (o.name === 'room-emissive') emissiveMat = o.material; });
   stats.sprites = venue.spriteCount || 0;
   // the room's walkways for arrivals and departures; floor height by depth from the rows (steps on the rake)
   const sorted = rows.filter((r) => !r.balcony).slice().sort((a, b) => a.z - b.z);
@@ -783,7 +927,18 @@ async function buildRoom() {
     for (let j = 1; j < nd; j++) if (Math.abs(frontSeats[j].x - s.x) > Math.abs(frontSeats[twin].x - s.x)) twin = j;
     return cast[twin];
   });
-  await Promise.all([...new Set(frontNames)].map(async (n) => { src[n] = prepFront(await load(`people/${n}${P.frontFile}.glb`)); }));
+  // (the crowd's atlas and alpha start loading now, alongside the front people)
+  const texReady = Promise.all([loadTexture(`people/lod_atlas${P.atlas}.jpg`), P.atlas ? alphaR8() : loadTexture('people/lod_alpha.png')]);
+  LOADT.urls.add(`people/lod_atlas${P.atlas}.jpg`); if (P.atlas) LOADT.urls.add('people/lod_alpha_512.r8');
+  // the front people stream in after the room's first frame (their .tv files are the slowest to load): addFront, from
+  // main; capture and still frames wait for them
+  // (their bytes are prefetched; the parses, 2.5-4.6 s each on the TV's A55 and on the main thread, wait for addFront,
+  // after the room's first frame, one at a time with a frame between them)
+  const yieldFrame = () => new Promise((r) => (STILL || CAPTURE ? r() : requestAnimationFrame(() => setTimeout(r, 0))));
+  const loadFront = async () => { for (const n of new Set(frontNames)) { src[n] = prepFront(await load(`people/${n}${P.frontFile}.glb`)); await yieldFrame(); } tmark('front glbs'); };
+  const addFront = async () => {
+  await loadFront();
+  await motionReady; // (the people's motion clips)
   if (!ab('nofront')) frontSeats.forEach((s, i) => {
     const seat = makeSeat(s, !s.rail);
     const model = SkeletonUtils.clone(src[frontNames[i]]);
@@ -806,17 +961,25 @@ async function buildRoom() {
   });
   stats.front = frontSeats.length;
   for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.isMesh && !frontBgMats.has(o.material)) frontBgMats.set(o.material, p); });
+  const hk = people.find((p) => p.kind === 'front' && p.src === hkSeat) || people.filter((p) => p.kind === 'front' && p.o.row === 0 && p.o.x < closeTable.x - 0.5).sort((a, b) => b.o.x - a.o.x)[0];
+  if (hk) {
+    hk.heckler = true;
+    room.hecklerPos = hk.rig.seat.localToWorld(new THREE.Vector3(0, hk.o.stand ? 1.6 : 1.15, 0));
+  }
+  return people.filter((p) => p.kind === 'front');
+  };
 
   // ---- atlas for everyone who is not in the front ----
   // tv: the hair alpha as one 8-bit channel (0.35 MB on the GPU instead of 1.4 MB as RGBA; tools/textures.py r8)
-  const alphaR8 = async () => {
-    const buf = await new THREE.FileLoader().setResponseType('arraybuffer').loadAsync('people/lod_alpha_512.r8');
+  async function alphaR8() {
+    const buf = await fetchBytes('people/lod_alpha_512.r8');
     const t = new THREE.DataTexture(new Uint8Array(buf), 512, 512, THREE.RedFormat, THREE.UnsignedByteType);
     t.mipmaps = coverageMips(t.image.data, 512, 512); // (the GPU's own mips let the hair cards erode into holes)
     t.generateMipmaps = false; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.needsUpdate = true;
     return t;
-  };
-  const [atlas, alpha] = await Promise.all([texLoader.loadAsync(`people/lod_atlas${P.atlas}.jpg`), P.atlas ? alphaR8() : texLoader.loadAsync('people/lod_alpha.png')]);
+  }
+  const [atlas, alpha] = await texReady;
+  tmark('front people, textures');
   atlas.flipY = false; atlas.colorSpace = THREE.SRGBColorSpace; atlas.anisotropy = P.aniso;
   alpha.flipY = false;
   const shared = { uTime: { value: 0 }, uBeat: { value: room.beat }, light: PEOPLE_LIGHT, vlit: VLIT, clothFix: !ab('oldcloth'), rimFlat: !!V.rimFlat, keyDepth: !!V.keyDepth, uMaskOut: { value: 0 } };
@@ -947,28 +1110,25 @@ async function buildRoom() {
     // they are large; the wide keeps the cheaper level (the TV lost 5-7 fps with lod in every shot)
     const lodBands = P.inst.filter((b) => b.closeLod && !ab('lodalways'));
     // (only the places some close-up setup actually frames)
-    const closeCams = CLOSES.map(camOf), _p = new THREE.Vector3();
+    const closeCams = CLOSES.filter((S) => S.lit === 'close').map(camOf), _p = new THREE.Vector3(); // (wide-lit setups keep the wide's levels)
     const inClose = (st) => closeCams.some((c) => { _p.set(st.x, eyesAt(st), st.z).project(c); return _p.z < 1 && Math.abs(_p.x) < 1.15 && Math.abs(_p.y) < 1.3; });
     const lodPlan = plan.filter((q) => lodBands.some((b) => q.s.row >= b.from && q.s.row <= b.to && q.level === b.level && !q.stand) && inClose(q.s)).map((q) => ({ ...q, level: 'lod' }));
-    if (lodPlan.length) {
+    // (the close-ups' copy is built after the first frame, with the front people: the wide never shows it)
+    if (lodPlan.length) addLod = async () => {
       const cl = await instanced(lodPlan, ab('noalpha') || fastAlpha ? solid : cut, variety, () => null, (level) => (fastAlpha && !ab('noalpha') && near(level) ? cut : null));
       cl.closeOnly = true;
       crowds.push(cl);
       cl.groups.forEach((G) => [].concat(G.mesh.material).forEach((m) => { m.userData.near = true; crowdMats.push(m); }));
       closeLodSwap = { lod: cl, wide: c.groups.filter((G) => lodBands.some((b) => G.mesh.name.startsWith(`instances-${b.level}:`))) };
       showCloseLod(false);
-    }
+      return cl;
+    };
   }
   stats.back = plan.length;
 
   if (candle) candle.position.set(closeTable.x, 0.92, closeTable.z - 0.02);
   // the heckler: the front-row person in the heckler's seat (or the nearest on that side of the table)
-  const hk = people.find((p) => p.kind === 'front' && p.src === hkSeat) || people.filter((p) => p.kind === 'front' && p.o.row === 0 && p.o.x < closeTable.x - 0.5).sort((a, b) => b.o.x - a.o.x)[0];
-  if (hk) {
-    hk.heckler = true;
-    room.hecklerPos = hk.rig.seat.localToWorld(new THREE.Vector3(0, hk.o.stand ? 1.6 : 1.15, 0));
-  }
-  return { venue };
+  return { venue, addFront, addLod };
 
   async function instanced(plan, matParams, variety, paramsFor = () => null, cardFor = () => null) {
     const key = (q) => `${q.stand ? `stand-${q.hands}-` : ''}${q.level}:${q.type}`;
@@ -976,14 +1136,20 @@ async function buildRoom() {
     const types = await Promise.all(keys.map(async (k) => {
       const m = k.match(/^(?:stand-(\w+)-)?(\w+):(\w+)$/);
       const [, hands, level, type] = m;
-      return { name: k, matParams: paramsFor(level), cardParams: cardFor(level), rimSoft: !!V.rimFlat && (level === 'far' || level === 'xfar'), dropCards: P.fast && !ab('alpha') && !ab('noalpha') && (level === 'far' || level === 'xfar'), baked: bakeType((await load(`people/${type}.${level}.glb`)).scene, { stand: !!hands, standHands: hands || 'down', bothArms: !!V.stadium }) };
+      const gl = await load(`people/${type}.${level}.glb`);
+      const tb = performance.now();
+      const baked = bakeType(gl.scene, { stand: !!hands, standHands: hands || 'down', bothArms: !!V.stadium });
+      LOADT.bake += performance.now() - tb;
+      return { name: k, matParams: paramsFor(level), cardParams: cardFor(level), rimSoft: !!V.rimFlat && (level === 'far' || level === 'xfar'), dropCards: P.fast && !ab('alpha') && !ab('noalpha') && (level === 'far' || level === 'xfar'), baked };
     }));
+    tmark(`crowd types ${keys.length}`);
     const seatList = plan.map((q, i) => ({ seat: makeSeat(q.s), type: key(q), row: q.s.row, x: q.s.x, seed: SEED + 9000 + i * 13, src: q.s }));
     for (const q of plan) placed.push(q.s);
-    return new InstancedCrowd(scene, types, seatList, matParams, shared, {
+    const ti = performance.now();
+    try { return new InstancedCrowd(scene, types, seatList, matParams, shared, {
       performer: PERFORMER, variety: (s) => variety(s),
       traffic: (s, now) => (s.bar || s.balcony ? null : traffic(s, room.mode, now - room.modeAt)),
-    });
+    }); } finally { LOADT.inst += performance.now() - ti; tmark(`crowd built ${seatList.length}`); }
   }
 }
 
@@ -1057,12 +1223,15 @@ function onMessage(raw) {
     // a different room needs a different scene: reload into it (the host re-sends venue and shot after 'ready')
     if (VENUES[msg.venue] && msg.venue !== VENUE_ID && !Q.has('venue-lock')) {
       const q = new URLSearchParams(location.search); q.set('venue', msg.venue);
-      location.replace(location.pathname + '?' + q.toString());
+      // (the next frame keeps this room's picture for the reload, so the screen shows it, not black, until the new
+      // room's first frame: see #hold in index.html)
+      pendingVenue = location.pathname + '?' + q.toString();
+      if (frames < 3) location.replace(pendingVenue);
     }
   }
   else if (msg.type === 'shot') latest.shot = msg;
   else if (msg.type === 'mode') setMode(msg.mode);
-  else if (msg.type === 'cue') sound.cue(String(msg.id), typeof msg.strength === 'number' ? msg.strength : 0.7);
+  else if (msg.type === 'cue') { sound.cue(String(msg.id), typeof msg.strength === 'number' ? msg.strength : 0.7); castWait = { id: String(msg.id), at: performance.now() }; } // (at once: the reaction's timing is measured; the cast's voices join when it is known, soundTick)
   else if (msg.type === 'duck') sound.duck(!!msg.on);
   else if (msg.type === 'snap' && msg.key !== undefined) snaps.push(String(msg.key));
 }
@@ -1203,8 +1372,17 @@ function report(obj) {
   try { if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(obj)); } catch (e) { /* no host */ }
   try { if (window.parent !== window) window.parent.postMessage(obj, '*'); } catch (e) { /* no parent */ }
 }
-const sound = new CrowdSound('sounds/', report, { mix: Q.get('sound') !== 'sprite' }); // &sound=sprite: one clip per cue, as before
-window.__mixes = () => sound.mixes; window.__sound = sound; // (box harnesses)
+/**
+ * Who laughs in this laugh, for the sound (sound.js cue's cast, castArrived): the motion agent's laughCast() (people.js:
+ * { n, share, people: [{ person, gender, type: 'roar'|'giggle'|'exhale', level }] }), copied, since people.js reuses
+ * its object. Read only once the people have seen this reaction (soundTick), so it is this laugh's cast, not the last.
+ */
+function laughCastNow() {
+  const c = laughCast();
+  return { n: c.n, share: c.share, people: c.people.map((e) => ({ person: e.person, gender: e.gender, type: e.type, level: e.level })) };
+}
+const sound = new CrowdSound('sounds/', report, { mix: Q.get('sound') !== 'sprite', venue: VENUE_ID }); // &sound=sprite: one clip per cue, as before
+window.__mixes = () => sound.mixes; window.__sound = sound; window.__audioMB = () => sound.audioMB(); // (box harnesses)
 const unlock = () => sound.unlock();
 addEventListener('pointerdown', unlock);
 addEventListener('keydown', unlock);
@@ -1225,28 +1403,41 @@ function hostEvents() {
  * at once. Only the camera's timing changes: what the room does still comes from the engine (the user, 2026-10-12:
  * "the camera was too moving, I couldn't focus on faces").
  */
-const CLOSE_MIN_SEC = 4.5, WIDE_MIN_SEC = 8;
+// each venue's own pacing (director.js PACE: the theatre holds longest, the club cuts quickest), never under 4.5 s on
+// a reaction shot nor 8 s on the wide
+const PACE_V = PACE[VENUE_ID] || { close: 4.5, wide: 8 };
+const CLOSE_MIN_SEC = Math.max(4.5, num('closehold', PACE_V.close)), WIDE_MIN_SEC = Math.max(8, num('widehold', PACE_V.wide));
+/** A new reaction while the wide is still holding: the wide's own variant, a wide setup of the venue's (or the house
+ * left or right half of the room on a longer lens, alternately, where the venue has none). */
+function wideVariant() {
+  const i = pickClose('wide');
+  if (i >= 0) { const W = CLOSES[i]; SHOTS.wide.pos.copy(W.pos); SHOTS.wide.look.copy(W.look); SHOTS.wide.fov = W.fov; wideAt = 3; usedSetup(i); }
+  else useWide(wideAt === 1 ? 2 : 1);
+  cutAt = room.now; cuts++; placeCamera(room.now);
+}
 function hostShot() {
   const sh = latest.shot;
   let want = 'wide';
   if (sh && sh.kind === 'reaction' && room.mode === 'live') {
     const h = typeof sh.focus === 'number' ? hist.get(sh.focus) : null;
     want = h && h.kind === 'heckle' && room.hecklerPos ? 'heckler' : 'close';
+    if (h && typeof h.s === 'number') cutStrength = h.s;
   }
-  // a new reaction while a close-up is already up: another setup (a cut between two reactions), once the current one
-  // has held 1.2 s, so laughs close together don't give the cut sheet the same frame twice
+  // a new reaction while a reaction shot is up: another setup (a cut between two reactions), once the current one has
+  // held its minimum, so laughs close together don't give the cut sheet the same frame twice
   const rk = sh && typeof sh.focus === 'number' ? sh.focus : sh; // (the reaction: its id when the TV gives one)
-  if (want === 'close' && shot === 'close' && rk !== closeOn && room.now - cutAt > 1.2 && CLOSES.length > 1) {
+  if (want === 'close' && shot === 'close' && rk !== closeOn && room.now - cutAt >= CLOSE_MIN_SEC && CLOSES.length > 1) {
     closeOn = rk; shot = ''; return cut('close');
   }
   if (want === 'close' && rk !== closeOn) closeOn = rk;
   if (want === shot || room.mode !== 'live' || want === 'heckler') return cut(want);
+  if (!shot) return cut(want); // (a page loaded mid-set has no shot yet: the camera would sit at the origin, under the floor)
   const held = room.now - cutAt;
   if (want === 'wide' && held < CLOSE_MIN_SEC) return undefined; // still reading the faces
   if (want === 'close' && shot === 'wide' && cuts > 1 && held < WIDE_MIN_SEC) {
-    // too soon after the last close-up: the laugh stays on a wide, but a new reaction gets a different one (the house
-    // left or right half of the room on a longer lens, alternately), so no two cut-sheet frames in a row are the same
-    if (rk !== heldOn) { heldOn = rk; useWide(wideAt === 1 ? 2 : 1); cutAt = room.now; cuts++; placeCamera(room.now); }
+    // too soon after the last close-up: the laugh stays on a wide, but a new reaction gets a different one, so no two
+    // cut-sheet frames in a row are the same
+    if (rk !== heldOn) { heldOn = rk; wideVariant(); }
     return undefined;
   }
   return cut(want);
@@ -1267,7 +1458,7 @@ function modeTimeline(now) {
     room.events = []; // nothing is being performed or measured: no reactions
     room.fill = 0.55 + 0.45 * clamp01(age / 40);
     room.houseTarget = 0.6; // doors open: house lights about 60%, the stage dark
-    room.keyTarget = 0.12;
+    room.keyTarget = PREVIEW_KEY; // (the stage at about half: the bill's room read as a black screen at 0.12, theatre mean luma 0.036)
     room.lastCallTarget = 0;
   } else if (room.mode === 'after') {
     const fs = room.lastFinale || 0.5, len = 2 + 3 * fs; // a stronger finish claps longer
@@ -1284,8 +1475,10 @@ function modeTimeline(now) {
     room.lastCallTarget = 0;
   }
 }
+let holdShot = false; // (a harness's __cutTo holds its shot)
 function director(now) {
   if (HOST) return hostShot();
+  if (holdShot) return undefined;
   if (Q.has('shot')) return cut(Q.get('shot') === 'close' ? 'close' : 'wide');
   if (room.mode !== 'live') return cut('wide');
   if (MODE === 'laugh') return cut('close');
@@ -1308,7 +1501,15 @@ addEventListener('keydown', (e) => {
 const cued = new Set();
 const _levels = {};
 const soundSeen = { dead: 0, heckle: null };
+let castWait = null; // the TV's last cue, whose cast the sound is waiting for (≤ 0.8 s)
+const CUE_KIND = { 'laugh-small': 'laugh', 'laugh-medium': 'laugh', 'laugh-big': 'laugh' };
 function soundTick(now) {
+  // the laugh's cast: decided when the people first see the reaction in the drive (earlier in this frame)
+  if (castWait) {
+    const k = CUE_KIND[castWait.id];
+    if (!k || performance.now() - castWait.at > 800) castWait = null;
+    else if (room.events.some((e) => (e.kind || 'laugh') === k && now - e.t >= 0 && now - e.t < 1)) { sound.castArrived(laughCastNow()); castWait = null; }
+  }
   const levels = _levels;
   for (const k in levels) levels[k] = 0;
   for (const ev of room.events) {
@@ -1316,7 +1517,7 @@ function soundTick(now) {
     const lv = ev.levelAt ? ev.levelAt(age) : age < 0 ? 0 : age < 0.25 ? (ev.s * age) / 0.25 : age < 0.5 + 1.5 * ev.s ? ev.s : Math.max(0, ev.s * (1 - (age - 0.5 - 1.5 * ev.s) / 1.2));
     if (lv > (levels[kind] || 0)) { levels[kind] = lv; levels[kind + 'Peak'] = ev.s; }
     // the standalone demo cues its own sound (the TV sends cues itself)
-    if (!HOST && !cued.has(ev.id) && age >= 0 && age < 0.5) { cued.add(ev.id); const id = cueFor(kind, ev.s); if (id) sound.cue(id, ev.s); }
+    if (!HOST && !cued.has(ev.id) && age >= 0 && age < 0.5) { cued.add(ev.id); const id = cueFor(kind, ev.s); if (id) sound.cue(id, ev.s, kind === 'laugh' ? { cast: laughCastNow() } : null); } // (the cast is decided earlier in this frame: read at once)
   }
   sound.tick(levels, room.mode === 'preview' ? 1.2 : room.mode === 'after' ? 0.85 : 1);
   // a dead bit or a heckle in a tough room sometimes draws a boo or a groan (sound.js react; never at the open mic)
@@ -1599,10 +1800,17 @@ async function spriteBake() {
 // ---------- main loop ----------
 const hazeTimes = [];
 async function main() {
-  await initMotion(); // the motion clips (anim/), before anyone is built; without them the motion stays procedural
+  // the motion clips (anim/) load while the room's files are fetched; the people wait for them (buildRoom)
+  motionReady = initMotion().then((ok) => { tmark('motion'); return ok; });
+  if (VIEW === 'avatar' || VIEW === 'spritebake') await motionReady;
   if (VIEW === 'avatar') return avatarView();
   if (VIEW === 'spritebake') return spriteBake();
-  const { venue } = await buildRoom();
+  const { venue, addFront, addLod } = await buildRoom();
+  tmark('room built');
+  // (capture, still frames and the low and high presets have the front people from the first frame; live tv pages draw
+  // the room first and add them as they arrive: frontIn below)
+  const streamFront = P.fast && !CAPTURE && !STILL && !Q.has('frontfirst');
+  if (!streamFront) { if (addLod) await addLod(); await addFront(); tmark('front people'); document.body.dataset.front = '1'; }
   const wallBase = venue.walls.material.color.clone().multiplyScalar(V.wallScale ?? 1);
   // ---- budget enablers (E) ----
   // opaque objects front to back: people, then the room, the floor, the walls and the sky (r160 sorts opaque by
@@ -1621,12 +1829,56 @@ async function main() {
   const OFF = new Set([...(ab('nohaze') || (P.fast && !ab('haze')) ? ['beams'] : []), ...(ab('noroom') ? ['room', 'room-emissive', 'floor', 'walls', 'blobs'] : [])]);
   if (OFF.size) scene.traverse((o) => { if (OFF.has(o.name)) o.visible = false; });
   if (ab('nofront')) stats.front = 0;
+  // &ab=overdraw: every surface drawn as a faint flat grey, added up and with no depth test, so the frame's brightness
+  // is how many layers each pixel paid for (a box diagnostic: tools/render/overdraw.mjs counts them)
+  // (&ab=overdraw keeps the draw order and the depth test, so it counts the fragments that are shaded; overdrawall
+  // takes the depth test off too and counts every fragment rasterised)
+  if (ab('overdraw') || ab('overdrawall')) scene.traverse((o) => {
+    if (!o.material || !(o.isMesh || o.isPoints)) return;
+    for (const m of [].concat(o.material)) {
+      Object.assign(m, { blending: THREE.AdditiveBlending, toneMapped: false, fog: false }, ab('overdrawall') ? { transparent: true, depthTest: false, depthWrite: false } : {});
+      const prev = m.onBeforeCompile;
+      m.onBeforeCompile = (sh, r) => { if (prev) prev.call(m, sh, r); const i = sh.fragmentShader.lastIndexOf('}'); sh.fragmentShader = sh.fragmentShader.slice(0, i) + '  gl_FragColor = vec4(vec3(1.0 / 16.0), 1.0);\n}'; };
+      const k0 = m.customProgramCacheKey.bind(m); m.customProgramCacheKey = () => k0() + '|overdraw';
+      m.needsUpdate = true;
+    }
+  });
   // the haze beams' slow smoke
   scene.traverse((o) => { if (o.name === 'beams' && o.material.uniforms && o.material.uniforms.time) hazeTimes.push(o.material.uniforms.time); });
   // every program now (the phones too), so the first cut never waits for a shader
   const phonesOff = people.map((p) => p.phone).filter(Boolean);
   phonesOff.forEach((m) => (m.visible = true));
+  tmark('scene ready');
   try { await renderer.compileAsync(scene, camera); } catch (e) { renderer.compile(scene, camera); }
+  tmark('shaders compiled');
+  // the front people, once the room is on screen: built hidden, their programs compiled without a stall, then shown
+  // at a frame's start; the shot's light is applied to them again
+  const frontIn = async () => {
+    if (addLod) { // (the close-ups' lod copy first: hidden, then compiled off the scene like the people)
+      const cl = await addLod();
+      const meshes = cl.groups.map((G) => G.mesh), holder = new THREE.Group(), was = meshes.map((m) => [m.parent, m.visible]);
+      for (const m of meshes) { holder.add(m); m.visible = true; }
+      try { await renderer.compileAsync(holder, camera, scene); } catch (e) { /* compiled on first draw */ }
+      meshes.forEach((m, i) => { (was[i][0] || scene).add(m); m.visible = was[i][1]; });
+      tmark('close-up copy');
+      if (shot && litNow() !== 'wide') showCloseLod(true);
+    }
+    const front = await addFront();
+    // (off the scene while their programs compile: compile only looks at visible objects, and the frame must not draw
+    // them first, which would compile them in its own frame)
+    const holder = new THREE.Group(), parents = front.map((p) => p.rig.seat.parent);
+    for (const p of front) { holder.add(p.rig.seat); if (p.phone) p.phone.visible = true; }
+    try { await renderer.compileAsync(holder, camera, scene); } catch (e) { /* compiled on first draw */ }
+    front.forEach((p, i) => { (parents[i] || scene).add(p.rig.seat); if (p.phone) p.phone.visible = false; });
+    applyShotLight();
+    fileBytes.clear(); // (every file is parsed)
+    tmark('front people');
+    document.body.dataset.front = '1';
+    const line = loadLine();
+    console.log(line);
+    if (HOST) report({ type: 'load', line });
+  };
+  if (streamFront) setTimeout(() => frontIn().catch((e) => console.error(e)), 0); else fileBytes.clear();
   phonesOff.forEach((m) => (m.visible = false));
   if (Q.has('debug') || CAPTURE) Object.assign(window, { __scene: scene, __camera: camera, __THREE: THREE, __people: people, __room: room });
   // a check the box harness runs in every mode: is anyone visible still in the bind pose (arms out)?
@@ -1656,8 +1908,10 @@ async function main() {
     room.lastCall += ((room.lastCallTarget ?? 0) - room.lastCall) * ease;
     venue.walls.material.color.copy(wallBase).multiplyScalar(1 + (V.wallHouse ?? 8) * room.house);
     // house lights thin the dark: the haze recedes so the walls and the back of the room come up
-    if (scene.fog) { const f = FOG[shot] || FOG.wide, k = 1 + 1.5 * room.house; scene.fog.near = f[0] * k; scene.fog.far = f[1] * k; }
+    if (scene.fog) { const f = curFog || FOG[shot] || FOG.wide, k = 1 + 1.5 * room.house; scene.fog.near = f[0] * k; scene.fog.far = f[1] * k; }
     director(now);
+    // (0.7 s into a reaction shot, once the faces have started: the laugher it shows, forward in the sound)
+    if (shot === 'close' && curSetup && featuredCut !== cuts && now - cutAt > 0.6) { if (featureVoice(curSetup) || now - cutAt > 2.5) featuredCut = cuts; }
     placeCamera(now);
     lightLevels();
     vlitFrame();
@@ -1675,7 +1929,8 @@ async function main() {
     }
     for (const c of crowds) if (!c.hidden) c.update(now, room);
     if (crowds.shared) { crowds.shared.uTime.value = now; crowds.shared.uBeat.value = room.beat; }
-    room.shot = shot;
+    room.camPos = camera.position;
+    room.shot = litNow(); // (the venue's own close-up treatment follows the light: a wide-lit setup is a wide to it)
     if (venue.animate) venue.animate(now, room);
     cpuMs = cpuMs * 0.9 + (performance.now() - t0) * 0.1;
     const gu = venue.points.material.uniforms;
@@ -1689,6 +1944,11 @@ async function main() {
     soundTick(now);
     if (frames % 15 === 0) captionFor();
     renderer.render(scene, camera);
+    if (pendingVenue) { // (a venue change: keep this frame for the reload, then go)
+      try { sessionStorage.setItem('encore-hold', JSON.stringify({ t: Date.now(), uri: canvas.toDataURL('image/jpeg', 0.82) })); } catch (e) { /* no hold: black until ready */ }
+      const to = pendingVenue; pendingVenue = null;
+      location.replace(to);
+    }
     for (let i = 0; i < people.length; i++) people[i].skelDirty = false;
     if (snaps.length) takeSnaps();
     frames++;
@@ -1698,20 +1958,32 @@ async function main() {
     lastT = pn;
     if (frames === 2) { texMB = textureMB(); dlMB = downloadsMB(); }
     hud();
+    if (frames === 1) tmark('first frame');
+    if (frames === 3) {
+      tmark('third frame');
+      const line = loadLine();
+      console.log(line);
+      if (HOST) report({ type: 'load', line });
+      window.__load = () => ({ marks: LOADT.marks, files: LOADT.files, urls: [...LOADT.urls], line: loadLine() });
+    }
     if (HOST && frames === 3) {
       const v = viewport(), r = canvas.getBoundingClientRect();
-      report({ type: 'ready', view: `${v.w}×${v.h} css · dpr ${devicePixelRatio} · inner ${innerWidth}×${innerHeight} · canvas ${Math.round(r.width)}×${Math.round(r.height)} css, ${RW}×${RH} drawn` });
+      report({ type: 'ready', load: loadLine(), view: `${v.w}×${v.h} css · dpr ${devicePixelRatio} · inner ${innerWidth}×${innerHeight} · canvas ${Math.round(r.width)}×${Math.round(r.height)} css, ${RW}×${RH} drawn` });
     }
     if ((HOST || LOG) && frames > 3 && pn - lastReport > 2000) {
       lastReport = pn;
       const i = renderer.info.render, ft = frameTimes();
-      const st = { type: 'stats', fps: Math.round(1000 / Math.max(frameMs, 0.1)), ms: +frameMs.toFixed(1), p50: ft.p50, p90: ft.p90, max: ft.max, long: ft.long, cpu50: ft.cpu50, cpu90: ft.cpu90, aa: CTX_AA, calls: i.calls, tris: i.triangles };
+      const vv = viewport();
+      const st = { type: 'stats', view: `${vv.w}x${vv.h}`, fit: stageFit, fps: Math.round(1000 / Math.max(frameMs, 0.1)), ms: +frameMs.toFixed(1), p50: ft.p50, p90: ft.p90, max: ft.max, long: ft.long, cpu50: ft.cpu50, cpu90: ft.cpu90, aa: CTX_AA, calls: i.calls, tris: i.triangles };
       report(st);
       if (LOG) console.log(`[crowd] sweep ${LABEL} · ${st.fps} fps · p50 ${st.p50} ms · p90 ${st.p90} ms · max ${st.max} ms · over50 ${st.long}/${ft.n} · cpu p50 ${st.cpu50} p90 ${st.cpu90} ms · ${st.calls} calls · ${st.tris} tris · ${RW}x${RH} · raf ${pct(rafDt, nRaf, 0.5).toFixed(1)} ms, late p50 ${pct(rafLate, nRaf, 0.5).toFixed(1)} p90 ${pct(rafLate, nRaf, 0.9).toFixed(1)} · draws in vsyncs 1:${drawV[1]} 2:${drawV[2]} 3:${drawV[3]} 4:${drawV[4]} 5+:${drawV[5]}${VSYNC_CAP ? ' · vsync cap' : ''}`);
       drawV.fill(0);
     }
     if (frames === 3) {
       document.body.dataset.ready = '1';
+      setTimeout(() => sound.go(), 800); // (the sound decodes only now the room is on screen)
+      window.__firstFrameMs = Math.round(performance.now());
+      holdOff(); // (the last frame of the previous venue, held over the reload, gives way to this one)
       const i = renderer.info.render;
       const breakdown = { front: 0, inst: {}, other: 0 };
       scene.traverse((o) => {
@@ -1725,8 +1997,10 @@ async function main() {
     }
     if (frames === 4) window.__frameTimes = frameTimes; // for the box harnesses
     if (frames === 4 || CAPTURE) window.__crowdMask = crowdMask;
-    if (frames === 4) window.__shot = () => ({ shot, setup: shot === 'close' && CLOSES[closeAt] ? CLOSES[closeAt].label : null });
-    if (frames === 4) window.__closes = () => ({ at: closeAt, log: closeLog.slice(), setups: CLOSES.map((S) => ({ label: S.label, seats: S.seats.map((x) => [+x.x.toFixed(2), x.row]), pos: S.pos.toArray().map((v) => +v.toFixed(2)), look: S.look.toArray().map((v) => +v.toFixed(2)) })), front: people.filter((p) => p.kind === 'front').map((p) => [+p.src.x.toFixed(2), p.src.row, !!p.focus]) });
+    if (frames === 4) window.__shot = () => ({ shot, setup: shot === 'close' && curSetup ? curSetup.label : shot === 'wide' && wideAt === 3 ? 'wide variant' : null, size: curSetup && shot === 'close' ? curSetup.size : shot, lit: litNow(), i: shot === 'close' ? closeAt : -1 });
+    // (box harnesses: cut to setup i now, or back to the wide with -1)
+    if (frames === 4 || CAPTURE) window.__cutTo = (i) => { holdShot = true; shot = ''; if (i < 0) cut('wide'); else cut('close', i); return window.__shot ? window.__shot() : null; };
+    if (frames === 4) window.__closes = () => ({ at: closeAt, log: closeLog.slice(), setups: CLOSES.map((S) => ({ label: S.label, size: S.size, lit: S.lit, seats: S.seats.map((x) => [+x.x.toFixed(2), x.row]), pos: S.pos.toArray().map((v) => +v.toFixed(2)), look: S.look.toArray().map((v) => +v.toFixed(2)) })), front: people.filter((p) => p.kind === 'front').map((p) => [+p.src.x.toFixed(2), p.src.row, !!p.focus]) });
   };
   if (CAPTURE) {
     // frame-exact capture: the harness steps the clock and screenshots each frame

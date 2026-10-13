@@ -1,6 +1,6 @@
 // The anatomy sweep, on the build box: every venue × state, stepping each page through time (capture mode) and asking
 // the page's validator (people.js anatomyCheck → window.__anatomy: joint limits, the arms against every body and the
-// furniture, seated posture), the hand checker (window.__handCheck) and the instanced bake report
+// furniture, seated posture, the elbows and knees: anatomy.js limbs), the hand checker (window.__handCheck) and the instanced bake report
 // (window.__bakeAnatomy). Clap, heckle and finale are driven through the host protocol (crowdDrive messages).
 //   node anatomy.mjs <page url without query, e.g. http://127.0.0.1:8093/after/index.html> [venues...]
 //   (EXTRA='&anatomy=off' appends to every page's query)        exit code 1 if anything is found
@@ -30,7 +30,7 @@ try {
     const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
     const errs = [];
     page.on('pageerror', (e) => errs.push(e.message.slice(0, 160)));
-    await page.goto(`${base}?venue=${v}&${S.q}&preset=tv&capture=1&hud=0&venue-lock=1${EXTRA}`, { timeout: 240000 });
+    await page.goto(`${base}?venue=${v}&${S.q}&preset=${process.env.PRESET || 'tv'}&capture=1&hud=0&venue-lock=1${EXTRA}`, { timeout: 240000 });
     await page.waitForFunction(() => typeof window.__renderAt === 'function' && typeof window.__anatomy === 'function', null, { timeout: 240000 });
     const found = [];
     for (const t of S.ts) {
@@ -44,6 +44,7 @@ try {
         return [...a.joints.map((x) => `joint · ${x.joint}${x.side ? ' ' + x.side : ''} · ${x.name} (${x.value}°)`),
           ...a.collisions.map((x) => `collision · ${x.what} · ${x.name} ${x.side} (${x.depth})${why ? ' k' + x.k + ' [' + x.doing + ']' : ''}`),
           ...a.posture.map((x) => `posture · ${x.posture} · ${x.name} (${x.value})`),
+          ...(a.limbs || []).map((x) => `limbs · ${x.what}${x.side ? ' ' + x.side : ''} · ${x.name} (${x.value})`),
           ...h.map((x) => `collision · ${x.what || 'in ' + x.in} · ${x.name} ${x.hand} (${x.depth})`)];
       }, { t, d: S.drive ? S.drive(t) : null, why: !!process.env.WHY });
       for (const x of r) found.push(`t=${t} ${x}`);
@@ -59,5 +60,5 @@ try {
   }
 } finally { await browser.close(); }
 console.log('by kind:', JSON.stringify(tally));
-console.log(total ? `TOTAL ${total} anatomy findings` : 'TOTAL 0: no joint, collision or posture violations');
+console.log(total ? `TOTAL ${total} anatomy findings` : 'TOTAL 0: no joint, collision, posture or limb (elbow and knee) violations');
 process.exit(total ? 1 : 0);

@@ -84,3 +84,71 @@ are real recordings only.
 
 No licensed recordings of "come on!", "wah wah!" or "kya baat hai!" were found on freesound (CC0 or CC BY; the "wah
 wah" results are guitar and trumpet effects), so those still need to be recorded.
+
+## Single voices and each venue's own sounds (`crowd-voices`, `crowd-club`, `crowd-theatre`, `crowd-arena`, `crowd-openmic`)
+
+These are built by `prototypes/crowd3d/tools/build_pool.mjs --voices <dir>` from freesound's HQ previews. Each window is
+normalised (voices -20 dBFS RMS, venue sounds -21 dBFS RMS, peaks under -1 dBFS) and faded at both ends.
+
+`crowd-voices.mp3` holds 32 single people laughing, sorted by gender and laugh type:
+- women: 6 roars, 6 giggles, 4 chuckles through the nose;
+- men: 6 roars, 5 giggles, 5 chuckles through the nose.
+
+sound.js adds as many of them to a laugh as its cast, and puts one forward when a close-up shows that person laughing.
+
+The venue files are loaded only in their own room:
+- the club's table thumps;
+- the theatre's polite chuckles and applause;
+- the arena's stadium roar and whistling;
+- the open mic's sparse room.
+
+Each licence was checked on the sound's own page (the licence link) on 2026-10-13. All are real recordings.
+
+**Needs a credit (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/):**
+
+- `voice-4`, `voice-5`: "Young Woman laughter and giggles. Studio recording" by bpayri, https://freesound.org/s/504737/.
+  Credit: `"Young Woman laughter and giggles. Studio recording" by bpayri, freesound.org, CC BY 4.0`
+- `voice-13`: "26.07.28- Woman Giggling - Close-Lipped Muffled Chuckle" by Valerie-Vivegnis, https://freesound.org/s/865415/.
+  Credit: `"Woman Giggling - Close-Lipped Muffled Chuckle" by Valerie-Vivegnis, freesound.org, CC BY 4.0`
+- `voice-14`, `voice-15`: "Woman's Soft Laughter" by Federico_Casazza, https://freesound.org/s/687349/.
+  Credit: `"Woman's Soft Laughter" by Federico_Casazza, freesound.org, CC BY 4.0`
+- `voice-21`: "heartily laughing" by mokasza, https://freesound.org/s/810179/.
+  Credit: `"heartily laughing" by mokasza, freesound.org, CC BY 4.0`
+- `voice-25`, `voice-26`, `voice-31`: "Short male snorts and giggles" by pfranzen, https://freesound.org/s/418368/.
+  Credit: `"Short male snorts and giggles" by pfranzen, freesound.org, CC BY 4.0`
+
+**CC0 1.0:**
+
+| Clips | Source | Author |
+|---|---|---|
+| `voice-0` | "Female Giggle", https://freesound.org/s/611781/ | DarkNightPrincess |
+| `voice-1` | "giggle", https://freesound.org/s/635014/ | Singger |
+| `voice-2` | "Girl, female, laughing, giggling.wav", https://freesound.org/s/218308/ | SpliceSound |
+| `voice-3` | "Girl Laughing.wav", https://freesound.org/s/335581/ | jgreer |
+| `voice-6`, `voice-7` | "woman_laughs.wav", "woman_laughs_2.wav", https://freesound.org/s/556251/, /556250/ | C-V |
+| `voice-8` | "WOMAN LAUGH", https://freesound.org/s/468514/ | SamuelGremaud |
+| `voice-9` | "Woman laugh", https://freesound.org/s/433921/ | Kalibrk |
+| `voice-10` | "Girl laughing and chuckling", https://freesound.org/s/382998/ | BlueSiren |
+| `voice-11` | "laughter_female", https://freesound.org/s/852284/ | ReallyInterestingPictureCo |
+| `voice-12` | "Girl Chuckle.wav", https://freesound.org/s/377742/ | BlueSiren |
+| `voice-16` | "G51-06-Leon Errol Laugh.wav", https://freesound.org/s/438805/ | craigsmith |
+| `voice-17` | "R15-32-Man Laughing Heartily.wav", https://freesound.org/s/481735/ | craigsmith |
+| `voice-18` | "Wholesome Genuine Laugh (male)", https://freesound.org/s/720133/ | JotrainG |
+| `voice-19` | "Male Laughter.wav", https://freesound.org/s/119459/ | Eneasz |
+| `voice-20` | "Man laughing various", https://freesound.org/s/859265/ | SPAudiobooks |
+| `voice-22`, `voice-23` | "Various Chuckles_Male.mp3", https://freesound.org/s/643665/ | SnowFightStudios |
+| `voice-24` | "LaughM.ogg", https://freesound.org/s/536811/ | egomassive |
+| `voice-27` | "Man chuckling soft laughter", https://freesound.org/s/823548/ | beautifuldaymonster1968 |
+| `voice-28` | "deep laugh chuckle.mp3", https://freesound.org/s/458101/ | hsmith1986 |
+| `voice-29`, `voice-30` | "Low chuckle", https://freesound.org/s/790713/ | WalliumVA |
+| club `thump-0`, `thump-1` | "Table bang.m4a", "Table bang overdub.m4a", https://freesound.org/s/507939/, /507940/ | GeorgiaReitano1970 |
+| club `thump-2`–`thump-5` | "table bang", https://freesound.org/s/548622/ | Ali14sound |
+| club `thump-6`, `thump-7` | "Slapping a table.aif", https://freesound.org/s/151897/ | carroll27 |
+| theatre `ripple-0`–`ripple-3` | "G29-41-Theater Laughter.wav", https://freesound.org/s/438401/ | craigsmith |
+| theatre `ripple-4`–`ripple-6` | "AF Crowd Small Laugh" 1-3, https://freesound.org/s/678668/, /678669/, /678670/ | mglennsound |
+| theatre `ripple-7` | "ShortStockLaughter2.wav", https://freesound.org/s/242244/ | ehohnke |
+| theatre `applause-8`, `applause-9` | "Applause (Theatre Audience - Indoors)", https://freesound.org/s/807725/ | christos71 |
+| arena `roar-0`–`roar-2` | "Crowd Cheer", "Crowd Cheer II", https://freesound.org/s/397434/, /397435/ | FoolBoyMedia |
+| arena `roar-3`, `roar-4` | "concert crowd cheering", https://freesound.org/s/645337/ | fxcv |
+| arena `whistle-5`, `whistle-6` | "Crowd Whistling With Pitch Movement", https://freesound.org/s/764029/ | ShangusBurger |
+| open mic `sparse-0` | "Sparse Chatter And Laughter", https://freesound.org/s/763965/ | ShangusBurger |

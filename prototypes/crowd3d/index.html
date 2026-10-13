@@ -17,6 +17,8 @@
   .cut .why span { color: var(--gold-dim); }
   /* host mode: the TV app draws its own lower-third, LIVE mark and captions */
   body.host .lower-third, body.host .live, body.host .hints, body.host .cut { display: none; }
+  /* a venue change: the last frame of the previous room, held over the reload until this room's first frame */
+  #hold { position: absolute; inset: 0; width: 1920px; height: 1080px; display: none; object-fit: fill; }
   #hud { position: absolute; left: 12px; top: 8px; font: 15px/1.2 ui-monospace, "DejaVu Sans Mono", monospace; color: #cfc6b4; background: rgba(0,0,0,.45); padding: 3px 8px; border-radius: 3px; white-space: nowrap; }
 </style>
 <script type="importmap">
@@ -29,12 +31,27 @@
 <body>
 <div class="tv">
   <canvas id="c" width="1280" height="720"></canvas>
+  <img id="hold" alt="">
   <div class="cut" id="cut"></div>
   <div class="live"><i></i>LIVE <small>mic on · test</small></div>
   <div class="lower-third"><div class="venue">The Basement · <em>Comedy Club</em></div><div class="rule"></div><div class="clock">3:12 <small>of a 5:00 set</small></div></div>
   <div class="hints"><span><b>OK</b>laugh</span><span><b>M</b>dead air</span></div>
   <div id="hud">loading…</div>
 </div>
+<script>
+// before the page's script parses (a second on the TV): fit the stage, and show the previous room's last frame if this
+// load is a venue change (crowd.js stores it in sessionStorage just before the reload, and removes it at first frame)
+(function () {
+  var d = document.documentElement, w = d.clientWidth || innerWidth, h = d.clientHeight || innerHeight;
+  var kx = w / 1920, ky = h / 1080, tv = document.querySelector('.tv');
+  tv.style.transformOrigin = '0 0';
+  tv.style.transform = Math.abs(kx / ky - 1) < 0.12 ? 'scale(' + kx + ', ' + ky + ')' : 'scale(' + Math.min(kx, ky) + ')';
+  try {
+    var hold = JSON.parse(sessionStorage.getItem('encore-hold') || 'null');
+    if (hold && Date.now() - hold.t < 60000) { var img = document.getElementById('hold'); img.src = hold.uri; img.style.display = 'block'; }
+  } catch (e) { /* no hold */ }
+})();
+</script>
 <script type="module" src="crowd.js"></script>
 </body>
 </html>

@@ -12,7 +12,7 @@ from payloads import debrief_payload, debrief_req, line_req, record
 
 
 def arena_set() -> DebriefRequest:
-    """QA set 2 (18-s2-cut.jpg): stand-up at Wankhede, Arena, deadpan; 4 of 4 landed, 4.4 a minute, 2.8 s of dead air
+    """QA set 2 (18-s2-cut.jpg): stand-up at The Bowl, Arena, deadpan; 4 of 4 landed, 4.4 a minute, 2.8 s of dead air
     at 0:52, 157 wpm (peak 166), no fillers; the words showed 6 specific details, 2 tags and 1 callback, no wordplay."""
     p = debrief_payload(persona="deadpan", venue="arena", durationSec=54.6, landed=4, candidates=4, landedPerMin=4.4,
                         roomReactions=4, longestDeadAirSec=2.8, longestDeadAirAt=52, wpm=157, peakWpm=166,
@@ -90,7 +90,7 @@ def test_the_retry_that_passed_on_the_day_is_rejected_now():
     "No wordplay tonight, but two tags. Go again here.",  # a true absence
     "Try some wordplay on the landlord line next time.",  # advice in the fix, not a claim
     "Not the next room yet: there is nothing above this one. Go again here.",
-    "Nothing to fix. Stay at Wankhede.",
+    "Nothing to fix. Stay at The Bowl.",
 ])
 def test_honest_arena_debriefs_pass(fix):
     assert arena_note(fix).fix == fix

@@ -314,3 +314,101 @@ Builds k and l ran a club set at about 17 fps (minimum 10), against 22–24 on A
 | arena-pillimpostors | `venue=arena state=cycle` | `ab=pillimpostors` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dcycle%26ab%3Dpillimpostors%26hud%3D0%26log%3D1%26label%3Darena-pillimpostors"` |
 | arena-rows3 | `venue=arena state=cycle` | `ab=rows3` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dcycle%26ab%3Drows3%26hud%3D0%26log%3D1%26label%3Darena-rows3"` |
 | arena-allpills | `venue=arena state=cycle` | `ab=pillsprites,pillimpostors,rows3` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dcycle%26ab%3Dpillsprites%2Cpillimpostors%2Crows3%26hud%3D0%26log%3D1%26label%3Darena-allpills"` |
+
+## Round 7: arena (2026-10-13)
+
+Round 6 had the arena at 13–17 fps (p50 55–69 ms, p90 117–159 ms) with CPU p50 at only 21–29 ms. That makes it
+GPU-bound on the Mali-G31. The goal is club-like: 20+ fps and p90 under 70 ms, without losing the 2/5-alive rule
+(aliveprobe ≥ 0.40) or the faces.
+
+This build's changes since APK m:
+- arena motion v1;
+- the per-venue laugh coverage (director.js: the arena's `state=cycle` now cuts to the crane, the stands, the pit and
+  the floor crowd, as well as the rail);
+- the sprites turn to whichever camera is live.
+
+Most rows below use `state=listen`, so they price the wide alone. `a7-cycle` and `a7-combo-cycle` include the reaction
+setups.
+
+Already off on tv: the light cones (the arena's sweep beams are named `beams`, which the tv preset hides; `a7-haze`
+puts them back to price them).
+
+Switches:
+- **Diagnostics** (take one part out to see what it costs): `res=360`, nopost, nofog, nosprites (the sprite crowd on
+  the floor and the tiers), noimpostor, noinst (the six 3D rows), nofront (the six skinned people), nostands (the tier
+  planes, roof edges and towers), noglows (every glow point, including the floodlight halos), nosky (the sky sphere
+  behind everything), nophones, noroom (floor, stage and tiers).
+- **Candidate fixes:**
+  - nosort: no front-to-back sprite order. This prices the tv default, which sorts.
+  - quadsprites: discard cut-out quads instead of the opaque outline fans. This is the reference for "opaque, early-z
+    cut-outs", which are already the tv default.
+  - fan9: a coarser sprite outline, 9 triangles instead of 16. The sprites are 60k of the arena's 148k triangles; with
+    fan9 the arena wide is 124k, and aliveprobe reads 0.50.
+  - imphalf: half of the impostor block rows (fewer impostor layers).
+  - floor30: the floor sprite crowd ends at 30 m, not 38.
+  - rows4 and rows3: four or three 3D rows instead of six.
+  - mediump: all shaders at mediump precision (fp16 on Mali).
+  - fold: the final pass folded into the tone map.
+  - combo: fan9, rows4, nosky, noglows and imphalf together.
+
+Not built yet:
+- A lower-res offscreen pass for the far stands: it needs a second render target and a composite. It is next if
+  nosprites, noimpostor or nostands show the far bowl is the cost.
+- Merging sprite rows into larger quads: the floor crowd as impostor strips. It is next if floor30 or nosprites shows
+  the floor is the cost.
+- Cheaper fog: the sprites and impostors already fog per vertex. nofog bounds what any cheaper fog could save.
+
+Overdraw on the box (`tools/render/overdraw.mjs`, arena wide). With `&ab=overdraw,nopost`, every surface is added as
+a flat 1/16 grey in the real draw order with the depth test on:
+- The arena wide shades 1.19 fragments per pixel. 86% of pixels are shaded once, 13% two or three times, and 1% four
+  to seven times.
+- The sky fills the 25.5% of the frame that nothing else covers (nosky: 0.93).
+- quadsprites is the same (1.20).
+
+With `overdrawall` (no depth test), 4.78 fragments are rasterised per pixel, and early-z and the front-to-back order
+reject most of them. So overdraw isn't what costs. The suspects are vertex and tiler load (148k triangles: sprites
+60k, 3D rows about 56k, front 31k) and the shaders' per-pixel cost.
+
+| Arena wide (box, capture) | calls | tris | sprites |
+| --- | --- | --- | --- |
+| base | 44 | 148.3k | 3992 |
+| nosprites | 43 | 88.4k | (hidden) |
+| noinst | 26 | 92.5k | 3992 |
+| nofront | 26 | 116.9k | 3992 |
+| quadsprites | 44 | 96.4k | 3992 |
+| fan9 | 44 | 124.4k | 3992 |
+| floor30 | 44 | 141.2k | 3519 |
+| rows4 | 42 | 132.0k | 4078 |
+| rows3 | 38 | 124.6k | 4121 |
+| combo (without fan9) | 40 | 131.4k | 4078 |
+
+aliveprobe on the arena wide: base 0.49, fan9 0.50 (the floor is 0.40).
+
+| Label | Scene | Switches | Command |
+| --- | --- | --- | --- |
+| a7-base | `venue=arena state=listen` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26hud%3D0%26log%3D1%26label%3Da7-base"` |
+| a7-cycle | `venue=arena state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Da7-cycle"` |
+| a7-res360 | `venue=arena state=listen` | `res=360` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26res%3D360%26hud%3D0%26log%3D1%26label%3Da7-res360"` |
+| a7-nopost | `venue=arena state=listen` | `ab=nopost` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnopost%26hud%3D0%26log%3D1%26label%3Da7-nopost"` |
+| a7-nofog | `venue=arena state=listen` | `ab=nofog` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnofog%26hud%3D0%26log%3D1%26label%3Da7-nofog"` |
+| a7-nosprites | `venue=arena state=listen` | `ab=nosprites` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnosprites%26hud%3D0%26log%3D1%26label%3Da7-nosprites"` |
+| a7-noimpostor | `venue=arena state=listen` | `ab=noimpostor` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnoimpostor%26hud%3D0%26log%3D1%26label%3Da7-noimpostor"` |
+| a7-noinst | `venue=arena state=listen` | `ab=noinst` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnoinst%26hud%3D0%26log%3D1%26label%3Da7-noinst"` |
+| a7-nofront | `venue=arena state=listen` | `ab=nofront` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnofront%26hud%3D0%26log%3D1%26label%3Da7-nofront"` |
+| a7-nostands | `venue=arena state=listen` | `ab=nostands` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnostands%26hud%3D0%26log%3D1%26label%3Da7-nostands"` |
+| a7-noglows | `venue=arena state=listen` | `ab=noglows` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnoglows%26hud%3D0%26log%3D1%26label%3Da7-noglows"` |
+| a7-nosky | `venue=arena state=listen` | `ab=nosky` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnosky%26hud%3D0%26log%3D1%26label%3Da7-nosky"` |
+| a7-nophones | `venue=arena state=listen` | `ab=nophones` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnophones%26hud%3D0%26log%3D1%26label%3Da7-nophones"` |
+| a7-noroom | `venue=arena state=listen` | `ab=noroom` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnoroom%26hud%3D0%26log%3D1%26label%3Da7-noroom"` |
+| a7-haze | `venue=arena state=listen` | `ab=haze` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dhaze%26hud%3D0%26log%3D1%26label%3Da7-haze"` |
+| a7-nosort | `venue=arena state=listen` | `ab=nosort` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dnosort%26hud%3D0%26log%3D1%26label%3Da7-nosort"` |
+| a7-quadsprites | `venue=arena state=listen` | `ab=quadsprites` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dquadsprites%26hud%3D0%26log%3D1%26label%3Da7-quadsprites"` |
+| a7-fan9 | `venue=arena state=listen` | `ab=fan9` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dfan9%26hud%3D0%26log%3D1%26label%3Da7-fan9"` |
+| a7-imphalf | `venue=arena state=listen` | `ab=imphalf` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dimphalf%26hud%3D0%26log%3D1%26label%3Da7-imphalf"` |
+| a7-floor30 | `venue=arena state=listen` | `ab=floor30` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dfloor30%26hud%3D0%26log%3D1%26label%3Da7-floor30"` |
+| a7-rows4 | `venue=arena state=listen` | `ab=rows4` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Drows4%26hud%3D0%26log%3D1%26label%3Da7-rows4"` |
+| a7-rows3 | `venue=arena state=listen` | `ab=rows3` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Drows3%26hud%3D0%26log%3D1%26label%3Da7-rows3"` |
+| a7-mediump | `venue=arena state=listen` | `ab=mediump` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dmediump%26hud%3D0%26log%3D1%26label%3Da7-mediump"` |
+| a7-fold | `venue=arena state=listen` | `ab=fold` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dfold%26hud%3D0%26log%3D1%26label%3Da7-fold"` |
+| a7-combo | `venue=arena state=listen` | `ab=fan9,rows4,nosky,noglows,imphalf` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dfan9%2Crows4%2Cnosky%2Cnoglows%2Cimphalf%26hud%3D0%26log%3D1%26label%3Da7-combo"` |
+| a7-combo-cycle | `venue=arena state=cycle` | `ab=fan9,rows4,nosky,noglows,imphalf` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dcycle%26ab%3Dfan9%2Crows4%2Cnosky%2Cnoglows%2Cimphalf%26hud%3D0%26log%3D1%26label%3Da7-combo-cycle"` |

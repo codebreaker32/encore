@@ -189,8 +189,12 @@ void main(){
 // people a sprite, instead of a quad whose corners the fragment shader discards: opaque, so the tile GPU can kill the
 // pixels hidden behind nearer rows before shading them
 const RING = [[-0.245, 0, 0], [-0.245, -0.33, 1], [-0.25, -0.3, 3], [-0.17, -0.25, 1], [-0.15, -0.24, 1], [-0.15, -0.11, 1], [-0.08, -0.03, 1], [0, 0, 1]];
-const OUTLINE = [...RING, ...RING.slice(0, -1).reverse().map(([x, y, a]) => [-x, y, a])];
+const OUTLINE16 = [...RING, ...RING.slice(0, -1).reverse().map(([x, y, a]) => [-x, y, a])];
+// (&ab=fan9: a coarser outline, 9 triangles, for the round 7 sweep: the sprites are 60k of the arena's 148k triangles)
+const RING9 = [[-0.245, 0, 0], [-0.25, -0.3, 3], [-0.15, -0.24, 1], [-0.08, -0.03, 1], [0, 0, 1]];
+const OUTLINE9 = [...RING9, ...RING9.slice(0, -1).reverse().map(([x, y, a]) => [-x, y, a])];
 function outlineGeometry(count) {
+  const OUTLINE = ARENA.ab && ARENA.ab.fan9 ? OUTLINE9 : OUTLINE16;
   const pos = [], idx = [];
   for (let k = 0; k < count; k++) {
     const dx = count === 1 ? 0 : (k - 0.5) * 0.5, c = pos.length / 3;
@@ -317,9 +321,10 @@ function impostors(blocks, R, palette, spriteU, phoneU) {
  * keeps its lower six rows on the sides only: from the stage riser its end and its top rows ran along the frame's top
  * edge, behind the caption and LIVE.
  */
-function impostorBlocks() {
+function impostorBlocks(half = false) {
   const out = [], W = IMP_COLS * 0.62;
-  const band = (k0, rows, rise, at) => { for (let k = k0; k < k0 + rows; k += IMP_ROWS) at(k, IMP_ROWS * rise + 1.45); };
+  // (&ab=imphalf: every other block row, a fewer-layers candidate; the tier's dark plane shows between them)
+  const band = (k0, rows, rise, at) => { for (let k = k0, j = 0; k < k0 + rows; k += IMP_ROWS, j++) if (!half || j % 2 === 0) at(k, IMP_ROWS * rise + 1.45); };
   for (const s of [-1, 1]) {
     band(12, 6, 0.42, (k, h) => { for (let z = 2 + W / 2; z < 40; z += W) out.push({ x: s * (16.6 + (k + 1) * 0.84), y: 1.4 + k * 0.42, z, w: W, h }); });
     band(0, 6, 0.5, (k, h) => { for (let z = W / 2; z < 57; z += W) out.push({ x: s * (33.4 + (k + 1) * 0.92), y: 15.6 + k * 0.5, z, w: W, h }); });
@@ -453,15 +458,17 @@ function buildArena(scene, rows, P) {
   // tiers: lower around the floor, upper above, a roof edge
   const tiers = [];
   const addTier = (kind, xs, z0, z1, y0, rise, deep) => tiers.push({ kind, xs, z0, z1, y0, rise, deep });
+  const AB0 = P.arenaAB || {};
+  const C1 = AB0.nostands ? new Collector() : C0; // (&ab=nostands: the tiers' planes, roof edges and towers are left out)
   for (const s of [-1, 1]) {
-    C0.add('lambert', new THREE.PlaneGeometry(40, 16.2).rotateX(-Math.PI / 2).rotateZ(s * -0.46).translate(s * 24.5, 5.2, 21), 0x18181e, { ao: 0 });
-    C0.add('lambert', new THREE.PlaneGeometry(58, 13).rotateX(-Math.PI / 2).rotateZ(s * -0.5).translate(s * 39.5, 18.6, 28), 0x141418, { ao: 0 });
-    C0.add('lambert', box(1.2, 1.2, 62, s * 46, 25.6, 28), 0x222228, { ao: 0 }); // roof edge
+    C1.add('lambert', new THREE.PlaneGeometry(40, 16.2).rotateX(-Math.PI / 2).rotateZ(s * -0.46).translate(s * 24.5, 5.2, 21), 0x18181e, { ao: 0 });
+    C1.add('lambert', new THREE.PlaneGeometry(58, 13).rotateX(-Math.PI / 2).rotateZ(s * -0.5).translate(s * 39.5, 18.6, 28), 0x141418, { ao: 0 });
+    C1.add('lambert', box(1.2, 1.2, 62, s * 46, 25.6, 28), 0x222228, { ao: 0 }); // roof edge
     // floodlight towers at the corners
     // (pushed out to the bowl's far corners, outside the 24 mm wide: nothing bright under the caption or LIVE)
     for (const [tz, tx, top] of [[78, s * 56, 31]]) {
-      C0.add('lambert', box(0.8, top + 1, 0.8, tx, (top + 1) / 2, tz), 0x2a2a30, { ao: 0 });
-      C0.add('lambert', box(5, 3, 0.4, tx - s * 0.6, top + 0.5, tz), 0x1a1a1e, { ao: 0 });
+      C1.add('lambert', box(0.8, top + 1, 0.8, tx, (top + 1) / 2, tz), 0x2a2a30, { ao: 0 });
+      C1.add('lambert', box(5, 3, 0.4, tx - s * 0.6, top + 0.5, tz), 0x1a1a1e, { ao: 0 });
       for (let i = 0; i < 8; i++) {
         const lx = tx - s * 0.6 + (i % 4 - 1.5) * 1.1, ly = top - 0.2 + Math.floor(i / 4) * 1.4;
         glow.push({ x: lx, y: ly, z: tz - 0.3, c: [0.95, 0.95, 1.0], s: 2.8 });
@@ -469,9 +476,9 @@ function buildArena(scene, rows, P) {
       }
     }
   }
-  C0.add('lambert', new THREE.PlaneGeometry(32, 16.2).rotateX(-Math.PI / 2 + 0.46).translate(0, 5.2, 48.5), 0x18181e, { ao: 0 });
-  C0.add('lambert', new THREE.PlaneGeometry(80, 13).rotateX(-Math.PI / 2 + 0.5).translate(0, 18.6, 64), 0x141418, { ao: 0 });
-  C0.add('lambert', box(94, 1.2, 1.2, 0, 25.6, 70.5), 0x222228, { ao: 0 });
+  C1.add('lambert', new THREE.PlaneGeometry(32, 16.2).rotateX(-Math.PI / 2 + 0.46).translate(0, 5.2, 48.5), 0x18181e, { ao: 0 });
+  C1.add('lambert', new THREE.PlaneGeometry(80, 13).rotateX(-Math.PI / 2 + 0.5).translate(0, 18.6, 64), 0x141418, { ao: 0 });
+  C1.add('lambert', box(94, 1.2, 1.2, 0, 25.6, 70.5), 0x222228, { ao: 0 });
   // (no big screen: the user had the jumbotron with the performer's silhouette taken out, 2026-10-12. The side tier it
   // stood in front of is seated there instead. `screen` stays as an off-scene stand-in for the house-light hook.)
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x000000 }));
@@ -481,8 +488,8 @@ function buildArena(scene, rows, P) {
   const PAL_SUM = PALETTE.reduce((a, [, w]) => a + w, 0);
   const cloth = () => { let x = R() * PAL_SUM; for (const [h, w] of PALETTE) { if ((x -= w) <= 0) return new THREE.Color(h).multiplyScalar(0.45 + R() * 0.2); } return new THREE.Color(0x141416); };
   const list = [];
-  const AB = P.arenaAB || {};
-  ARENA.ab = { pills: !!AB.pills, pillImp: !!AB.pillImp };
+  const AB = AB0;
+  ARENA.ab = { pills: !!AB.pills, pillImp: !!AB.pillImp, fan9: !!AB.fan9 };
   // &ab=fewtiers: no upper ring and the lower tiers twelve rows deep (from eighteen): a diagnostic for the tiers' cost
   const push = (x, y, z, az, h, count) => { if (AB.few && (count === 2 || y > 1.4 + 11.5 * 0.42)) return; const c = cloth(); list.push({ x, y, z, az, r: c.r, g: c.g, b: c.b, h: h * (0.92 + R() * 0.16), w: 0.5, skin: R(), count, ph: R() * 1000 }); };
   const step = tv ? 0.62 : 0.55;
@@ -494,7 +501,7 @@ function buildArena(scene, rows, P) {
   for (let k = 0; k < 13; k++) for (let x = -38; x < 38; x += step * 2) push(x, 15.6 + k * 0.5, 58.6 + k * 0.92, 0.5 - x / 152, 1.0, 2);
   // the floor behind the 3D rows: a standing crowd
   const lastZ = rows.length ? rows[rows.length - 1].z : 3;
-  for (let z = lastZ + 1.5; z < 38; z += tv ? 0.7 : 0.62) for (let x = -14; x < 14; x += tv ? 0.66 : 0.6) push(x + (R() - 0.5) * 0.6, 0, z + (R() - 0.5) * 0.6, 0.5 - x / 60, 1.7 + (R() - 0.5) * 0.08, 1); // (±0.3 m, ±4 cm: not a grid)
+  for (let z = lastZ + 1.5; z < (AB.floor30 ? 30 : 38); z += tv ? 0.7 : 0.62) for (let x = -14; x < 14; x += tv ? 0.66 : 0.6) push(x + (R() - 0.5) * 0.6, 0, z + (R() - 0.5) * 0.6, 0.5 - x / 60, 1.7 + (R() - 0.5) * 0.08, 1); // (±0.3 m, ±4 cm: not a grid)
   const cam = new THREE.Vector3(...(ARENA.cam || ARENA_CAM).pos); // the sprites turn to face the wide camera (the look may move it)
   // &ab=spritesort: nearest the wide camera first, so a tile's nearer sprites write depth before the ones behind are shaded
   if (AB.sort) list.sort((a, b) => (a.x - cam.x) ** 2 + (a.y - cam.y) ** 2 + (a.z - cam.z) ** 2 - ((b.x - cam.x) ** 2 + (b.y - cam.y) ** 2 + (b.z - cam.z) ** 2));
@@ -505,10 +512,12 @@ function buildArena(scene, rows, P) {
     two.material.dispose(); two.material = sprites.material;
     scene.add(two);
   }
+  if (AB.nosprites) scene.traverse((o) => { if (o.name === 'sprites') o.visible = false; }); // (&ab=nosprites: no sprite crowd)
   const phoneList = list.filter((_, i) => i % 3 === 0);
   const ph = phones(phoneList);
   scene.add(ph);
-  const imp = AB.few && AB.imp ? impostors(impostorBlocks(), R, PALETTE, sprites.material.uniforms, ph.material.uniforms) : null;
+  if (AB.nophones) ph.visible = false;
+  const imp = AB.few && AB.imp ? impostors(impostorBlocks(AB.imphalf), R, PALETTE, sprites.material.uniforms, ph.material.uniforms) : null;
   if (imp) scene.add(imp);
   // beams from the stage roof
   const O = [-9, -5.5, -2, 2, 5.5, 9].map((x) => new THREE.Vector3(x, 13.5, -3));
@@ -521,11 +530,14 @@ function buildArena(scene, rows, P) {
   C0.build(scene, 'basic', new THREE.MeshBasicMaterial({ vertexColors: true }), 'room-emissive');
   const points = glowPoints(glow, glowTexture());
   scene.add(points);
+  if (AB.noglows) points.visible = false;
+  if (AB.nosky) sky.visible = false;
   const walls = screen; // the house-light hook dims/brightens this
   // per frame: beams, beat, wave, arms, bounce, phones, fill
   const animate = (now, room) => {
     const u = sprites.material.uniforms;
     u.uTime.value = now; beams.material.uniforms.uTime.value = now; ph.material.uniforms.uTime.value = now;
+    if (room.camPos) u.uCam.value.copy(room.camPos); // (the sprites turn to whichever camera the shot uses: the crane, the stands, the pit)
     u.uBeat.value = room.beat || 0; // crowd.js sets the beat only for singing and the preview
     // arms go up for cheers and the finale, never for a laugh; the bounce is for sung cheers only, on the beat
     let cheer = 0, laugh = 0, clap = 0;
@@ -554,8 +566,8 @@ function buildArena(scene, rows, P) {
     const close = room.shot && room.shot !== 'wide';
     // (in the stage look's close-up the sprites behind the 3D rows fall darker and into the haze, so they sit back as
     // a crowd instead of flat cut-outs)
-    u.uDim.value = close ? (ARENA.stageLook ? 0.11 : 0.25) : 1; u.uFace.value = close ? 0 : 1;
-    u.uMaskY.value = beams.material.uniforms.uMaskY.value = room.maskY || 0; u.uFogNear.value = close ? 2 : 20; u.uFogFar.value = close ? (ARENA.stageLook ? 10 : 14) : 170;
+    u.uDim.value = close ? (ARENA.stageLook ? 0.7 : 0.25) : 1; // (0.11 left the rail shots 62% near-black, at half the wide's mean luma) u.uFace.value = close ? 0 : 1;
+    u.uMaskY.value = beams.material.uniforms.uMaskY.value = room.maskY || 0; u.uFogNear.value = close ? 6 : 20; u.uFogFar.value = close ? (ARENA.stageLook ? 70 : 14) : 170; // (the stage look's rail shots keep the floor and the stands behind: at 10 m they were a black top third)
     ph.material.uniforms.uOn.value = room.finale ? 0.25 + 0.5 * room.finale.strength : room.act === 'singing' ? 0.25 : room.mode === 'preview' ? 0.12 : 0.04;
     if (ARENA.stageLook) { u.uFall.value = ARENA.stageLook.spriteFall; ph.material.uniforms.uOn.value = Math.max(ph.material.uniforms.uOn.value, ARENA.stageLook.phonesOn); } // &look=stage
     const pulse = 0.75 + 0.25 * Math.sin(now * 0.9);
@@ -572,7 +584,7 @@ export const ARENA = {
   performer: [0, 3.5, -2.6], cam: ARENA_CAM,
   cast: ['Female_Adult_02', 'Male_Adult_06', 'Female_Adult_04', 'Male_Adult_07', 'Female_Adult_12', 'Male_Adult_10'], standingCrowd: true, stadium: true, beat: 1.5,
   fog: { color: 0x06070d, wide: [14, 170], close: [2.6, 7.5], heckler: [2.6, 7.5] },
-  closeDim: 0.15, // the standing rows right behind the pair go to silhouettes
+  closeDim: 0.7, // the standing rows right behind the pair stay lit (0.15 left the rail shots at half the wide's brightness; look.js has the stage look's value)
   exposure: { wide: 1, close: 0.9, heckler: 0.9 },
   grade: { wb: [0.97, 1, 1.04], sat: 0.9, lift: [0.001, 0.002, 0.006] },
   light: {

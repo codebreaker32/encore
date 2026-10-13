@@ -1,0 +1,80 @@
+{
+ "file": "crowd-club.mp3",
+ "sampleRate": 44100,
+ "totalSec": 7.15,
+ "firstAudibleSample": 13525,
+ "clips": [
+  {
+   "id": "thump-0",
+   "src": "freesound-507939",
+   "kind": "thump",
+   "start": 0.25,
+   "dur": 0.6,
+   "startSample": 11025,
+   "samples": 26460
+  },
+  {
+   "id": "thump-1",
+   "src": "freesound-507940",
+   "kind": "thump",
+   "start": 1.15,
+   "dur": 0.6,
+   "startSample": 50715,
+   "samples": 26460
+  },
+  {
+   "id": "thump-2",
+   "src": "freesound-548622",
+   "kind": "thump",
+   "start": 2.05,
+   "dur": 0.55,
+   "startSample": 90405,
+   "samples": 24255
+  },
+  {
+   "id": "thump-3",
+   "src": "freesound-548622",
+   "kind": "thump",
+   "start": 2.9,
+   "dur": 0.55,
+   "startSample": 127890,
+   "samples": 24255
+  },
+  {
+   "id": "thump-4",
+   "src": "freesound-548622",
+   "kind": "thump",
+   "start": 3.75,
+   "dur": 0.55,
+   "startSample": 165375,
+   "samples": 24255
+  },
+  {
+   "id": "thump-5",
+   "src": "freesound-548622",
+   "kind": "thump",
+   "start": 4.6,
+   "dur": 0.55,
+   "startSample": 202860,
+   "samples": 24255
+  },
+  {
+   "id": "thump-6",
+   "src": "freesound-151897",
+   "kind": "thump",
+   "start": 5.45,
+   "dur": 0.55,
+   "startSample": 240345,
+   "samples": 24255
+  },
+  {
+   "id": "thump-7",
+   "src": "freesound-151897",
+   "kind": "thump",
+   "start": 6.3,
+   "dur": 0.55,
+   "startSample": 277830,
+   "samples": 24255
+  }
+ ]
+}

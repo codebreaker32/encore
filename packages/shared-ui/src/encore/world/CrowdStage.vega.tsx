@@ -69,6 +69,8 @@ export function CrowdStage({
       setEpoch((n) => n + 1);
     } else if (report.type === 'thumb') {
       if (thumbRef.current) thumbRef.current(report.key, report.uri);
+    } else if (report.type === 'load') {
+      console.log(`[crowd] page ${typeof report.line === 'string' ? report.line : ''}`);
     } else if (report.type === 'audio') {
       // With the stage on, the page is the room's only sound (CrowdSound renders no players), so its state matters.
       console.log(`[crowd] audio ${report.state}`);

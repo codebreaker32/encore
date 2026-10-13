@@ -392,7 +392,11 @@ describe('content in a live set', () => {
     );
     // The room decided because the next line began: that is not the model being late.
     expect(resumed.judged[0]).toMatchObject({ lineId: 1, candidate: true, judge: 'early' });
-    expect(resumed.judged[0].why).toMatch(/your next line came before the MC's model answered/);
+    expect(resumed.judged[0].why).toMatch(/the room decided before the MC's model answered \(your next line/);
+    // The set ends before the estimate's deadline: early too, so the cut sheet never counts it as the model late
+    // (seen on the Google TV, 2026-10-13: "8 in time, 1 late" where every verdict had arrived in its window).
+    const ended = apply(start(true), { type: 'tick', now: 3.1 }, { type: 'finish', now: 3.2 });
+    expect(ended.judged[0]).toMatchObject({ lineId: 1, candidate: true, judge: 'early' });
   });
 
   it('asks the judge only with words on, a spoken act and text, with up to three earlier lines', () => {

@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import {
   PERSONAS,
+  VENUE_IDS,
   cutSheet,
   getVenue,
   ledgerRows,
@@ -34,6 +35,13 @@ export function silentSentence(reason: McUnavailableReason): string {
 
 export function nextWords(next: 'again' | 'up' | 'down'): string {
   return next === 'up' ? 'go up a room' : next === 'down' ? 'go down a room' : 'go again here';
+}
+
+/** The action line's verb for the room OK goes to: the same room, or up or down the ladder (the selection moves with
+ * the MC's advice, so "go again" was wrong whenever it had moved, seen on the TV 2026-10-13). */
+export function moveWords(from: VenueId, to: VenueId): string {
+  const d = VENUE_IDS.indexOf(to) - VENUE_IDS.indexOf(from);
+  return d === 0 ? 'go again at' : d > 0 ? 'go up to' : 'go down to';
 }
 
 /** The house rule for the next room, as a measurement (not MC prose): see `measuredNext` in @strumble/crowd. */
@@ -286,7 +294,7 @@ export function CutSheetScreen({
         <Text style={styles.nextLine}>
           {up('Press ')}
           <Text style={styles.nextKey}>OK</Text>
-          {up(` to go again at the ${next.name}`)}
+          {up(` to ${moveWords(config.venue, nextVenue)} ${next.house}`)}
         </Text>
         <Text style={styles.nextSmall}>
           Back · green room · Up/Down · change venue

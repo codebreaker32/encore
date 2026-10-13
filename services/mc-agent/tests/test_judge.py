@@ -60,6 +60,13 @@ def test_parse_clamps_and_rejects_a_partial_verdict():
             judge.parse("standup", raw)
 
 
+def test_an_answer_cut_off_by_the_token_cap_keeps_its_numbers_and_drops_the_reason():
+    raw = '{"imagery": 0.9, "sound": 0.85, "turn": 0.7, "reason": "vivid monsoon imagery with a quiet tur'
+    assert judge.parse("poetry", raw) == ({"imagery": 0.9, "sound": 0.85, "turn": 0.7}, None)
+    with pytest.raises(ValueError):  # cut off before every number arrived: still no verdict
+        judge.parse("poetry", '{"imagery": 0.9, "sound": 0.8')
+
+
 def test_a_reason_with_a_number_is_dropped_and_a_long_one_trimmed():
     assert judge.parse("standup", '{"punch": 1, "surprise": 1, "reason": "3 laughs at least"}')[1] is None
     long = "word " * 30

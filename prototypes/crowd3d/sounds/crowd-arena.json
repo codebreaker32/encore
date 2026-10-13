@@ -1,0 +1,76 @@
+{
+ "file": "crowd-arena.mp3",
+ "sampleRate": 44100,
+ "totalSec": 34.35,
+ "firstAudibleSample": 11408,
+ "clips": [
+  {
+   "id": "roar-0",
+   "src": "freesound-397434",
+   "kind": "roar",
+   "level": 0.9,
+   "start": 0.25,
+   "dur": 5,
+   "startSample": 11025,
+   "samples": 220500
+  },
+  {
+   "id": "roar-1",
+   "src": "freesound-397434",
+   "kind": "roar",
+   "level": 0.9,
+   "start": 5.55,
+   "dur": 5,
+   "startSample": 244755,
+   "samples": 220500
+  },
+  {
+   "id": "roar-2",
+   "src": "freesound-397435",
+   "kind": "roar",
+   "level": 0.9,
+   "start": 10.85,
+   "dur": 5,
+   "startSample": 478485,
+   "samples": 220500
+  },
+  {
+   "id": "roar-3",
+   "src": "freesound-645337",
+   "kind": "roar",
+   "level": 0.85,
+   "start": 16.15,
+   "dur": 5,
+   "startSample": 712215,
+   "samples": 220500
+  },
+  {
+   "id": "roar-4",
+   "src": "freesound-645337",
+   "kind": "roar",
+   "level": 0.85,
+   "start": 21.45,
+   "dur": 5,
+   "startSample": 945945,
+   "samples": 220500
+  },
+  {
+   "id": "whistle-5",
+   "src": "freesound-764029",
+   "kind": "whistle",
+   "start": 26.75,
+   "dur": 3.5,
+   "startSample": 1179675,
+   "samples": 154350
+  },
+  {
+   "id": "whistle-6",
+   "src": "freesound-764029",
+   "kind": "whistle",
+   "start": 30.55,
+   "dur": 3.5,
+   "startSample": 1347255,
+   "samples": 154350
+  }
+ ]
+}

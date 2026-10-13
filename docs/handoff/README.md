@@ -1,5 +1,84 @@
 # Handoff: end of 2026-10-12 (about 16:10 UTC / 21:40 IST)
 
+## Evening wrap-up (about 19:00 UTC / 00:30 IST, Wed 14 Oct)
+- **The TV has APK r** (`~/.cache/encore-apk/encore-release-2026-10-13-r.apk`): q plus app-side `[crowd] page load start` and `[crowd] page …` load-breakdown logging. Encore is closed on the TV.
+- **Black screens** (report: `docs/android-emu/black-2026-10-13/report.md`):
+  - **Bill and launch:** `stageGate.ts` keeps the plate up until a page built for the wanted venue is ready. Verified on the TV: the plate shows from 3.5 s.
+  - **Venue changes:** one reload per change (700 ms settle). The new room is ready 4.5–7 s after the key on the TV, with the plate meanwhile.
+  - **Intro card:** shown over the plate.
+  - **Renderer loss:** remounts the stage.
+  - **The user's "black after a laugh"** was the Theatre fly-gallery wide lit as a close-up. Fixed by the crowd agent, plus a brightness gate (every setup at least 0.9 × its venue's wide).
+  - **Right/bottom edge bands:** fixed (the stage fills each axis).
+  - **Mid-set camera:** placed at once.
+  - **Still to do:** the 2-frame plate blip on venue keys; prefetch the plates.
+- **Load on the TV (no screen recording; screenrecord inflates everything):**
+  - the 3D room shows about 14.4 s after launch (app about 4.7 s, page 10.8 s on APK r);
+  - the crowd agent's later pack draws the room first, prefetches, and builds the front people after the first frame. It isn't measured on the TV yet.
+- **Theatre set on APK r:** judge 40/41 in time; voices fine; fps p50 17, p10 15. The theatre wide stays very dark (70–80% near-black). The user said "display is not full"; not clarified yet.
+- **MC venue names:** `personas.py` still had Prithvi, Wankhede and Toastmasters' Hall, and the MC said "Prithvi" on a card. They now match the packs. The new test `tests/test_houses_in_step.py` fails on any drift, and the MC on the build box was restarted.
+- **Vanishing hands** (`tools/render/handocc.mjs`):
+  - **Theatre:** fixed with lower armrests.
+  - **Open mic and arena:** 0 flickers.
+  - **Club:** in progress. Tables were moved closer (0.47) and the glasses moved to the outer sides; the motion agent owns the next step (top radius 0.31 → 0.40 in `venue.js cabaretTables`, lap hands under the top). The crowd agent holds off venue.js until that merges.
+  - **Checkpoint club4: not merged.** The WIP is in `~/encore-motion-wip-club4.tgz` and the box's `~/m/stage`: TABLE_R 0.40, TABLE_D 0.40, glasses ±0.32.
+  - **Knee hands under the top: 588 flickers.** The knees push the hands up through the near edge.
+  - **Plan B: both hands resting on the table top: 37 flickers.** **Approved by the user (2026-10-14):** club sitters rest their hands on the table top. Next:
+    1. bring the remaining 37 flickers (hands dipping in turn and shake) to 0;
+    2. run anatomy, handsweep and bindcheck, plus a by-eye check;
+    3. merge;
+    4. the crowd agent re-runs its brightness and edge checks.
+  - Three sitters' knees are still under 10 cm into the top.
+- **Motion s19 merged:**
+  - head-to-neighbour contact check;
+  - laugh styles don't repeat;
+  - seated-leg caching: Person.update about 8.2 ms at 8× (target 6, not met);
+  - anatomy, handsweep and bindcheck at 0.
+- **1080p filming:** a 16-vCPU Mumbai quota request is pending for our account (request id 63a2e593…). The friend's account was dropped; the user is undoing its role and image share.
+- **AWS CLI:** it failed at the end with a login-cache error (`'4b85d1cc…'`). Run `aws login` before any box work. The agents reached the build box by IP (15.206.68.78); the boxes stop themselves after 45 idle minutes.
+- **Nothing committed since `1222f9d`:** 97 files changed.
+
+## Afternoon update (Tue 13 Oct)
+- **Demo filming stays at 720p** on the Android TV emulator in our account (28–29 fps measured). For 1080p, a 16-vCPU box (`c7i.4xlarge`, nested virtualisation) is needed:
+  - Our Mumbai standard-vCPU quota is 8.
+  - New quota requests are blocked by two open Bedrock Claude Haiku cases; the user is closing them, then request 16 in ap-south-1.
+  - A friend's account (with a 16 quota) was tried and dropped. The safety checks block operating there, and the user is undoing the role and the share.
+- **The emulator image is copied to Mumbai:** `ami-0ebb22a63ccee7cf2` (from `ami-036f586604f7ea3f7`, snapshot `snap-0a6c54c49c98230f1`, unencrypted, 120 GB).
+- **Black screens on the real TV (APK o):**
+  - the bill is plain black (not the plate) until the page's first ready, which took 77 s, likely the sound pool decoding;
+  - every venue change is black for 7–8 s until the next ready.
+
+  The fixes are with the crowd agent (page) and the black-screen agent (shell). The crowdtest recordings had no black frames.
+- **Motion s18 is merged and packed:**
+  - anatomy, handsweep and bindcheck at 0;
+  - per-person and per-venue laughs;
+  - `laughCast()`;
+  - 9 face shapes.
+
+  The JS reduction didn't hold (page JS level with s17).
+
+## Morning update (04:50 UTC / 10:20 IST, Tue 13 Oct)
+- **The TV has APK n** (`~/.cache/encore-apk/encore-release-2026-10-13-n.apk`): m plus arena motion v1. Encore is closed on the TV.
+- **Round 6 sweep** (APK m; `~/.cache/encore-tv/round6-results.txt`):
+  - club cycle 20–21 fps (p50 43 ms); club listen 25; open mic 21–24; theatre 21.
+  - **The arena is 12–17 fps** (p50 55–69 ms, p90 101–158) and GPU-bound (cpu p50 23–29 ms). The pill variants are no faster, so the arena itself is the cost. rows3 trims p90 to 101 ms.
+- **Words-on club set on APK n:**
+  - judge 39/41 in time (p50 308 ms, p90 483);
+  - set fps p50 19, p10 16;
+  - intro voiced +330 ms, debrief voiced (10.7 s);
+  - no crash or black screen in the logs.
+- **The user's feedback, given to the agents:**
+  - Laughs look the same in every venue and every time. The cause is that everyone shares 3 Rocketbox laugh families × 2 genders.
+  - **The motion agent's task 5:** a per-person repertoire of 3–5 takes, per-laugh casting by strength, a laugh character per venue, faces matched to the take, and a `laughCast()` getter for the sound pass.
+  - **The crowd agent, in order:**
+    1. 8–10 reaction setups per venue with a coverage style per venue, never one of the last 3, sizes varied;
+    2. laugh sounds per venue and per laugh, following the cast;
+    3. arena speed (round 7 A/B switches).
+- **Caution: the crowd agent's half-done camera work is in the laptop tree, unpacked and partly unverified.** That's `prototypes/crowd3d/director.js` (new: 9 setups per venue, never one of the last 3, varied sizes, holds per venue) plus its `crowd.js` changes (`&ab=oldsetups` gives the old six). Finish and verify it before the next APK build: an APK built now would include it. The backup is `~/encore-crowd-wip-1013.tgz`.
+- **On the build box:**
+  - the relay and the MC were started for the TV (`~/svc/`);
+  - the laptop tunnel is `~/.cache/encore-tv/tunnel.sh`;
+  - stopped at wrap-up.
+
 ## Late update (21:05 UTC / 02:35 IST, Tue 13 Oct)
 - **New APK m** (not yet on the TV): `~/.cache/encore-apk/encore-release-2026-10-12-m.apk` for the TV, and `-m-emu.apk` for the emulator. It contains the 7 emulator-QA fixes, the arena faces (v2), crowd shouts, and the club wide back on its lighter model. Install it on the TV in round 6.
 - **The launch-ANR fix is verified on the emulator.** `useStageMount` mounts the stage after the bill has painted. Test: launch with the WebView's files cold and the disk capped at 3 MB/s (a cgroup cap; `~/emu/coldtest.sh` and `coldab.sh` on BOX=android), pressing D-pad keys at +2 s and +8 s:

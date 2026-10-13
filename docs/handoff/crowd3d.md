@@ -284,3 +284,325 @@ from the box copy (below) and show what is waiting, not what ships.
   `node dbg2.mjs <base> <venue> <state> t:Name,...` (per-stage elbow trace).
 - Rebuild the TV shapes: in `~/m/fx` (node_modules is a symlink to ~/m/after/node_modules), run
   `node tools/anim/tv_morphs.mjs`.
+
+## 2026-10-13 (morning): per-venue laugh coverage, per-venue laugh sound, arena round 7 switches (packed)
+
+**Camera cuts**
+- `director.js`: each venue has 9 reaction setups (camera poses only) and its own pacing (`PACE`):
+
+  | Venue | Close hold | Wide hold |
+  | --- | --- | --- |
+  | club | 4.5 s | 8 s |
+  | open mic | 5.5 s | 9 s |
+  | theatre | 6.5 s | 11 s |
+  | arena | 5 s | 8.5 s |
+
+- `pickSetup` rules:
+  - never one of the last 3;
+  - laughRank, damped for people featured in the last 4 cuts;
+  - unused setups first;
+  - a change of shot size;
+  - big laughs only lean to the house setups.
+- `crowd.js`:
+  - per-setup light (`lit`: close or wide), with every front person in frame lit;
+  - per-setup fog;
+  - track, roll and drift;
+  - wide variants from the venue's wide setups.
+- The arena sprites now turn to the live camera (`room.camPos`).
+- Strips: `docs/mockups/laugh-cuts-v1-{club,openmic,theatre,arena}.png`, 8 consecutive laugh cuts each, 7 distinct setups per venue. Built with `tools/render/laughcuts.sh`; `tools/render/setupsheets.sh` shows every setup.
+- Costs are unchanged: the build follows the wide and the close-lit setups only.
+
+**Sound**
+- New packs, built by `tools/build_pool.mjs --voices <dir>`:
+  - `sounds/crowd-voices` (32 single laughs: f/m × roar, giggle, exhale);
+  - `sounds/crowd-{club,theatre,arena,openmic}` (thumps; theatre chuckles and applause; arena roar and whistling; open mic sparse room);
+  - all licences checked per clip on 2026-10-13, credited in `sounds/CREDITS.md`, with the CC BY names added to the bill line in `BillScreen.tsx`.
+- `sound.js` `VENUE_SOUND`: per-venue reverb, crowd layer counts, voice range and touches.
+- Voices follow the cast, from `castFn` = `laughCastNow()` in crowd.js: `PEOPLE.laughCast()` or `window.__laughCast()` when the motion agent's getter lands, else an estimate of the same shape.
+- No clip or layer set from the last 3 laughs is reused.
+- `feature()` puts a matching voice forward 0.6–2.5 s into a reaction shot whose laugher scores ≥ 0.45.
+- Renders: `docs/mockups/laugh-venues-v1-<venue>.mp3`, via `tools/render/laughvenues.sh`.
+- Extra decoded audio is about 100 s (about 20 MB at 48 kHz).
+
+**Arena round 7**
+- Switches and rows are in `tools/render/tv-sweep.md` "Round 7: arena", including the overdraw findings and the tri table.
+- Shaded overdraw is 1.19 per pixel, so the cost is triangles and shaders, not fill.
+- `fan9` cuts the sprites from 60k to 36k triangles, with aliveprobe at 0.50.
+- `tools/render/overdraw.mjs` measures overdraw; `tools/render/packcheck.mjs` checks the packed build from file://.
+
+**Pending**
+- The TV run of round 7.
+- When laughCast merges, check that the voices follow it (`window.__mixes()` shows `cast.named`).
+- Arena candidates still to build if the TV points at them: a half-res far-stands pass, floor impostor strips.
+
+## Motion agent: s18 MERGED (2026-10-13, about 14:45 UTC; not committed)
+- **In the shared tree now:**
+  - people.js, anatomy.js and instances.js;
+  - tools/render/{anatomy, limbstats, limbsheet, facesheet, laughsheet}.mjs;
+  - tools/anim/tv_morphs.mjs;
+  - people/*.tv.glb (9 shapes).
+- **Backup:** the s17 versions are in `~/encore-premerge-s17/` on the laptop, and the overlay in `~/encore-motion-s18.tgz`.
+- **Verified on s18:**
+  - anatomy 0 in all four venues, limb rules included;
+  - handsweep 0 of 20 runs;
+  - bindcheck: no one in the bind pose;
+  - loadcheck clean;
+  - `pack --tv` (18.0 MB) loads from file:// in all four venues with no errors;
+  - laughCast is exported and resolves for crowd.js's `PEOPLE.laughCast`.
+- **Rule fixes made in the final pass:** these false positives were fixed in the rule, not by raising thresholds.
+  - The elbow tucked-behind and winged rules skip people walking, sitting down or standing up, whose arms swing behind the body. In those states fixArms only keeps the elbows out of the body. Frames that showed it:
+    - club after t=44.5 (F13);
+    - theatre preview t=20 (F03);
+    - theatre after t=36.5 and 38.5 (F17), t=40.5 (F04);
+    - open mic after t=34.5 (M12), t=38.5 (M04).
+  - The chair-in-front check measures only at the chair's back (−0.4 < z < −0.1 in that chair's frame). It uses the chair's home seat when its owner is up, and only for seated people. Frames that showed it: theatre after t=10.5, open mic after t=28.5.
+- **Pose fixes in the final pass:**
+  - unreachable rest targets are drawn in to 95% of the arm;
+  - the table hand is used only within 92% of the arm;
+  - the elbow guard is off during claps and in traffic;
+  - claps are 5–8 mm wider (more for the low clap and when standing);
+  - two-handed phone hands sit 8 mm further apart.
+- **8×, box quiet:**
+
+  | Build | Person.update p50 / p90 | page JS p50 / p90 |
+  |---|---|---|
+  | s17 | 8.9 / 19.1 ms | 20.0 / 32.7 ms |
+  | s18 | 9.8 / 16.7 ms | 20.3 / 32.1 ms |
+  | s18 with 8 shapes | 9.6 / 18.4 ms | 20.5 / 34.0 ms |
+  | a6 | 4.9 / 10.3 ms | 15.9 / 25.0 ms |
+
+  - The 9th shape costs nothing.
+  - A full pose costs 0.26 ms against s17's 0.19 (bench.mjs, stepped). The live holds win that back, so page JS is level with s17. The 6–7 ms target is **not** met.
+  - Next: cache the seated leg fixes and the elbow guard between calls, since the seated legs barely move.
+- **Sheets:** rendering on the box into `~/sheets/{limbs,faces,laughs}`, to be copied into docs/mockups as limbs-v1-*, faces-v1-* and laughs-v1-*.
+
+## 2026-10-13 (afternoon): APK o fixes (packed)
+
+- **Right-edge band.** The page background showed down the right because the WebView's viewport in the app is wider
+  than 16:9: reproduced at 1018×541 css, where the APK o pack leaves a 74 px band (5.5%). `fitStage` (crowd.js) and
+  an inline copy in `index.html` now scale each axis on its own when the viewport is within 12% of 16:9, refit every
+  2 s and on visualViewport resizes, and the stats message carries `view` and `fit`.
+  - Proof: `tools/render/edgecheck.mjs` and `edgeall.sh` cover the bill, the wide, every setup and the cut sheet in all
+    4 venues at 962×541 and 1018×541. Every frame reads band 0. Sheet: `docs/mockups/edge-fill-v1.png` (top row: APK o).
+  - The bill's credit line also had no right edge (it ran off screen); it now wraps (`BillScreen.tsx`, `right: edge.x`).
+- **Audio after the first frame.**
+  - `sound.js` decodes nothing until crowd.js calls `sound.go()` 0.8 s after the first frame, then one file at a time
+    with pauses: sprite, pool, shouts, this venue's pack, voices. Cues play from whatever is decoded so far.
+  - The context runs at 32 kHz: decoded audio is 36.1 MB in all, against about 54 MB at 48 kHz. `window.__audioMB()`
+    reports it.
+- **Venue change.** The page still reloads, but the last frame of the old room is kept in sessionStorage
+  (`encore-hold`), shown as `#hold` by an inline script before the bundle parses, and removed at the new room's first
+  frame. On the box at 8× the next room was ready in 5.9 s, against 9.8 s before, with the held frame on screen the
+  whole time.
+- **Dark setups.** `tools/render/setupsheet.mjs` (`lumaall.sh`) reports mean luma and the share of near-black pixels for
+  every setup and state.
+  - Changes:
+    - the theatre's high wides and side angles get the spill opened wider (`keyWiden`, a setup field), and were re-aimed;
+    - the composed mid is lit like a close-up;
+    - the stage lip's bright line is gone from the side angles;
+    - the arena's close-up sprite dim goes from 0.11 to 0.18;
+    - in preview the key is at 0.45 instead of 0.12.
+  - The stage-look wides are about 0.06–0.07 mean with 55–57% near-black, by design. Every setup is now at or above its
+    venue's wide.
+- **Sound cast.** It now reads `laughCast()` from people.js. The TV's cue plays at once (the reaction's timing is
+  measured), with the voice count from its strength. The cast's own voices (`sound.castArrived`: count, genders,
+  laugh types) join when the people first see the reaction, usually a frame later. The standalone demo reads the cast
+  with the cue, since it is decided in the same frame.
+- **Sheets (s18, in docs/mockups):**
+  - limbs-v1-<Avatar>.png for all 12 avatars: avatar-view states and the rest poses, plus a front and side tile in each venue. Arena tiles are included; their front views are partly hidden by the barrier panel.
+  - faces-v1-<Avatar>.png for all 12, plus faces-v1-temperaments.png.
+  - laughs-v1-{openmic,club,theatre,arena}.png: four laughs at strengths 0.5, 0.9, 0.7 and 0.9, the room's wide view and one person close. Plus laughs-v1-venues.png, one big laugh per venue side by side.
+  - The cast shares at 0.5 / 0.9: open mic 0.28 / 0.38, club 0.31 / 0.78, theatre 0.34 / 0.70, arena 0.39 / 0.86.
+- **Known, not fixed:**
+  - Open mic laugh 4 (laughs-v1-openmic, close tile): Male_Adult_06 throws his head back while the neighbour turned towards him, and their heads and shoulders overlap. There is no head-to-neighbour check yet; it needs a new rule plus a fix.
+  - limbs-v1-Female_Adult_03, open mic tile with preset=high (the tv cast doesn't include her): one "knees through each other". The high preset isn't swept.
+  - A take's "doubled over" is demoted to "head back" on a laugh that isn't big, so two consecutive laughs can show the same style even though the take changed.
+  - The JS target isn't met (see above).
+
+## 2026-10-13 (evening): black-screen hunt fixes and load timing (packed)
+
+- **#2, house setups lit as the wide.** A setup with no front people of its own (the theatre's high wides and composed
+  mid, the arena's house shots) is lit as the wide, keeping the reaction shot's wider spill (`houseShot`, `litNow`).
+  - The arena's close-ups keep the floor and the stands: sprite fog to 70 m, sprite dim 0.7, closeDim 0.7 in look.js.
+    Before, the rail shots had a black top third.
+  - The pit shot was re-aimed.
+  - `setupsheet.mjs` now gates on brightness: every setup's mean luma must be at least 0.9 × its venue's wide, measured
+    at t 2.0 in a laugh. `lumaall.sh` runs it for all venues and states.
+- **#4, page loaded mid-set.** `hostShot` cuts at once when no shot is set yet; the camera was at the origin under the
+  floor. `tools/render/resizecheck.mjs` covers this and a WebView resized after load (no band at any edge).
+- **#5.** The bands at all four edges are 0 px in all venues at 962×541 and 1018×541 (`edgecheck.mjs`, `edgeall.sh`).
+- **Load timing.**
+  - At the third frame the page posts a `[crowd] load …` line: phase marks in seconds since start (script, setups,
+    venue geometry, front glbs, front people and textures, room built, scene ready, shaders compiled, first frame,
+    third frame) and each GLB's fetch and parse.
+  - It goes to the console and to the host (`type: 'load'`, and `load` on the ready message). `window.__load()` has
+    the raw numbers.
+  - The audio decode posts its own `[crowd] load audio …` line.
+  - The motion clips now load in parallel with the room, and the crowd atlas in parallel with the front GLBs.
+- **Prefetch and streamed front people (later the same evening).**
+  - `people/prefetch-tv.json` lists each venue's GLBs and crowd textures, room first and front `.tv.glb` last. It is
+    generated by `tools/render/manifest.mjs` on the box; re-run it when casts, bands or files change.
+  - On preset=tv the page fetches the whole list from script start, five at a time. Every `load()`, the atlas and the
+    alpha take their bytes from that one map, so nothing is fetched twice; the map is cleared once the front people are
+    in.
+  - Live tv pages draw the room first. `addFront` builds the front people when their files arrive, compiles them off
+    the scene, then shows them and reapplies the shot light; `document.body.dataset.front = '1'` marks it. Capture,
+    still, the low and high presets and `&frontfirst` keep the old order. `&noprefetch` turns the prefetch off.
+  - Box at 8×, club: first frame 4.5–5.4 s against 5.8 s on APK o; the front people are in by 4.5–5.8 s. A venue
+    change is ready in 4.9–5.2 s against 9.8 s. The `.tv.glb` files parse in 1.3–1.5 s each at 8×.
+- **Bills.** `previewKey` and `previewWiden` (venue fields) set the stage key and spill while the room fills.
+  - Theatre: key 0.8, widen 2.6, and `hemiHouse` 3.6, which takes its bill from 0.047 to 0.072 mean luma.
+  - Club: widen 2.2, from 0.059 to 0.071.
+  - Open mic 0.101 and arena 0.125, unchanged.
+- **AWS.** The laptop's AWS token expired at about 16:20 UTC, so encore-box.sh can't find the box. Its IP was
+  15.206.68.78; ssh with the usual key until the login is renewed.
+- **Off the critical path (after the APK r TV line, where the room showed 10.0 s from script start).**
+  - The front people's `.tv.glb` parses wait until after the first frame and run one at a time, with a frame between.
+  - The club's close-up lod copy (`addLod`) is built after the first frame too, compiled off the scene.
+  - Finer marks: `crowd types N` (parse and bake) and `crowd built N`, plus summed `crowd bake` and `crowd build` times.
+  - Box at 8×: first frame 3.0 s from script start (club) and 3.5 s (arena); front people in by 5.4–5.5 s; venue change
+    ready in 4.6 s. With the parses no longer interleaved, the summed parse is 1.6 s instead of 8 s, so the TV's
+    2.5–4.6 s per file was largely contention.
+
+## Motion agent: s19 MERGED (2026-10-13, about 17:00 UTC; not committed)
+Merged on top of the crowd agent's pack: people.js, anatomy.js and tools/render/anatomy.mjs, plus the new tools/render/secbench.mjs.
+
+**What's in it**
+- **Heads and shoulders between neighbours:**
+  - Check: `headContact` in anatomy.js. Heads must stay 2 cm apart at their fitted radii, and a head must stay out of a neighbour's torso sections widened by 0.8 of the head's radius. Findings are flagged as "head against …" in the limbs rules.
+  - Fix: `clearHeads` runs after the spine clamps and tips the upper body away at Spine1, up to three steps. The legs hang from Spine, so they don't move.
+  - The open mic laugh-4 case (Male_Adult_06) now reads clear, and the head check finds nothing in any venue on tv.
+- **Laugh styles:** when a downgrade ("doubled over" → "head back", nose or giggle → roar on a big laugh) lands on the person's previous style, the next style their repertoire allows here is used instead.
+- **Seated legs:**
+  - The leg passes are worked out on one call in four and held between (`_legC`). Stepped views compute every call.
+  - Knees stay at least 12 cm apart, centre to centre (each thigh turned out at the hip). This removed the high preset's "knees through each other": theatre 291 → 0, open mic 86 → 4.
+- **Debug switch:** `&sec=1` records per-section timings of Person.update in `window.__sec`; `tools/render/secbench.mjs` reads them.
+
+**Validators on s19 (tv)**
+- Anatomy: 0 in all four venues.
+- Handsweep: 0.
+- Bindcheck: no one in the bind pose.
+- Pack: `pack --tv` loads from file:// in all four venues with no errors.
+
+**High preset, swept once.** It is not the TV's preset and was never swept before: 133 findings.
+
+| Venue | Findings | Mostly |
+|---|---|---|
+| Theatre | 55 | legs and arms into neighbours, which sit closer with 12 front avatars; 4 "head against" |
+| Open mic | 61 | 24 asymmetric elbows, 13 floating hands, legs through neighbours |
+| Arena | 10 | barrier, own torso |
+| Club | 7 | own thigh, legs through neighbours |
+
+**JS (8×, club, box quiet)**
+
+| Build | Person.update p50 / p90 | Page JS p50 / p90 |
+|---|---|---|
+| s17 | 9.1 / 16.0 ms | 20.4 / 31.1 ms |
+| s18 | 8.7–10.0 / 17.1–17.6 ms | 20.3–20.6 / 32.5–33.4 ms |
+| s19 | 8.2–8.3 / 16.4–16.6 ms | 19.1–19.6 / 29.5–33.4 ms |
+| a6 | 4.6 / 6.4 ms | 15.8 / 22.7 ms |
+
+- Live listen, unthrottled: 0.80 ms of update a frame, against 0.95 for s18 and 1.03 for s17.
+- **The 6 ms target is not met.** Where a full pose goes (secbench, µs a call, listen):
+
+  | Section | µs |
+  |---|---|
+  | armFix (the anatomy pass) | 31 |
+  | body (lean, eulers and the full matrix update) | 20–23 |
+  | legs (still computed every call in stepped views; cached live) | 18–25 |
+  | IK and gestures | 12–14 |
+  | spine clamps | 8 |
+  | face | 7–8 |
+  | matrices | 5–7 |
+  | clip | 6–8 |
+
+- Next levers:
+  - extend the arm-fix reuse to people laughing, with a 2–3 call hold for slow parts;
+  - avoid the full `rig.upd(model)` at the body step (update only the spine chain);
+  - hold the face at 10 Hz while it is calm.
+
+## Motion agent: "a hand vanishes" (TV, theatre), 2026-10-13 ~17:40 UTC
+- **Cause: the theatre seats' armrests occlude the hands.** venue.js `SEAT_GEOS.theatre` has armrests 0.22 m tall at y 0.56, so their tops are at 0.67 m. A resting hand on the thigh sits at about y 0.62 and |x| 0.10–0.13. From the low, side-on close-ups the armrest top cuts the line of sight to the hand. A laugh or clap moves the hand 1–3 cm, so it pops in and out between consecutive frames.
+- **Ruled out:**
+  - Frustum culling: every skinned front and mid mesh is `frustumCulled = false`. The hands are part of the body mesh, not separate meshes or primitives in the .tv and .lod GLBs.
+  - The near plane: it's 0.05 m, and the nearest camera-to-hand distance over all director setups is 1.37–1.87 m.
+  - Broken bones: `handvanish.mjs` read every front bone on every frame of the live page (cycle and after, four venues) and found no non-finite matrices or torn hands.
+- **Measured** with `tools/render/handocc.mjs`: rays from every setup camera to every front palm, every 0.1 s, through a laugh, a clap and the finale.
+  - Theatre: 176 of 22,800 samples hidden, 8 hidden-between-visible flickers. Setups: along the front row from house left and right, the stalls two-shot, the high wide from the stage box.
+  - Club: 87 flickers. These are hands passing under the table top's edge, which is real occlusion.
+  - Arena: the barrier panel, which is intended.
+  - Open mic: 0.
+- **Fix:** venue.js belongs to the crowd agent, so I haven't touched it. Change the two theatre armrests to `box(0.05, 0.12, 0.46, ±0.27, 0.51, 0)`, which puts their tops at 0.57 m. Tested in a throwaway box copy: theatre 0 hidden and 0 flickers. The before/after strip is docs/mockups/hands-v1-theatre-armrest.png (top row before, bottom row after).
+
+## Motion agent: club table hands, in progress (2026-10-13 ~18:30 UTC; NOT merged)
+- **What it is:** the club's resting hands sit in the lap, with the palms at y 0.67–0.73 m, just under the 0.75 m table top. From the stage-side cameras, every few centimetres of a laugh's movement takes a hand across the table edge's sightline.
+- **Club flickers so far:** at the start, 87 flickers and 5,981 hidden samples.
+- **Attempt (box copy only, `~/encore-motion-wip-club.tgz`):**
+  - Table sitters rest their hands on the top, palms about 0.80, using tableBoth, forearmsTable and tableOne with both hands on the table. The positions are fitted to the actual table, on the near-edge band, pushed clear of the glasses and the jar. "Knee" gestures are off at tables, and slaps land on the top.
+  - Result: 38 flickers and 1,573 hidden.
+  - The hands on the top are hidden behind the glasses and the candle jar from the cameras across the table: the rays hit at y 0.81–0.89, the glasses' height.
+  - The new rules (5 cm clear of the glasses and the jar; no resting hand within −5…+3 cm of the top) find 155 hands at the glasses and 6 at the table edge. On-table poses also raise 43 floating hands and 36 hand or arm contacts between the two tablemates.
+  - None of this is merged; the shared tree is still s19.
+- **Ways forward:**
+  - (a) Lap hands lowered well under the top (onto the knees, under the table's footprint), so they stay hidden from every camera rather than flickering; only some sitters put a hand on the table, at its near edge.
+  - (b) The crowd agent moves the two glasses and the jar off the line between the cameras and the sitters' hands (towards the sitters' sides, or to the stage-side rim).
+  - (c) handocc stops counting a hand hidden behind a glass on the table as a flicker, since that is real occlusion.
+- **Club, 19:30 UTC (box copy `~/encore-motion-wip-club3.tgz`; NOT merged):**
+  - Changes on the new 0.47 layout:
+    - anatomy.js's table band (seat z 0.19–0.77) and post (src.z − 0.47) moved by 0.09;
+    - a hand pushed out of the table slab from below goes back down under the top, not up onto its edge;
+    - the phone is held 6 cm higher at a table;
+    - the club2 work stays in: knee rests, nothing at table height, a 0.12 forward lean at tables.
+  - handocc club: 400 flickers and 311 occlusions. Most are lap and knee hands at y 0.60–0.68 toggling as the body rocks in a laugh.
+  - tools/render/tablegeo.mjs measures where the table is in each sitter's own frame:
+    - the centre is 0.52–0.60 m from the sitter, not 0.47, because the table is 0.31 to the side of each sitter and the seats are jittered and turned;
+    - the nearest edge is 0.21–0.29 m away;
+    - the knees sit −0.16 to +0.09 m from the edge, so right on it.
+  - The top therefore doesn't cover the laps, and a lap hand sits right on the edge's sightline.
+  - Fix needed in venue.js (the crowd agent's file), one of:
+    - a top of about 0.40 m radius;
+    - the table about 0.15 m nearer each pair's midpoint line, so the centre is about 0.40 from each sitter;
+    - the pair seated closer together.
+
+## Motion agent: club table fix, checkpoint club4 (2026-10-13 ~19:10 UTC; NOT merged)
+
+State: the work is in the box copy `~/m/stage` and on the laptop in `~/encore-motion-wip-club4.tgz` (mo/stage, probes, stage-sync.sh). None of it is in the shared tree. venue.js in the shared tree is unchanged by me.
+
+venue.js changes, in the WIP copy only:
+- a module-level `export const TABLE_R = 0.4, TABLE_D = 0.4` (was a 0.31 top and a 0.47 distance);
+- the `cabaretTables` push uses `z: r.z - TABLE_D`;
+- the top is `CylinderGeometry(TABLE_R, TABLE_R, 0.03, 22)` (was 0.31 with 18 segments);
+- the glasses moved to t.x ± 0.32 (were ± 0.25);
+- the centre contact blob is scaled 1.0 (was 0.8), and the glass blobs moved to ± 0.32.
+
+TABLE_D 0.40 goes against "keep the distance". At 0.47 the knees weren't covered. At 0.40, tablegeo puts the knees −0.05 to +0.22 under the top, so the 10 cm rule still fails for Female_Adult_03, Male_Adult_17 and Male_Adult_10.
+
+anatomy.js (WIP):
+- `TABLE_R` is used in the table bands and posts;
+- the post is at `src.z - 0.4`;
+- the glass and jar things are at ± 0.32;
+- the fixArms table push now only lifts from above (0.735–0.76 → 0.785);
+- new rules: 'table edge (a resting hand)' and 'table rim (own body)'.
+
+handocc, club only, on the 0.5 s / 0.3 s flicker rule:
+
+| Variant | Flickers | Occlusions | Hidden |
+|---|---|---|---|
+| Lap ('knees') rests at tables | 588 | 267 | — |
+| Plan B, both hands on the top ('tableBoth'/'forearmsTable', palms about 0.80–0.82) | 37 | 45 | 1096 |
+
+- In the lap variant, palmh shows many "knee" palms at 0.77–0.84. They aren't under the top: the knee target sits under the table's near edge, and the arm or thigh fix lifts them through it. Only a few reach 0.59–0.67.
+- Plan B's remaining 37 flickers are stance transitions (`st:turn` / `st:shake`), where a resting hand dips to about 0.63 and comes back.
+- Plan B departs from the coordinator's "lap hands under the top, only a few on the edge", so it needs sign-off.
+- The Plan B people.js is saved as `mo/stage/people.planB.js.txt`. The live stage people.js is the lap variant.
+
+Not run this round: tablegeo after the latest changes, handocc in theatre, open mic and arena, anatomy, handsweep, bindcheck, the by-eye check, pack.
+
+Next steps:
+1. Choose between lap and Plan B, or a mix with most on the top.
+2. For lap: put the knee targets at u ≥ 0.85 with palm y ≤ 0.68, and stop fixArms or the thigh push from lifting hands at 0.70–0.76 up through the top.
+3. For Plan B: keep resting hands on the top through stance turns and shakes (hold the rest weight, or blend over the table, not under it).
+4. Settle TABLE_D: 0.47 with a radius of about 0.40–0.42 if the distance must stay; otherwise justify 0.40.
+5. Re-run tablegeo, handocc ×4, anatomy, handsweep and bindcheck, then the by-eye check, merge, pack --tv and pack-check.
+
+Box: the page server on 8093 is stopped (PID 1936). The 8092 server and the relay aren't mine and are still running.

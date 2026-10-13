@@ -25,6 +25,8 @@ const _m = new THREE.Matrix4();
 const _e = new THREE.Euler();
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
 const wpos = (o, v) => v.setFromMatrixPosition(o.matrixWorld);
+// (a bone's subtree, the fingers left for the end of the update when the rig can: people.js Rig.upd)
+const UPD = (rig, o) => (rig.upd ? rig.upd(o) : o.updateMatrixWorld(true));
 const wquat = (o, q) => q.setFromRotationMatrix(_m.extractRotation(o.matrixWorld));
 const pct = (a, p) => { if (!a.length) return 0; a.sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.max(0, Math.floor(p * a.length)))]; };
 const DEG = Math.PI / 180;
@@ -246,6 +248,99 @@ export function armCollisions(person, out = null, opts = {}) {
   return n;
 }
 
+// ---- the elbow's place (the limbs rules): the chest's own frame for one side ----
+const _ef = { lat: new THREE.Vector3(), fwd: new THREE.Vector3(), up: new THREE.Vector3(), S: new THREE.Vector3(), O: new THREE.Vector3(), H: new THREE.Vector3() };
+function chestFrame(rig, side) {
+  const b = rig.b, F = _ef;
+  wpos(side ? b.rUpper : b.lUpper, F.S); wpos(side ? b.lUpper : b.rUpper, F.O);
+  F.up.copy(wpos(b.neck, _ev[0])).sub(wpos(b.pelvis, _ev[1])).normalize();
+  F.lat.copy(F.S).sub(F.O);
+  F.fwd.crossVectors(F.lat, F.up).normalize();
+  if (_ev[2].copy(F.fwd).applyMatrix4(_m.copy(rig.inv).setPosition(0, 0, 0)).z < 0) F.fwd.negate();
+  const l = _ev[3].crossVectors(F.up, F.fwd).normalize();
+  F.lat.copy(l.dot(F.lat) < 0 ? l.negate() : l);
+  return F;
+}
+const _ev = [...Array(8)].map(() => new THREE.Vector3()), _eo = [0, 1, 2].map(() => new THREE.Vector3());
+/** How badly an elbow at E breaks the rules (0: fine). The hand at H; F from chestFrame. */
+function elbowCost(person, side, E, H, F, clapping, inOnly = false) {
+  const fit = person.rig.fit, d = _ev[4].copy(E).sub(F.S), out = d.dot(F.lat), fwd = d.dot(F.fwd), upv = d.dot(F.up);
+  const hout = _ev[5].copy(H).sub(F.S).dot(F.lat);
+  let c = 0;
+  for (const s of fit.torso) { const k = depthIn(s, E); if (k > 0.03) c += (k - 0.03) * 3; }
+  if (inOnly) return c; // (on the move: only the body itself, see fixArms)
+  if (!(person._intentBack === side || person._intentBack === 2) && fwd < -0.08) c += -0.08 - fwd;
+  if (!clapping && upv < -0.05 && out > 0.14 && out - 0.7 * Math.max(0, hout) > 0.08) c += Math.min(out - 0.14, out - 0.7 * Math.max(0, hout) - 0.08);
+  if (person._resting && out > 0.06) c += out - 0.06; // (resting, the elbows in by the flanks)
+  if (person._resting && person._symOut !== undefined) c += Math.max(0, Math.abs(out - person._symOut) - 0.06); // (and alike)
+  // (and clear of the other arm: the elbow's centre 7 cm from its upper arm and forearm; a clap brings them close)
+  { const b = person.rig.b, o = side ? 0 : 1, S2 = wpos(o ? b.rUpper : b.lUpper, _eo[0]), E2 = wpos(o ? b.rFore : b.lFore, _eo[1]), H2 = wpos(o ? b.rHand : b.lHand, _eo[2]);
+    const dd = Math.min(segDist(E, S2, E2), segDist(E, E2, H2)); if (dd < 0.07) c += 0.07 - dd; }
+  return c;
+}
+function elbowBad(person, side, clapping, inOnly = false) {
+  const rig = person.rig, b = rig.b, F = chestFrame(rig, side);
+  return elbowCost(person, side, wpos(side ? b.rFore : b.lFore, _ev[6]), wpos(side ? b.rHand : b.lHand, _ev[7]), F, clapping, inOnly) > 0;
+}
+/** The pole (a world direction from the shoulder) for the best elbow on its circle for a wrist at W. */
+const _bp = new THREE.Vector3(), _bc = new THREE.Vector3(), _bu = new THREE.Vector3(), _bv = new THREE.Vector3(), _bE = new THREE.Vector3(), _bW = new THREE.Vector3();
+export function bestElbow(person, side, W, clapping, inOnly = false) {
+  const rig = person.rig, b = rig.b, F = chestFrame(rig, side), [l1, l2] = rig.len.arm;
+  // (a straight arm has no circle: the wrist drawn in a little first)
+  const ax = _bW.copy(W).sub(F.S); let d = ax.length();
+  if (d > 0.95 * (l1 + l2)) { W.copy(F.S).addScaledVector(ax.normalize(), 0.95 * (l1 + l2)); ax.copy(W).sub(F.S); d = ax.length(); }
+  ax.normalize();
+  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d), r = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  _bc.copy(F.S).addScaledVector(ax, a);
+  _bu.copy(Math.abs(ax.dot(F.up)) < 0.9 ? F.up : F.fwd).addScaledVector(ax, -(Math.abs(ax.dot(F.up)) < 0.9 ? F.up : F.fwd).dot(ax)).normalize();
+  _bv.crossVectors(ax, _bu);
+  const cur = wpos(side ? b.rFore : b.lFore, _ev[6]).clone();
+  let best = Infinity, bestRule = Infinity;
+  for (let k = 0; k < 24; k++) {
+    const t = (k / 24) * Math.PI * 2;
+    _bE.copy(_bc).addScaledVector(_bu, r * Math.cos(t)).addScaledVector(_bv, r * Math.sin(t));
+    // (out of the rules first; then, among those, the one nearest where the pose had it, a little down by preference)
+    const rule = elbowCost(person, side, _bE, W, F, clapping, inOnly);
+    const c = rule * 10 + _bE.distanceTo(cur) + 0.15 * Math.max(0, _ev[4].copy(_bE).sub(F.S).dot(F.up) + 0.1);
+    if (c < best) { best = c; bestRule = rule; _bp.copy(_bE).sub(F.S); }
+  }
+  bestElbow.rule = bestRule;
+  return _bp.normalize();
+}
+/**
+ * The last word on the elbows (after the arms' collision fixes and the joint limits): an elbow still against the limbs
+ * rules gets the best place on its circle; a hand that leaves no good place (reached across the body) is drawn back
+ * towards its own side, up to 24 cm. Kept only if the arm then collides no more than before. Returns the count fixed.
+ */
+const _gq = [0, 1, 2].map(() => new THREE.Quaternion()), _gW = new THREE.Vector3();
+export function guardElbows(person, clapping = false) {
+  const rig = person.rig, b = rig.b;
+  if (!rig.fit || !rig.fit.ok) return 0;
+  let n = 0;
+  for (let side = 0; side < 2; side++) {
+    if (!elbowBad(person, side, clapping)) continue;
+    const up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
+    _gq[0].copy(up.quaternion); _gq[1].copy(fo.quaternion); _gq[2].copy(ha.quaternion);
+    const before = armCollisions(person) + joints(person, false) + (person.o.stand ? 0 : posture(person, null, { resting: !!person._resting }));
+    // (the other elbow's place across, for a resting pair to match)
+    { const Fo = chestFrame(rig, 1 - side); person._symOut = _ev[4].copy(wpos(side ? b.lFore : b.rFore, _ev[5])).sub(Fo.S).dot(Fo.lat); }
+    const F = chestFrame(rig, side), W0 = wpos(ha, _ev[7]).clone();
+    let pole = null;
+    for (let k = 0; k <= (person._resting || clapping ? 0 : 7); k++) { // (a resting or clapping hand stays where it is)
+      _gW.copy(W0).addScaledVector(F.lat, 0.06 * k).addScaledVector(F.up, -0.02 * k);
+      pole = bestElbow(person, side, _gW, clapping);
+      if (bestElbow.rule <= 0) break;
+    }
+    person._symOut = undefined;
+    rig.solve(up, fo, ha, _gW, pole, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
+    UPD(rig, ha);
+    if (armCollisions(person) + joints(person, false) + (person.o.stand ? 0 : posture(person, null, { resting: !!person._resting })) > before) {
+      up.quaternion.copy(_gq[0]); fo.quaternion.copy(_gq[1]); ha.quaternion.copy(_gq[2]); UPD(rig, up);
+    } else n++;
+  }
+  return n;
+}
+
 /**
  * The fix for the arms (after every other layer): any forearm or hand inside the person's own torso, thigh or head,
  * the seat or chair back, the table, or a neighbour is moved out (along the body's outward normal by the section's
@@ -300,15 +395,26 @@ export function fixArms(person, seated, clapping = false) {
           }
         }
       }
-      if (worst <= 0) continue;
+      // the elbow itself (the samples start 30% down the forearm): inside the flank, tucked behind the chest, or winged
+      // out beyond its own hand (the limbs rules, measured as limbMetrics does). The same wrist, the elbow placed at the
+      // best point of the circle it can take round the shoulder-wrist line
+      // (walking, sitting down, standing up: the capture's arms swing as they will, only kept out of the body)
+      const inOnly = !!person._inTraffic, eb = elbowBad(person, side, clapping, inOnly);
+      if (worst <= 0 && !eb) continue;
       any = true; moved++;
       const wrist = wpos(hand, _v[7]).add(shift);
+      if (eb) {
+        const pole = bestElbow(person, side, wrist, clapping, inOnly);
+        rig.solve(upper, fore, hand, wrist, pole, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
+        UPD(rig, hand);
+        continue;
+      }
       // the elbow forward and down (out of the flank), on this arm's side
       // (the elbow where the pose had it for the first rounds, so a small push doesn't swing it out from the flank; then
       // forward and down, out of the flank)
       const pole = round < 2 ? _v[6].copy(wpos(fore, _v[8])).sub(wpos(upper, _v[9])) : _v[6].set(0.55 * sgn, -0.75, 0.45 + 0.25 * Math.min(round, 2)).normalize().transformDirection(seat.matrixWorld);
       rig.solve(upper, fore, hand, wrist, pole, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
-      hand.updateMatrixWorld(true);
+      UPD(rig, hand);
     }
     // the forearms through each other (their upper three quarters: the wrists may meet, as in a clap): the higher
     // one goes up and forward, clear by both radii (not while clapping: the hands are meant to meet)
@@ -325,7 +431,7 @@ export function fixArms(person, seated, clapping = false) {
         const hand = top ? b.rHand : b.lHand, fore = top ? b.rFore : b.lFore, upper = top ? b.rUpper : b.lUpper, sgn = top ? -1 : 1;
         const wrist = wpos(hand, _v[7]).add(_v[4].set(0, need + 0.03, 0.02).transformDirection(seat.matrixWorld).multiplyScalar(need + 0.035));
         rig.solve(upper, fore, hand, wrist, _v[6].set(0.55 * sgn, -0.75, 0.45).normalize().transformDirection(seat.matrixWorld), top ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
-        hand.updateMatrixWorld(true);
+        UPD(rig, hand);
         any = true; moved++;
       }
     }
@@ -386,7 +492,7 @@ export function joints(person, fix = false, out = null) {
         r.x = 0; if (ax.flex === 1) { r.y = fl2; r.z = dv2; } else { r.z = fl2; r.y = dv2; }
         const q = fromRotVec(r, _q[4]).multiply(_q[5].setFromAxisAngle(_v[2].set(1, 0, 0), t2));
         hand.quaternion.copy(rest).multiply(q);
-        hand.updateMatrixWorld(true);
+        UPD(rig, hand);
         n++;
       }
     }
@@ -408,7 +514,7 @@ export function joints(person, fix = false, out = null) {
         const hw = _q[6].copy(c).multiply(D2).multiply(fit.headRel0); // the head's corrected world rotation
         const nw = wquat(b.neck, _q[7]);
         b.head.quaternion.copy(nw.invert().multiply(hw));
-        b.head.updateMatrixWorld(true);
+        UPD(rig, b.head);
         n++;
       }
     }
@@ -435,7 +541,7 @@ export function joints(person, fix = false, out = null) {
       if (d < dmin) target.copy(S).addScaledVector(dir.multiplyScalar(1 / Math.max(d, 1e-4)), dmin);
     }
     rig.solve(up, fo, ha, target, pole, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
-    ha.updateMatrixWorld(true);
+    UPD(rig, ha);
     n++;
   }
   if (!fix) {
@@ -487,12 +593,23 @@ export function clampSpine(person, resting) {
     const sp = b.spine1 || b.spine2;
     const sw = wquat(sp, _q[5]).premultiply(_q[6].setFromAxisAngle(ax, angle));
     sp.quaternion.copy(wquat(sp.parent, _q[7]).invert().multiply(sw));
-    sp.updateMatrixWorld(true);
+    UPD(rig, sp);
     n++;
   };
   const cap = 42 * DEG;
   // (the seat's up is not the pelvis's when it leans: a few steps to land within the cap)
   for (let i = 0; i < 3; i++) { const y = twist(); if (Math.abs(y) <= cap) break; turnTo(_v[1].set(0, 1, 0), -(y - Math.sign(y) * (cap - 0.01))); }
+  // resting (hands on the thighs), the shoulders square to the hips within 7°: a chest turned further puts one hand
+  // beyond its arm's reach (the elbow locked straight) and the elbows out of symmetry (the limbs rules)
+  if (resting && b.lThigh && b.rThigh) for (let i = 0; i < 3; i++) {
+    const inv = rig.inv, a = wpos(b.lUpper, _v[2]).applyMatrix4(inv), d = wpos(b.rUpper, _v[3]).applyMatrix4(inv);
+    const h0 = wpos(b.lThigh, _v[4]).applyMatrix4(inv), h1 = wpos(b.rThigh, _v[5]).applyMatrix4(inv);
+    let y = Math.atan2(-(a.z - d.z), a.x - d.x) - Math.atan2(-(h0.z - h1.z), h0.x - h1.x);
+    y = Math.atan2(Math.sin(y), Math.cos(y));
+    const lim = 7 * DEG;
+    if (Math.abs(y) <= lim) break;
+    turnTo(_v[1].set(0, 1, 0), -(y - Math.sign(y) * (lim - 0.01)));
+  }
   if (resting) for (let i = 0; i < 3; i++) { // (Spine1 sits higher than Spine: a few steps to level the shoulders)
     const inv = rig.inv, a = wpos(b.lUpper, _v[2]).applyMatrix4(inv), d = wpos(b.rUpper, _v[3]).applyMatrix4(inv);
     const roll = Math.atan2(a.y - d.y, Math.hypot(a.x - d.x, a.z - d.z)), lim = 6 * DEG; // (6: the check allows 10, and the arms' own pass can tip them a little after)
@@ -503,7 +620,7 @@ export function clampSpine(person, resting) {
     const Qs = _q[5].setFromUnitVectors(sn, target), sq = _q[6].copy(rig.invQ).invert();
     const Qw = _q[7].copy(sq).multiply(Qs).multiply(rig.invQ);
     const sp = b.spine1 || b.spine2, W = wquat(sp, _q[4]).premultiply(Qw);
-    sp.quaternion.copy(wquat(sp.parent, _q[3]).invert().multiply(W)); sp.updateMatrixWorld(true); n++;
+    sp.quaternion.copy(wquat(sp.parent, _q[3]).invert().multiply(W)); UPD(rig, sp); n++;
   }
   return n;
 }
@@ -524,10 +641,10 @@ export function shareYaw(person) {
   if (Math.abs(rel) <= 25 * DEG) return rel;
   const extra = rel - Math.sign(rel) * 25 * DEG;
   const up = _v[2].set(0, 1, 0).transformDirection(rig.seat.matrixWorld);
-  const turn = (bone, a) => { const W = wquat(bone, _q[3]).premultiply(_q[4].setFromAxisAngle(up, a)); bone.quaternion.copy(wquat(bone.parent, _q[5]).invert().multiply(W)); bone.updateMatrixWorld(true); };
+  const turn = (bone, a) => { const W = wquat(bone, _q[3]).premultiply(_q[4].setFromAxisAngle(up, a)); bone.quaternion.copy(wquat(bone.parent, _q[5]).invert().multiply(W)); UPD(rig, bone); };
   const headW = _q[7].copy(wquat(b.head, _q[6])); // (the face's world rotation, kept)
   turn(b.spine1 || b.spine2, extra * 0.2); turn(b.spine2, extra * 0.3); // (Spine1: the thighs hang from Spine)
-  b.head.quaternion.copy(wquat(b.head.parent, _q[5]).invert().multiply(headW)); b.head.updateMatrixWorld(true);
+  b.head.quaternion.copy(wquat(b.head.parent, _q[5]).invert().multiply(headW)); UPD(rig, b.head);
   return rel;
 }
 
@@ -554,7 +671,7 @@ export function clampHead(person, lo, hi) {
     if (part < 1) _q[3].copy(_q[4].identity().slerp(Qw, part));
     const W = wquat(bone, _q[5]).premultiply(_q[3]);
     bone.quaternion.copy(wquat(bone.parent, _q[6]).invert().multiply(W));
-    bone.updateMatrixWorld(true);
+    UPD(rig, bone);
   };
   fix(b.neck, 0.4);
   fix(b.head, 1);
@@ -599,5 +716,223 @@ export function posture(person, out = null, state = {}) {
       });
     }
   }
+  return n;
+}
+
+// ---------- elbows and knees ----------
+// (the limbs pass: the reviewer's rules for seated and standing people as numbers, in the seat's frame: x across, y up,
+// z forward. limbMetrics measures; limbs flags what breaks a rule. Sprites and impostors have no joints: not checked.)
+/** Metres outside a section (negative inside), along the section's own ellipse (a fair estimate near the surface). */
+function gapTo(sec, p) {
+  const l = _v[10].copy(p).applyMatrix4(sec.inv);
+  if (l.x < sec.x0 - 0.04 || l.x > sec.x1 + 0.04) return Infinity;
+  const ey = l.y >= 0 ? sec.yP : sec.yN, ez = l.z >= 0 ? sec.zP : sec.zN;
+  const e = Math.sqrt((l.y / ey) ** 2 + (l.z / ez) ** 2), r = Math.hypot(l.y, l.z);
+  return e > 1e-6 ? r - r / e : -Math.min(ey, ez);
+}
+const segSeg = (a0, a1, b0, b1) => { let best = Infinity; for (let i = 0; i <= 6; i++) best = Math.min(best, segDist(_pp.copy(a0).lerp(a1, i / 6), b0, b1)); return best; };
+const BARRIER_Z = 2.67; // the arena's barrier (arena.js AR.barrierZ: the tube at 1.1 m, the panel 12 cm in front of it)
+/** The numbers for one person's elbows and knees (plain objects: a validator, not the frame loop). */
+export function limbMetrics(person) {
+  const rig = person.rig, fit = rig.fit, b = rig.b, inv = rig.inv;
+  const W = (o) => wpos(o, new THREE.Vector3());
+  const L = (v) => v.clone().applyMatrix4(inv);
+  const S = [W(b.lUpper), W(b.rUpper)], E = [W(b.lFore), W(b.rFore)], H = [W(b.lHand), W(b.rHand)];
+  const sl = S.map(L), el = E.map(L), up = new THREE.Vector3(0, 1, 0);
+  // (in the chest's own frame: across the shoulders, up the spine, and forward out of the chest, so a body leaning back
+  // with its arms hanging along it has its elbows beside the flanks, not 'behind')
+  const spineUp = L(W(b.neck)).sub(L(W(b.pelvis))).normalize();
+  const arms = [0, 1].map((i) => {
+    const lat = sl[i].clone().sub(sl[1 - i]).normalize(); // outwards, this side
+    const fwd = new THREE.Vector3().crossVectors(lat, spineUp).normalize(); if (fwd.z < 0) fwd.negate();
+    lat.copy(new THREE.Vector3().crossVectors(spineUp, fwd).normalize().multiplyScalar(Math.sign(lat.dot(new THREE.Vector3().crossVectors(spineUp, fwd))) || 1));
+    const d = el[i].clone().sub(sl[i]), hd = L(H[i]).sub(sl[i]);
+    const a = S[i].clone().sub(E[i]).normalize(), c = H[i].clone().sub(E[i]).normalize();
+    let flank = Infinity, inside = -1;
+    if (fit) for (const s of fit.torso) { flank = Math.min(flank, gapTo(s, E[i])); inside = Math.max(inside, depthIn(s, E[i])); }
+    const other = Math.min(segSeg(E[i], E[i], S[1 - i], E[1 - i]), segSeg(E[i], E[i], E[1 - i], H[1 - i]));
+    return { out: d.dot(lat), hout: hd.dot(lat), up: d.dot(spineUp), fwd: d.dot(fwd), drop: -d.y, angle: Math.acos(clamp(a.dot(c), -1, 1)) / DEG, flank, inside, other };
+  });
+  const Hp = [W(b.lThigh), W(b.rThigh)], K = [W(b.lCalf), W(b.rCalf)], A = [W(b.lFoot), W(b.rFoot)];
+  const toe = [b.lFoot, b.rFoot].map((f) => (f._toe ??= f.children.find((c) => /Toe0$/.test(c.name)) || null));
+  const hl = Hp.map(L), kl = K.map(L), al = A.map(L);
+  const legs = [0, 1].map((i) => {
+    const shin = kl[i].clone().sub(al[i]), th = kl[i].clone().sub(hl[i]);
+    const u = K[i].clone().sub(Hp[i]).normalize(), f = A[i].clone().sub(K[i]).normalize();
+    let footPitch = 0;
+    if (toe[i]) { const t = L(W(toe[i])).sub(al[i]); footPitch = Math.atan2(t.y, Math.hypot(t.x, t.z)) / DEG; }
+    return {
+      kneeFwd: kl[i].z - al[i].z, shinTilt: Math.atan2(Math.hypot(shin.x, shin.z), shin.y) / DEG,
+      thighPitch: Math.atan2(th.y, Math.hypot(th.x, th.z)) / DEG, flex: Math.acos(clamp(u.dot(f), -1, 1)) / DEG, footPitch,
+      knee: kl[i], ankle: al[i], hip: hl[i],
+      minSlope: (Math.asin(clamp((hl[i].y - al[i].y - rig.len.leg[1]) / rig.len.leg[0], -1, 1)) / DEG),
+    };
+  });
+  const sx = Math.sign(hl[0].x - hl[1].x) || 1;
+  const kneeGap = (kl[0].x - kl[1].x) * sx, ankleGap = (al[0].x - al[1].x) * sx, hipGap = (hl[0].x - hl[1].x) * sx;
+  // clearance: the legs (hip to knee to ankle) against the neighbours' legs, centre line to centre line
+  let legNear = Infinity, legNearWho = '';
+  if (person.near) for (const q of person.near) {
+    if (!q.rig || q.hidden || !q.rig.model.visible) continue;
+    const qb = q.rig.b, qH = [W(qb.lThigh), W(qb.rThigh)], qK = [W(qb.lCalf), W(qb.rCalf)], qA = [W(qb.lFoot), W(qb.rFoot)];
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+      const d = Math.min(segSeg(Hp[i].clone().lerp(K[i], 0.5), K[i], qH[j].clone().lerp(qK[j], 0.5), qK[j]), segSeg(K[i], A[i], qK[j], qA[j]));
+      if (d < legNear) { legNear = d; legNearWho = q.name; }
+    }
+  }
+  // the furniture in front: the club's two-top (its post and top), the theatre seat in the row in front (its back), any
+  // occupied chair in front (from that person's seat), the arena's barrier (world z)
+  const furn = [];
+  const legPts = [];
+  for (let i = 0; i < 2; i++) { for (let k = 0; k <= 4; k++) legPts.push(K[i].clone().lerp(A[i], k / 4)); legPts.push(Hp[i].clone().lerp(K[i], 0.75)); }
+  const src = person.src || {}, venue = person._venue || '';
+  if (person.o.table && src.x !== undefined && person.o.neighbour) {
+    const post = new THREE.Vector3(src.x + person.o.neighbour * 0.31, src.y || 0, src.z - 0.56);
+    let d = Infinity;
+    for (const p of legPts) if (p.y < (src.y || 0) + 0.72) d = Math.min(d, Math.hypot(p.x - post.x, p.z - post.z) - 0.025);
+    furn.push({ what: 'table post', gap: d });
+    let top = Infinity;
+    for (let i = 0; i < 2; i++) { const k = K[i]; if (Math.hypot(k.x - post.x, k.z - post.z) < 0.31 + 0.05) top = Math.min(top, (src.y || 0) + 0.72 - (k.y + 0.06)); }
+    furn.push({ what: 'table top', gap: top });
+  }
+  if (venue === 'theatre' && (src.row | 0) >= 1 && !src.balcony) {
+    // the seat in front: 0.92 m ahead and 0.3 m down; its back's rear face 0.255 m behind its centre (rooms.js, venue.js)
+    // (seats turn to the performer: along this one's forward the next row's line is 0.92 / cos(turn) away)
+    const fz = Math.abs(_v[11].set(0, 0, 1).transformDirection(rig.seat.matrixWorld).z), ahead = 0.92 / Math.max(0.6, fz);
+    let d = Infinity;
+    for (const p of legPts) { const l = L(p); if (l.y > -0.3 + 0.445 && l.y < -0.3 + 1.0) d = Math.min(d, ahead - 0.255 - l.z); }
+    furn.push({ what: 'seat in front', gap: d - 0.05 }); // (a knee's or shin's radius)
+  }
+  if (src.standing && venue === 'arena') {
+    let d = Infinity, a = Infinity;
+    for (const p of legPts) d = Math.min(d, p.z - (BARRIER_Z - 0.095) - 0.05); // (below the tube: its panel's back face)
+    for (const p of [...E, ...H]) if (p.y < 1.16) a = Math.min(a, p.z - (p.y > 1.04 ? BARRIER_Z + 0.04 : BARRIER_Z - 0.095) - 0.04);
+    furn.push({ what: 'barrier', gap: d }, { what: 'barrier (arms)', gap: a });
+  }
+  // (occupied chairs in front: only for someone sitting; a person on the move is checked against people, not seats)
+  if (person.o.table === false && person.near && !(person.src && person.src._loco) && !person._inTraffic && !person.o.stand && (person._standW || 0) < 0.3) for (const q of person.near) {
+    if (!q.rig || q.o.stand || q.hidden) continue;
+    // (their chair stays where it is when they get up: its frame from their home seat, not from where they are now)
+    const away = q.home && (q._inTraffic || (q.src && q.src._loco));
+    const qi = away ? new THREE.Matrix4().compose(q.home.pos, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), q.home.yaw), new THREE.Vector3(1, 1, 1)).invert() : q.rig.inv;
+    const ql = L(away ? q.home.pos.clone() : W(q.rig.seat));
+    if (ql.z < 0.35 || Math.abs(ql.x) > 0.5) continue; // (only a chair in front of this person)
+    let d = Infinity;
+    for (const p of legPts) {
+      const l = p.clone().applyMatrix4(qi), sh = q.o.seatH;
+      if (Math.abs(l.x) > 0.26 || l.y < 0.1 || l.y > sh + 0.5 || l.z < -0.4 || l.z > -0.1) continue; // (at their chair's back: not anywhere behind it, nor past it)
+      d = Math.min(d, -0.26 - l.z - 0.05); // (their chair back's rear face, from behind: a knee's radius clear of it)
+    }
+    furn.push({ what: 'chair of ' + q.name, gap: d });
+  }
+  const com = L(W(b.pelvis)).multiplyScalar(0.55).add(L(W(b.spine2)).multiplyScalar(0.3)).add(L(W(b.head)).multiplyScalar(0.15));
+  return { arms, legs, kneeGap, ankleGap, hipGap, legNear, legNearWho, furn, com };
+}
+
+// ---------- heads and shoulders between neighbours ----------
+const _hc = [0, 1, 2, 3].map(() => new THREE.Vector3());
+/** The middle of a fitted head, world. */
+function headCentre(fit, out) { return out.set((fit.head.x0 + fit.head.x1) / 2, 0, 0).applyMatrix4(fit.head.bone.matrixWorld); }
+/**
+ * How far this person's head is into a neighbour's (heads 2 cm apart at their fitted radii) or into their chest and
+ * shoulders (the torso sections widened by most of the head's radius), metres > 0 for contact; with whom and the
+ * horizontal direction away from them (world). Returns the worst.
+ */
+const _contact = { depth: 0, who: null, away: new THREE.Vector3() };
+export function headContact(person) {
+  const fit = person.rig && person.rig.fit, C = _contact;
+  C.depth = 0; C.who = null;
+  if (!fit || !fit.ok || !fit.head || !person.near) return C;
+  const H = headCentre(fit, _hc[0]), r = fit.head.r || 0.09;
+  for (const q of person.near) {
+    const qf = q.rig && q.rig.fit;
+    if (!qf || !qf.ok || !qf.head || q.hidden || !q.rig.model.visible) continue;
+    const Q = headCentre(qf, _hc[1]), dq = H.distanceTo(Q);
+    if (dq > 0.9) continue;
+    let d = (r + (qf.head.r || 0.09) + 0.02) - dq;
+    if (d > C.depth) { C.depth = d; C.who = q; C.away.copy(H).sub(Q); }
+    for (const sec of qf.torso) {
+      const k = depthIn(sec, H, -r * 0.8);
+      if (k > 0) { const dd = k * r; if (dd > C.depth) { C.depth = dd; C.who = q; C.away.copy(H).sub(wpos(sec.bone, _hc[2])); } }
+    }
+  }
+  C.away.y = 0; if (C.away.lengthSq() < 1e-8) C.away.set(1, 0, 0); C.away.normalize();
+  return C;
+}
+/**
+ * The fix: a head that leans or throws itself back into a neighbour's head or shoulder yields, the upper body tipped
+ * away from them at Spine1 (the legs hang from Spine), a few degrees a step until clear. Returns the steps taken.
+ */
+export function clearHeads(person) {
+  const rig = person.rig, b = rig.b, sp = b.spine1 || b.spine2;
+  let n = 0;
+  for (let i = 0; i < 3; i++) {
+    const C = headContact(person);
+    if (C.depth <= 0) break;
+    const up = _hc[3].set(0, 1, 0), ax = _v[0].crossVectors(up, C.away).normalize(); // (about this axis the head moves towards 'away')
+    const ang = Math.min(0.22, (C.depth + 0.015) / 0.5);
+    const sw = wquat(sp, _q[5]).premultiply(_q[6].setFromAxisAngle(ax, ang));
+    sp.quaternion.copy(wquat(sp.parent, _q[7]).invert().multiply(sw));
+    UPD(rig, sp);
+    n++;
+  }
+  return n;
+}
+
+/**
+ * The rules (seated: hands at rest on the thighs or knees, or anything else; standing: the arena floor and rail).
+ * st: { seated, resting, rest (the rest pose's name), cheer (arms up or clapping: elbows may lift), bounce }.
+ */
+export function limbs(person, out = null, st = {}) {
+  const rig = person.rig;
+  if (!rig || !rig.fit || !rig.fit.ok) return 0;
+  const M = limbMetrics(person);
+  let n = 0;
+  const flag = (what, side, value) => { n++; if (out) out.push({ name: person.name, what, side: side === null ? '' : side ? 'R' : 'L', value: +value.toFixed(3) }); };
+  const symmetric = st.resting && !st.asym && /^(thighs|knees|clasped)$/.test(st.rest || ''); // (a lean to one shoulder or a turn towards a friend is meant to be asymmetric)
+  M.arms.forEach((a, i) => {
+    if (a.inside > 0.05) flag('elbow inside the torso', i, a.inside);
+    if (a.other < 0.06) flag('elbow inside the other arm', i, a.other);
+    // (winged: the elbow out to the side beyond where its own hand is, a chicken wing; a hand gesturing out to the side
+    // takes its elbow with it, which is how an arm moves)
+    if (!st.cheer && !st.moving && a.up < -0.05 && a.out > (st.seated ? 0.16 : 0.2) && a.out - 0.7 * Math.max(0, a.hout) > 0.1) flag('elbow winged out', i, a.out);
+    if (!st.cheer && !st.moving && a.fwd < -0.1) flag('elbow tucked behind', i, a.fwd); // (a walker's arm swings back)
+    if (st.resting && /^(thighs|knees|thighKnee)$/.test(st.rest || '') && (a.angle < 80 || a.angle > 145)) flag('elbow angle at rest', i, a.angle);
+    if (st.resting && st.rest === 'clasped' && (a.angle < 70 || a.angle > 150)) flag('elbow angle at rest', i, a.angle);
+    if (st.resting && (a.flank > 0.14 && a.out > 0.1)) flag('elbow off the flank at rest', i, a.flank);
+  });
+  if (symmetric) {
+    const [l, r] = M.arms;
+    if (Math.abs(l.angle - r.angle) > 30) flag('elbows not symmetric (angle)', null, l.angle - r.angle);
+    if (Math.abs(l.out - r.out) > 0.1) flag('elbows not symmetric (out)', null, l.out - r.out);
+  }
+  if (st.seated) {
+    M.legs.forEach((g, i) => {
+      if (g.kneeFwd < -0.15) flag('ankle in front of the knee', i, g.kneeFwd);
+      if (g.kneeFwd > 0.22) flag('foot tucked under the seat', i, g.kneeFwd);
+      if (g.shinTilt > 32) flag('shin far from vertical', i, g.shinTilt);
+      // (level as this body allows: with the shin upright, a short leg on a high seat has to slope its thigh; flagged
+      // when it slopes 8° more than that, and never under 30°)
+      if (Math.abs(g.thighPitch) > Math.max(30, g.minSlope + 8)) flag('thigh not level', i, g.thighPitch);
+      // (the ankle joint sits ~36° above the ball of the foot, avatar to avatar: flat is about -36°)
+      if (g.footPitch > -14 || g.footPitch < -60) flag(g.footPitch > -14 ? 'toes up' : 'on tiptoe', i, g.footPitch);
+    });
+    if (M.kneeGap < 0.11) flag(M.kneeGap < 0 ? 'legs crossed' : 'knees through each other', null, M.kneeGap);
+    if (M.kneeGap > 0.55) flag('knees splayed', null, M.kneeGap);
+    if (M.ankleGap < 0.1) flag(M.ankleGap < 0 ? 'ankles crossed' : 'ankles together', null, M.ankleGap);
+  } else if (st.standing) {
+    M.legs.forEach((g, i) => {
+      if (g.flex < 2) flag('knee locked', i, g.flex);
+      if (g.flex > (st.bounce ? 45 : 28)) flag('knee deep-bent', i, g.flex);
+    });
+    if (M.ankleGap < 0.1 || M.ankleGap > 0.5) flag('feet not under the hips', null, M.ankleGap);
+    // (the weight over the feet: the body's centre (hips, chest and head, roughly weighted) within 16 cm of the point
+    // between the ankles. Hips alone over-flag a laugh bent double, where the hips go back to balance the chest)
+    const am = M.legs[0].ankle.clone().add(M.legs[1].ankle).multiplyScalar(0.5), com = M.com;
+    if (Math.hypot(com.x - am.x, com.z - am.z) > 0.16) flag('weight off the feet', null, Math.hypot(com.x - am.x, com.z - am.z));
+  }
+  if (M.legNear < 0.09) flag('legs through ' + M.legNearWho, null, M.legNear);
+  { const C = headContact(person); if (C.depth > 0.005) flag('head against ' + (C.who && C.who.name), null, C.depth); } // (2 cm apart at the heads' fitted radii; the shoulders a head's radius)
+  for (const f of M.furn) if (f.gap < 0) flag('leg through the ' + f.what, null, f.gap);
   return n;
 }

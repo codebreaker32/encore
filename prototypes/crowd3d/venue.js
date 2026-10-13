@@ -56,7 +56,9 @@ export function cabaretTables(rows) {
   for (const r of rows.filter((x) => x.cabaret)) for (let i = 0; i + 1 < r.seats.length; i += 2) {
     const a = r.seats[i], b = r.seats[i + 1];
     if (Math.abs(a.x - b.x) > PITCH * 1.5) { i--; continue; }
-    tables.push({ x: (a.x + b.x) / 2, z: r.z - 0.56, y: r.y || 0, seats: [a, b] });
+    // (0.47 in front of the pair, from 0.56: the top now covers the knees and laps, which a laugh's rocking took in and
+    // out of view through the gap between the chairs and the table edge; handocc.mjs)
+    tables.push({ x: (a.x + b.x) / 2, z: r.z - 0.47, y: r.y || 0, seats: [a, b] });
   }
   return tables;
 }
@@ -146,7 +148,9 @@ export const SEAT_GEOS = {
   theatreLite: () => mergeGeometries([box(0.5, 0.1, 0.46, 0, 0.4, 0.02), box(0.5, 0.55, 0.09, 0, 0.72, -0.21)].map((g) => g.toNonIndexed())),
   // theatre seat: cushion, back, armrests
   theatre: () => mergeGeometries([
-    box(0.5, 0.1, 0.46, 0, 0.4, 0.02), box(0.5, 0.55, 0.09, 0, 0.72, -0.21), box(0.05, 0.22, 0.46, -0.27, 0.56, 0), box(0.05, 0.22, 0.46, 0.27, 0.56, 0),
+    // (armrest tops at 0.57 m, below hands resting at about 0.62: at 0.67 they hid the hands from the low side-on
+    // setups frame to frame, tools/render/handocc.mjs)
+    box(0.5, 0.1, 0.46, 0, 0.4, 0.02), box(0.5, 0.55, 0.09, 0, 0.72, -0.21), box(0.05, 0.12, 0.46, -0.27, 0.51, 0), box(0.05, 0.12, 0.46, 0.27, 0.51, 0),
   ].map((g) => g.toNonIndexed())),
   // pub chair: a heavier wooden chair with a spindle back
   pub: () => mergeGeometries([
@@ -437,8 +441,10 @@ export function buildVenue(scene, rows, P, visible = () => true, depthFor = () =
     if (!visible({ x: t.x, y: t.y, z: t.z })) continue;
     const k = R();
     C0.add('lambert', tableG, 0x3a2216, { matrix: mtx.clone().makeTranslation(t.x, t.y, t.z), ao: 0.6 });
-    C0.add('lambert', glassG, k > 0.4 ? 0x6a3a0c : 0x3a120a, { matrix: mtx.clone().makeTranslation(t.x - 0.13, t.y, t.z + 0.06), ao: 0 });
-    C0.add('lambert', glassG, k > 0.7 ? 0x5a5448 : 0x4a2a0c, { matrix: mtx.clone().compose(new THREE.Vector3(t.x + 0.14, t.y - 0.035, t.z + 0.03), q.identity(), new THREE.Vector3(1.15, 0.6, 1.15)), ao: 0 });
+    // (the glasses on each sitter's outer side of the rim, off the line from the stage-side cameras to the hands, which
+    // flickered behind them; the candle stays in the middle)
+    C0.add('lambert', glassG, k > 0.4 ? 0x6a3a0c : 0x3a120a, { matrix: mtx.clone().makeTranslation(t.x - 0.25, t.y, t.z + 0.11), ao: 0 });
+    C0.add('lambert', glassG, k > 0.7 ? 0x5a5448 : 0x4a2a0c, { matrix: mtx.clone().compose(new THREE.Vector3(t.x + 0.25, t.y - 0.035, t.z + 0.1), q.identity(), new THREE.Vector3(1.15, 0.6, 1.15)), ao: 0 });
     C0.add('basic', jarG, 0xc8402a, { matrix: mtx.clone().makeTranslation(t.x + 0.01, t.y, t.z - 0.06), ao: 0 });
     glow.push({ x: t.x + 0.01, y: t.y + 0.83, z: t.z - 0.06, c: [1.0, 0.55, 0.22], s: 0.3, f: R() + 0.1 });
     glow.push({ x: t.x + 0.01, y: t.y + 0.84, z: t.z - 0.06, c: [1.0, 0.85, 0.5], s: 0.06, f: R() + 0.1 });
@@ -452,7 +458,7 @@ export function buildVenue(scene, rows, P, visible = () => true, depthFor = () =
     const put = (x, y, z, r) => tb.setMatrixAt(k++, mtx.clone().compose(new THREE.Vector3(x, y, z), q.identity(), new THREE.Vector3(r, 1, r)));
     for (const t of shown) {
       put(t.x, t.y + 0.007, t.z, 0.8);
-      put(t.x - 0.13, t.y + 0.752, t.z + 0.06, 0.15); put(t.x + 0.14, t.y + 0.752, t.z + 0.03, 0.17); put(t.x + 0.01, t.y + 0.752, t.z - 0.06, 0.12);
+      put(t.x - 0.25, t.y + 0.752, t.z + 0.11, 0.15); put(t.x + 0.25, t.y + 0.752, t.z + 0.1, 0.17); put(t.x + 0.01, t.y + 0.752, t.z - 0.06, 0.12);
     }
     tb.count = k;
     tb.renderOrder = 1;
@@ -490,6 +496,7 @@ export const CLUB = {
     key: { pos: [-2.4, 3.4, -0.6], target: [0.8, 1.1, 5.0], intensity: 110, angle: 1.1, penumbra: 1, decay: 2 },
     rim: { dir: [0, 0.64, 0.77], color: 0xffb070, k: 0.9 }, fill: { dir: [0, -0.3, -0.95], color: 0xffb890, k: 0.6, house: 3 },
   },
+  previewWiden: 2.2, // (the bill: the stage spill opened wider while the room fills, crowd.js lightLevels)
   spread: 0.11, attention: 0.6,
   standing: [{ x: -2.7, z: ROOM.back - 1.35 }],
   tone: { id: 'room-tone-club', gain: 0.22 }, // (under the laughs: about 10 dB below a laugh at 0.6)
