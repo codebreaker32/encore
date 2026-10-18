@@ -273,6 +273,7 @@ function setBodyDetail() {
 // the reaction shot's wider spill.)
 const houseShot = () => shot === 'close' && curSetup && !curSetup.seats.length;
 const litNow = () => (shot === 'wide' || (shot === 'close' && curSetup && (curSetup.lit === 'wide' || !curSetup.seats.length)) ? 'wide' : shot);
+const fringes = []; // (the hair's blended second pass on each front person: shown in close and mid shots only)
 function applyShotLight() {
   const lit = litNow(), wideLit = lit === 'wide', spill = !wideLit || (houseShot() && curSetup.lit === 'close');
   curFog = wideLit ? FOG.wide : FOG[lit] || FOG.wide;
@@ -294,6 +295,8 @@ function applyShotLight() {
   if (V.closeDimRoom && roomMat) roomMat.color.setScalar(wideLit ? 1 : 0.4);
   if (V.closeDimEmissive && emissiveMat) emissiveMat.color.setScalar(wideLit ? 1 : V.closeDimEmissive);
   setBodyDetail();
+  // (the hair's second pass only in close and mid shots: on the wide the heads are small and the draws add up)
+  if (fringes.length) for (const f of fringes) f.visible = !wideLit || ab('hair2wide');
 }
 /**
  * &ab=dynres: on a cut, never mid-shot, step the drawing size down (540 → 450 → 360) while p90 over the last 120
@@ -692,6 +695,7 @@ function prepFront(gltf, ao = null) {
       const f = new THREE.SkinnedMesh(h.geometry, fm);
       f.name = h.name + '_fringe'; f.frustumCulled = false; f.renderOrder = 2;
       h.parent.add(f); f.bind(h.skeleton, h.bindMatrix);
+      f.userData.fringe = true;
     }
   }
   // the renderer walks every visible node each frame (80 bones a person, 480 of the club's 612 nodes); the bones need
@@ -1038,6 +1042,7 @@ async function buildRoom() {
   stats.front = frontSeats.length;
   for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.isMesh && !frontBgMats.has(o.material)) frontBgMats.set(o.material, p); });
   if (catchlights) for (const p of people) if (p.kind === 'front') catchlights.add(p, p.rig.model);
+  for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.userData.fringe) fringes.push(o); });
   // (the club's table candles on the people at them: venue.js puts each candle at the table's middle, 6 cm stage-side)
   if (REAL && !ab('nocandle') && VENUE_ID === 'club') {
     candles = new Candles(scene, num('candle', 0.2));
@@ -1769,7 +1774,8 @@ function finalPass() {
   return m;
 }
 // real-v1 lens (tv, with FXAA): depth of field (&ab=nodof) and a gentle grade (&ab=nograde)
-const DOF = !ab('nodof'), GRADE = !ab('nograde');
+const DOF = !ab('nodof'), GRADE = !ab('nograde'), LENS_WIDE = ab('lenswide');
+let lensCam = false, mipsDue = true; // (a harness's camera: __renderWith; the target's mips are due after an allocation)
 const _af = new THREE.Vector3(), _afh = new THREE.Vector3();
 /**
  * Autofocus, as a focus puller would: the front person whose head is nearest the frame's centre (a little above it),
@@ -1806,9 +1812,9 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
   rt.isXRRenderTarget = true; // (tone mapping and the output colour space as for the canvas)
   rt.texture.colorSpace = THREE.LinearSRGBColorSpace;
   const mat = new THREE.ShaderMaterial({
-    uniforms: { tDiffuse: { value: rt.texture }, uPx: { value: new THREE.Vector2(1 / RW, 1 / RH) }, uTime: { value: 0 }, tDepth: { value: rt.depthTexture }, uDof: { value: new THREE.Vector4() } },
+    uniforms: { tDiffuse: { value: rt.texture }, uPx: { value: new THREE.Vector2(1 / RW, 1 / RH) }, uTime: { value: 0 }, tDepth: { value: rt.depthTexture }, uDof: { value: new THREE.Vector4() }, uLens: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main() { vUv = position.xy * 0.5 + 0.5; gl_Position = vec4( position.xy, 0.0, 1.0 ); }',
-    fragmentShader: /* glsl */ `uniform sampler2D tDiffuse; uniform vec2 uPx; uniform float uTime; varying vec2 vUv;${DOF ? '\n      uniform sampler2D tDepth; uniform vec4 uDof;' : ''}
+    fragmentShader: /* glsl */ `uniform sampler2D tDiffuse; uniform vec2 uPx; uniform float uTime; varying vec2 vUv;${DOF ? '\n      uniform sampler2D tDepth; uniform vec4 uDof; uniform float uLens;' : ''}
       float hash( vec2 p ) { return fract( sin( dot( p, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ); }
       void main() {
         const vec3 W = vec3( 0.299, 0.587, 0.114 );
@@ -1859,7 +1865,7 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
         }` : ''}
         ${GRADE && DOF ? `// the lens's glow (bloom, with the grade; it reads the DOF's mips): what is bright spreads a little into the dark round it,
         // two coarse mip reads (the candles, sconces and lit faces get a halo, as glass and haze give a real lens)
-        { vec3 g1 = textureLod( tDiffuse, vUv, 2.5 ).rgb, g2 = textureLod( tDiffuse, vUv, 4.5 ).rgb;
+        if ( uLens > 0.0 ) { vec3 g1 = textureLod( tDiffuse, vUv, 2.5 ).rgb, g2 = textureLod( tDiffuse, vUv, 4.5 ).rgb;
           c += max( g1 - 0.62, 0.0 ) * 0.3 + max( g2 - 0.45, 0.0 ) * 0.2; }` : ''}
         ${GRADE ? `// a gentle grade: the stage's orange pulled a little towards neutral, as a camera balanced for tungsten would, and
         // a film-like toe (the blacks lifted a touch and kept warm, never a digital zero)
@@ -1874,9 +1880,17 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
   fxScene.add(quad);
   return {
     render(now) {
-      if (rt.width !== RW || rt.height !== RH) { rt.setSize(RW, RH); mat.uniforms.uPx.value.set(1 / RW, 1 / RH); }
+      if (rt.width !== RW || rt.height !== RH) { rt.setSize(RW, RH); mat.uniforms.uPx.value.set(1 / RW, 1 / RH); mipsDue = true; }
       mat.uniforms.uTime.value = now;
-      if (DOF) autofocus(mat.uniforms.uDof.value);
+      // (the lens, DOF and bloom, only in close and mid shots and a harness's own camera: the wide, the TV's frame-rate
+      // floor, skips the mip generation and the extra reads; &ab=lenswide keeps it on the wide too)
+      const lens = DOF && (LENS_WIDE || lensCam || litNow() !== 'wide');
+      // (a mipmapped target with no mips is incomplete and samples black: the mips are made once after every allocation,
+      // then only while the lens is on; on the wide they go stale, unread)
+      const mips = lens || mipsDue; mipsDue = false;
+      if (rt.texture.generateMipmaps !== mips) rt.texture.generateMipmaps = mips;
+      mat.uniforms.uLens.value = lens ? 1 : 0;
+      if (lens) autofocus(mat.uniforms.uDof.value); else mat.uniforms.uDof.value.y = 0;
       renderer.info.autoReset = false; renderer.info.reset(); // (the stats count the scene's draws and the pass's)
       renderer.setRenderTarget(rt);
       renderer.render(scene, camera);
@@ -2093,7 +2107,9 @@ async function main() {
   if (Q.has('debug') || CAPTURE) window.__renderWith = (cam) => {
     camera.position.copy(cam.position); camera.quaternion.copy(cam.quaternion); camera.fov = cam.fov; camera.near = cam.near;
     camera.updateProjectionMatrix(); camera.updateMatrixWorld(); lightView(); vlitFrame();
+    lensCam = true;
     if (FXAA) FXAA.render(room.now); else renderer.render(scene, camera);
+    lensCam = false;
     camera.near = 0.05; camera.updateProjectionMatrix();
   };
   if (Q.has('debug') || CAPTURE) window.__bodyDetail = (on) => { setBodyDetail(); for (const p of people) if (p.bodyMesh) p.bodyMesh.geometry = on ? p.bodyHi : p.bodyLow; };

@@ -495,3 +495,47 @@ Triangles (box, capture; calls are unchanged, plus one for FXAA):
 | r9-theatre-nohibody | `venue=theatre state=cycle` | `ab=nohibody` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnohibody%26hud%3D0%26log%3D1%26label%3Dr9-theatre-nohibody"` |
 | r9-theatre-nodynres | `venue=theatre state=cycle` | `ab=nodynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnodynres%26hud%3D0%26log%3D1%26label%3Dr9-theatre-nodynres"` |
 | r9-theatre-old | `venue=theatre state=cycle` | `ab=nofxaa,nohibody,nodynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnofxaa%2Cnohibody%2Cnodynres%26hud%3D0%26log%3D1%26label%3Dr9-theatre-old"` |
+
+## Round 10: real-v1, the front people's realism (2026-10-18/19, box session)
+
+The box session (`docs/handoff/box-progress.md`) made the front people read less like game assets. Every term is a
+switch and costs nothing when off. What changed on the tv preset:
+- `realLit` (real.js) on the front people's head and body materials: skin sheen, a narrower warm wrap, eye catchlights
+  (one Points draw), baked per-vertex AO (`people/ao/*.json`, a vertex attribute), teeth, hands, a cloth sheen, per-venue
+  clothes hues. `&ab=noreal` turns all of it off (it also turns off the side key, candles and hand shadows below).
+- The stage key 2.4 m house left and 0.4 m higher (`&ab=nosidekey`); the front fill 0.6.
+- The club: candle light on the people at tables (a shader term) and hand contact shadows on the table tops (one
+  instanced draw): `&ab=nocandle`, `&ab=nohandshadow`.
+- Two-pass hair (`&ab=nohair2`): one more draw per person with hair cards (+8–10 calls, +6k tris).
+- Lens: DOF from the FXAA target's depth and mips (`&ab=nodof`: the depth texture, the mip generation each frame, 1–5
+  extra reads per pixel) plus bloom from the same mips and a gentle grade (`&ab=nograde`).
+- Box costs (software GPU, relative only): calls club 43 → 55, theatre 38 → 47, open mic 48 → 59; triangles +5.7k; DOF
+  is the biggest box cost (club wide 3.4 → 5.5 ms, 3.8 with nodof).
+
+**What to decide from it:** for each venue compare `base` with `old` (all of real-v1 off). If `base` is within 1 fps of
+`old`, keep everything. If not, read `nodof`, `nohair2`, `noreal` and `nograde` to see which term costs, and make that
+term tv-off (its switch inverted) first: DOF, then hair2. The club must not drop under its 23–25 fps.
+
+| Label | Scene | Switches | Command |
+| --- | --- | --- | --- |
+| r10-club-base | `venue=club state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Dr10-club-base"` |
+| r10-club-old | `venue=club state=cycle` | `ab=noreal,nodof,nograde` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnoreal%2Cnodof%2Cnograde%26hud%3D0%26log%3D1%26label%3Dr10-club-old"` |
+| r10-club-nodof | `venue=club state=cycle` | `ab=nodof` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnodof%26hud%3D0%26log%3D1%26label%3Dr10-club-nodof"` |
+| r10-club-nohair2 | `venue=club state=cycle` | `ab=nohair2` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnohair2%26hud%3D0%26log%3D1%26label%3Dr10-club-nohair2"` |
+| r10-club-noreal | `venue=club state=cycle` | `ab=noreal` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnoreal%26hud%3D0%26log%3D1%26label%3Dr10-club-noreal"` |
+| r10-club-nograde | `venue=club state=cycle` | `ab=nograde` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnograde%26hud%3D0%26log%3D1%26label%3Dr10-club-nograde"` |
+| r10-club-nocatch | `venue=club state=cycle` | `ab=nocatch` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnocatch%26hud%3D0%26log%3D1%26label%3Dr10-club-nocatch"` |
+| r10-theatre-base | `venue=theatre state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Dr10-theatre-base"` |
+| r10-theatre-old | `venue=theatre state=cycle` | `ab=noreal,nodof,nograde` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnoreal%2Cnodof%2Cnograde%26hud%3D0%26log%3D1%26label%3Dr10-theatre-old"` |
+| r10-theatre-nodof | `venue=theatre state=cycle` | `ab=nodof` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnodof%26hud%3D0%26log%3D1%26label%3Dr10-theatre-nodof"` |
+| r10-theatre-nohair2 | `venue=theatre state=cycle` | `ab=nohair2` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnohair2%26hud%3D0%26log%3D1%26label%3Dr10-theatre-nohair2"` |
+| r10-theatre-noreal | `venue=theatre state=cycle` | `ab=noreal` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnoreal%26hud%3D0%26log%3D1%26label%3Dr10-theatre-noreal"` |
+| r10-theatre-nograde | `venue=theatre state=cycle` | `ab=nograde` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnograde%26hud%3D0%26log%3D1%26label%3Dr10-theatre-nograde"` |
+| r10-theatre-nocatch | `venue=theatre state=cycle` | `ab=nocatch` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnocatch%26hud%3D0%26log%3D1%26label%3Dr10-theatre-nocatch"` |
+| r10-openmic-base | `venue=openmic state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dopenmic%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Dr10-openmic-base"` |
+| r10-openmic-old | `venue=openmic state=cycle` | `ab=noreal,nodof,nograde` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dopenmic%26state%3Dcycle%26ab%3Dnoreal%2Cnodof%2Cnograde%26hud%3D0%26log%3D1%26label%3Dr10-openmic-old"` |
+| r10-openmic-nodof | `venue=openmic state=cycle` | `ab=nodof` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dopenmic%26state%3Dcycle%26ab%3Dnodof%26hud%3D0%26log%3D1%26label%3Dr10-openmic-nodof"` |
+| r10-openmic-nohair2 | `venue=openmic state=cycle` | `ab=nohair2` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dopenmic%26state%3Dcycle%26ab%3Dnohair2%26hud%3D0%26log%3D1%26label%3Dr10-openmic-nohair2"` |
+| r10-openmic-noreal | `venue=openmic state=cycle` | `ab=noreal` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dopenmic%26state%3Dcycle%26ab%3Dnoreal%26hud%3D0%26log%3D1%26label%3Dr10-openmic-noreal"` |
+| r10-openmic-nograde | `venue=openmic state=cycle` | `ab=nograde` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dopenmic%26state%3Dcycle%26ab%3Dnograde%26hud%3D0%26log%3D1%26label%3Dr10-openmic-nograde"` |
+| r10-openmic-nocatch | `venue=openmic state=cycle` | `ab=nocatch` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dopenmic%26state%3Dcycle%26ab%3Dnocatch%26hud%3D0%26log%3D1%26label%3Dr10-openmic-nocatch"` |
