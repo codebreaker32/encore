@@ -14,7 +14,7 @@ $N bash "$here/handsweep.sh" "$page" > "$out/handsweep.txt" 2>&1; sum+=("handswe
 BASE=$page $N node "$here/bindcheck.mjs" "$out/bind" > "$out/bindcheck.txt" 2>&1; sum+=("bindcheck: $(tail -1 "$out/bindcheck.txt")")
 for v in club theatre openmic arena; do
   $N node "$here/handocc.mjs" "$page" "$v" > "$out/handocc-$v.txt" 2>&1
-  sum+=("handocc $v: $(grep -io 'flickers[^,]*' "$out/handocc-$v.txt" | tail -1)")
+  sum+=("handocc $v: $(grep -o '"flickers":[0-9]*' "$out/handocc-$v.txt" | tail -1)")
 done
 rm -rf "$out/pack" && node "$here/../pack.mjs" "$out/pack" --tv > "$out/pack.txt" 2>&1
 sum+=("pack: $(tail -1 "$out/pack.txt")")

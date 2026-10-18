@@ -120,3 +120,6 @@ Gates: a first run meant for the merged commit actually hit port 8094, which the
 | openmic | 2 | 2 | 2 | 3 | 2 | 3 | 4 | 1 | no |
 
 The motion step lifted motion to 3–4 but not "real?" (1–2); judges still see laughs carried by heads and jaws, hands parked on knees or tables, and the Rocketbox faces. New concrete tells: the open mic face close's hair edge "dithered" (the fringe-depth bug above), a few remaining dark matte edges at the DOF boundary, the theatre's back stands as a grid of identical figures. Held-out: club "low across the candles" t 13.1; theatre "two-shot, centre" t 9.3; open mic "low from the riser" t 10.2.
+
+### 2026-10-18 16:25 UTC: gates on the merge with life-v1 step 2 (6941f34, frozen copy :8191)
+anatomy TOTAL 0; handsweep 0; bindcheck clean; handocc 0 flickers (area verdict) in all four venues; pack 20.2 MB; packcheck ready ×4; brightness gate pass ×4; edge bands 0 at both viewports in all four venues. One warning for the motion agent: "Person.update used 114 scratch vectors of 112" (theatre).
