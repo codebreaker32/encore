@@ -4,6 +4,7 @@
 // (window.__bakeAnatomy). Clap, heckle and finale are driven through the host protocol (crowdDrive messages).
 //   node anatomy.mjs <page url without query, e.g. http://127.0.0.1:8093/after/index.html> [venues...]
 //   (EXTRA='&anatomy=off' appends to every page's query)        exit code 1 if anything is found
+//   (ONLY=clap,listen runs those states only)
 import os from 'node:os';
 const { chromium } = await import(process.env.PW || `${os.homedir()}/tools/pw/node_modules/playwright/index.mjs`);
 const [base, ...vs] = process.argv.slice(2);
@@ -27,6 +28,7 @@ let total = 0;
 const tally = {};
 try {
   for (const v of venues) for (const S of SCEN) {
+    if (process.env.ONLY && !process.env.ONLY.split(",").includes(S.name)) continue; // (ONLY=clap,heckle: those states only)
     const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
     const errs = [];
     page.on('pageerror', (e) => errs.push(e.message.slice(0, 160)));

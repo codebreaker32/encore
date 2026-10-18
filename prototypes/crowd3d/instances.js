@@ -27,6 +27,9 @@ export const BAKE_REPORT = [];
 if (typeof window !== 'undefined') window.__bakeAnatomy = () => BAKE_REPORT;
 // &moves=off|nogest|nowalk: switch the captured moves off, or one part of them (for A/B checks)
 const MOVES_Q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('moves') || '' : '';
+// (life-v1: seated low-detail people sit a little forward, so the hands reach the thighs with the elbows bent; upright,
+// a short arm reached them straight, diagonally out past the seat in front: &bake=old for the old pose)
+const BAKE_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('bake') === 'old';
 const smooth01 = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 
 const UPPER = /Spine|Neck|Head|Clavicle|UpperArm|Forearm|Hand|Finger|^Bip01_[LRM][A-Z]/;
@@ -45,7 +48,7 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
   seat.updateMatrixWorld(true);
   const rig = new Rig(seat, model);
   const p = new Person(rig, null, { seed: 11, row: 3, x: 0, table: false, seatH, idle: 'still', stand, standHands, noParty: true });
-  Object.assign(p, { handsOn: 'lap', feet: 0.12, footFwd: 0.4, slouch: 0, headTilt: 0, cheerer: 0.9, style: 'giggle', gaze: { x: 0, y: 0 }, glance: 0 });
+  Object.assign(p, { handsOn: 'lap', feet: 0.12, footFwd: 0.4, slouch: stand || BAKE_OLD ? 0 : 0.2, headTilt: 0, cheerer: 0.9, style: 'giggle', gaze: { x: 0, y: 0 }, glance: 0 });
   const room = { events: [], murmur: 0, murmurId: 0, performer: new THREE.Vector3(0, seatH + 0.75, 60) };
   let sk = null;
   model.traverse((o) => { if (o.isSkinnedMesh) sk = o; });
@@ -110,6 +113,11 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
       const atRaw = (fn) => { fn(); frameNo++; return readSkin(); };
       // the seated rest pose, to add the laugh captures to
       const ab = bonesOf(rig), restQ = ab.map((b) => (b ? b.quaternion.clone() : null)), restRoot = ab[0].position.clone(), restModel = model.position.clone();
+      // (the rest pose's upper arms in the world, for the laughs below; the walk and the sit frames are posed after the
+      // rest bake, so they are read from it again: the rest geometry's own arms)
+      const armRestW = [];
+      model.updateMatrixWorld(true);
+      for (const u of [rig.b.lUpper, rig.b.rUpper]) if (u) { const q = new THREE.Quaternion(); u.getWorldQuaternion(q); armRestW.push([u, q]); }
       for (let f = 0; f < MOVES.walk; f++) frames.push(at(() => { applyPose(rig, sampleCycle(walkC, f / MOVES.walk, pose)); model.position.set(0, 0, 0); }, false));
       let neckW = null, hipW = null;
       { applyPose(rig, sampleCycle(walkC, 0, pose)); model.position.set(0, 0, 0); model.updateMatrixWorld(true); neckW = pos(rig.b.neck); hipW = pos(rig.b.lThigh).add(pos(rig.b.rThigh)).multiplyScalar(0.5); }
@@ -160,6 +168,13 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
           { const si = ab.findIndex((x) => x && x.name === 'Bip01_Spine');
             if (si >= 0) { const D = new THREE.Quaternion().copy(ab[si].quaternion).invert().multiply(restQ[si]); for (const x of ab) if (x && /_Thigh$/.test(x.name)) x.quaternion.premultiply(D); } }
           ab[0].position.copy(restRoot); model.position.copy(restModel);
+          // (life-v1: the arms keep the rest pose's own direction instead of swinging out with the laugh's twist of the
+          // chest: the shoulders carry them, a hand moves a few cm; swung, a low-detail arm stuck out across the
+          // neighbour's lap: &bake=old)
+          if (!BAKE_OLD) {
+            model.updateMatrixWorld(true);
+            for (const [u, q] of armRestW) { const pq = new THREE.Quaternion(); u.parent.getWorldQuaternion(pq); u.quaternion.copy(pq.invert().multiply(q)); }
+          }
         }));
       }
       // offsets from the seated rest; the seated end of the sit-down is re-based on the rest pose exactly
