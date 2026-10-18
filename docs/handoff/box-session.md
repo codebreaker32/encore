@@ -74,3 +74,22 @@ You are a Claude Code session on the AWS build box (`~/strumble`), started so wo
 
 ## Progress log
 Keep `docs/handoff/box-progress.md` current after every step. At the top, a 5-line status: where you are, the last result, the next step, "Needs the user", and the time (UTC). Below it, one dated entry per step, with numbers and image paths.
+
+## The strict judge (generator and discriminator loop), added by the user 18 Oct
+You are the **generator**. After every round of changes, run an independent **judge panel**, and don't count anything as done until it passes.
+1. **What the judges get:**
+   - **Frames:** render a fixed judge set per venue at TV resolution (800×450 drawn, shown at 1280×720): the wide, two mids, one face close, and a 6-frame strip at 0.2 s through a laugh.
+   - **A held-out set:** add one randomly chosen setup and moment per venue that you did not tune on, picked fresh each round from a seed you log.
+   - **Files:** save them to `docs/mockups/judge/round-NN/`.
+2. **Three fresh subagents** (the Agent tool, new each round, with no memory of earlier rounds and never shown your notes or claims) get only the images plus this rubric.
+   - **Their instruction:** "You are a strict visual-effects supervisor. Decide whether these frames could pass as real camera footage of a live audience on a TV. Default to 'fake' unless proven otherwise."
+   - **Each judge scores 0–10:** skin, eyes and face, hair, clothes, contact and grounding, lighting, motion and life (from the strip), and overall "real footage?". Each also lists the 5 biggest tells, ranked, with the image and the region.
+   - **Each judge has a distinct lens:** (a) a VFX and compositing supervisor; (b) a film director of photography; (c) an animator or motion-capture lead.
+3. **Scoring:**
+   - A venue's score per category is the **minimum** of the three judges, not the average.
+   - **Pass** means every category is 7 or more and "real footage?" is 7 or more for that venue.
+   - Log every score and the top tells in `docs/handoff/box-progress.md` (one table per round), with the image paths.
+4. **The generator's next round:** fix the highest-ranked tells first, re-render the same set plus a new held-out pick, and judge again.
+   - **Never game the judge:** don't crop, darken or blur to hide problems; don't change the camera to avoid a tell; don't drop the held-out set. Make sure the performance and anatomy gates still pass.
+   - **Stop for a venue** when it passes twice in a row, or when two rounds in a row improve its minimum score by less than 0.5. Then move to the next venue or the weakest category.
+5. **The judges can't see the TV's speed.** Keep the GPU cost honest (calls, tris, texture MB, box 8× frame time), and write the TV checks for the user in tv-sweep.md. The TV decides whether a change becomes a default.

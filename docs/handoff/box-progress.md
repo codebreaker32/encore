@@ -4,7 +4,7 @@
 **Last result:** round 01: still fails everywhere (minimums 1–4; "real footage?" 1–2). Small gains in contact and lighting; judge noise is about ±1.
 **Next:** round 02: per-vertex AO (mouth interiors, chin, collar), a more directional key with candle uplight, two-pass hair, the theatre's stray strap and card edges.
 **Needs the user:** nothing yet.
-**Updated:** 2026-10-18 13:25 UTC.
+**Updated:** 2026-10-18 13:20 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -14,7 +14,7 @@
 
 ## Log
 
-### 2026-10-18 13:25 UTC: round 00, the baseline (seed 1000)
+### 2026-10-18 13:05 UTC: round 00, the baseline (seed 1000)
 Frames `docs/mockups/judge/round-00/` (from the baseline at :8092). Judges: (a) VFX, (b) DoP, (c) animator; scores are the minimum of the three.
 
 | Venue | skin | eyes/face | hair | clothes | contact | lighting | motion | real? | pass |
@@ -32,7 +32,7 @@ Top tells (all three judges agree):
 
 Cost (draw calls / triangles, tv): club wide 43 / 79.7k, mids 43 / 128.0k; theatre wide 38 / 97.3k, mids 38 / 112.7–115.1k; open mic wide 48 / 83.8k, mids 48 / 101.5k.
 
-### 2026-10-18 13:40 UTC: round 01 (seed 1001): skin, eyes, hands, lens
+### 2026-10-18 13:19 UTC: round 01 (seed 1001): skin, eyes, hands, lens
 Changes (real.js, crowd.js; each a switch):
 - `realLit` on the front people's head and body materials (`&ab=noreal`): the wrapped warm terminator on skin (only where the albedo reads as skin, so caps and beanies don't get it) plus a two-lobe normalized Blinn sheen with Schlick Fresnel (F0 0.028); hands found from the hand and finger bone weights (`aReal`, computed at load) get the skin term and an albedo pulled towards the face's tone (they read as white gloves). `&ab=nospec` drops only the specular.
 - Catchlights (`&ab=nocatch`): one Points draw; each eye bone sits at the eyeball's centre (checked: vertex distances 1.47–1.61 cm, constant), so a 2.5 mm point goes on the eyeball where the normal halves the directions to the key and the lens, scaled by the key's cone and the cornea's side; the lids hide it by depth. A shader-only catchlight on the 73-vertex eyeballs fell under the lids, so it was dropped.
