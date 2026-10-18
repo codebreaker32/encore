@@ -628,7 +628,7 @@ const SKIN_DIRECT = [
 // real-v1 (real.js): the front people's skin, eyes and hands, the tv default (&ab=noreal turns it off, &ab=nospec drops
 // only the specular lobes)
 const REAL = !ab('noreal') && P.frontMat === 'lambert';
-realOptions({ nospec: ab('nospec'), fill: !!PEOPLE_LIGHT, fillK: num('frontfill', 0.6), wrap: num('wrap', 0.15) }); // (the front people's fill and house light at 0.6, the skin's wrap 0.15 (was 0.35, which flattened the faces); &frontfill= and &wrap= are test knobs)
+realOptions({ nospec: ab('nospec'), nosheen: ab('nosheen'), nopores: ab('nopores'), pores: num('pores', 0), fill: !!PEOPLE_LIGHT, fillK: num('frontfill', 0.6), wrap: num('wrap', 0.15) }); // (the front people's fill and house light at 0.6, the skin's wrap 0.15 (was 0.35, which flattened the faces); &frontfill= and &wrap= are test knobs)
 const catchlights = REAL && !ab('nocatch') ? new Catchlights(scene, key) : null; // (&ab=nocatch: none)
 let candles = null; // (real.js Candles: the club's table candles on the front people)
 function skinLit(m) {

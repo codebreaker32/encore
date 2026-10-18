@@ -98,4 +98,4 @@ Changes (all switchable):
 
 Top tells (unchanged in substance): the laugh as a mouth swap on still bodies; identical hands-on-knees and hands-on-table poses (both the motion agent's); waxy faces; the DOF's dark halo (fixed after this round); back rows as cut-outs; theatre bodies floating above seats. Held-out: club "low across the candles: centre table" t 12.1; theatre "stalls: group house right" t 17.7; open mic "the chairs: group house right" t 13.0.
 
-Gates on the merged commit 07afa52 (frozen copy at :8094): handsweep 0, bindcheck clean, handocc theatre/openmic 0, **anatomy 1** (openmic clap t 4.2, Male_Adult_04 L 1.1 cm into the other arm) and **handocc club 1 flicker** (Male_Adult_17 R from the bar side). Both reproduce with `&ab=noreal`, so they come from life-v1 step 1; sent to the motion agent to fix in its next commit.
+Gates: a first run meant for the merged commit actually hit port 8094, which the motion agent's dev server held (my server never bound), so its findings (openmic clap anatomy 1, club handocc 1 flicker) describe the agent's working copy, not real-v1; the agent was told. Rerun on my own frozen copy at :8191 (below).

@@ -41,8 +41,8 @@ export function realMasks(mesh, geometry = mesh.geometry, ao = null) {
   return { eyes, hands };
 }
 
-const NOSPEC = { v: false, fillK: 1, wrap: 0.35 };
-export function realOptions(o) { Object.assign(NOSPEC, { v: !!o.nospec, fill: !!o.fill, fillK: o.fillK ?? 1, wrap: o.wrap ?? 0.35 }); } // (fill: the people fill's uniforms exist)
+const NOSPEC = { v: false, fillK: 1, wrap: 0.35, nosheen: false, nopores: false, pores: 0.004 };
+export function realOptions(o) { Object.assign(NOSPEC, { v: !!o.nospec, fill: !!o.fill, fillK: o.fillK ?? 1, wrap: o.wrap ?? 0.35, nosheen: !!o.nosheen, nopores: !!o.nopores, pores: o.pores ?? 0.004 }); } // (fill: the people fill's uniforms exist)
 
 /** The direct term for a front material: kind 'head' (skin everywhere but the eyes) or 'body' (skin on the hands). */
 export function realLit(m, kind) {
@@ -82,6 +82,22 @@ export function realLit(m, kind) {
 	if ( uCandle.w > 0.0 ) { vec3 cl = uCandle.xyz - geometryPosition; float d2 = max( dot( cl, cl ), 0.03 );
 	  float cn = dot( geometryNormal, cl * inversesqrt( d2 ) );
 	  reflectedLight.directDiffuse += uCandleColor * ( uCandle.w / d2 ) * saturate( ( cn + 0.25 ) / 1.25 ) * BRDF_Lambert( material.diffuseColor ); }`;
+    // skin's fine breakup on the head (off: invisible at the TV's 800×450; &pores=0.15 to try): two octaves of smooth value noise in the head texture's space
+    // (stable as the face moves: no shimmer) bump the normal a little where the albedo is skin, so the sheen breaks into
+    // pores instead of sliding like wax. Screen-space derivatives, no texture.
+    const PORES = kind === 'head' && !NOSPEC.nopores && NOSPEC.pores > 0 && sh.fragmentShader.includes('vMapUv') ? `
+float realH( vec2 p ) { vec2 i = floor( p ), f = fract( p ); f = f * f * ( 3.0 - 2.0 * f );
+  float a = fract( sin( dot( i, vec2( 127.1, 311.7 ) ) ) * 43758.5453 ), b = fract( sin( dot( i + vec2( 1.0, 0.0 ), vec2( 127.1, 311.7 ) ) ) * 43758.5453 );
+  float c = fract( sin( dot( i + vec2( 0.0, 1.0 ), vec2( 127.1, 311.7 ) ) ) * 43758.5453 ), d = fract( sin( dot( i + vec2( 1.0, 1.0 ), vec2( 127.1, 311.7 ) ) ) * 43758.5453 );
+  return mix( mix( a, b, f.x ), mix( c, d, f.x ), f.y ); }` : '';
+    const PORE_N = /* glsl */ `
+	{ vec3 al0 = diffuseColor.rgb;
+	  float tone0 = saturate( ( al0.r - al0.b ) * 5.0 - 0.1 ) * step( al0.b, al0.g + 0.02 ) * step( al0.g, al0.r ) * ( 1.0 - vReal.x );
+	  float h = realH( vMapUv * 900.0 ) * 0.6 + realH( vMapUv * 2100.0 ) * 0.4;
+	  vec3 ps = - vViewPosition, sx = dFdx( ps ), sy = dFdy( ps );
+	  vec3 r1 = cross( sy, normal ), r2 = cross( normal, sx ); float det = dot( sx, r1 );
+	  vec3 grad = sign( det ) * ( dFdx( h ) * r1 + dFdy( h ) * r2 );
+	  normal = normalize( abs( det ) * normal - grad * ${NOSPEC.pores.toFixed(4)} * tone0 ); }`;
     const c = 'lights_lambert_pars_fragment';
     const src = THREE.ShaderChunk[c];
     const i0 = src.indexOf('void RE_Direct_Lambert'), i1 = src.indexOf('{', i0), i2 = src.indexOf('}', i1);
@@ -92,7 +108,8 @@ export function realLit(m, kind) {
 	{ vec3 fh = normalize( uFillDir + geometryViewDir );
 	  reflectedLight.directDiffuse += uFillColor * vReal.x * 30.0 * pow( saturate( dot( geometryNormal, fh ) ), 300.0 ) * saturate( dot( geometryNormal, uFillDir ) ); }`;
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 vReal;\nvarying float vAO;\nuniform vec4 uCandle; uniform vec3 uCandleColor; uniform mat3 uClothRot;\n#define REAL_SKIN_SPEC 1.0')
+      .replace('#include <common>', `#include <common>\nvarying vec2 vReal;\nvarying float vAO;\nuniform vec4 uCandle; uniform vec3 uCandleColor; uniform mat3 uClothRot;\n#define REAL_SKIN_SPEC 1.0${PORES}`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>${PORES ? PORE_N : ''}`)
       // the baked AO (open above 0.92, cavities under 0.12 black): all of the fill and house light, most of the key (a person's own small shadows, which the TV
       // can't draw: the mouth's inside, under the chin, inside a collar)
       .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>' + fillEye + CANDLE + `\n\t{ float aoK = smoothstep( 0.12, 0.92, vAO );${kind === 'head' ? ' vec3 tw = material.diffuseColor; aoK = max( aoK, 0.6 * smoothstep( 0.42, 0.62, min( tw.r, min( tw.g, tw.b ) ) ) * ( 1.0 - vReal.x ) );' : ''} reflectedLight.indirectDiffuse *= aoK * ${NOSPEC.fillK.toFixed(3)}; reflectedLight.directDiffuse *= mix( 1.0, aoK, 0.85 ); }`)
