@@ -19,4 +19,12 @@ done
 rm -rf "$out/pack" && node "$here/../pack.mjs" "$out/pack" --tv > "$out/pack.txt" 2>&1
 sum+=("pack: $(tail -1 "$out/pack.txt")")
 $N node "$here/packcheck.mjs" "$out/pack" > "$out/packcheck.txt" 2>&1; sum+=("packcheck: $(tail -2 "$out/packcheck.txt" | tr '\n' ' ')")
+# the brightness gate (no reaction setup darker than 0.9 of its venue's wide; setupsheet.mjs, LUMA=1)
+for v in club theatre openmic arena; do
+  LUMA=1 $N node "$here/setupsheet.mjs" "$page" "$v" "$out/luma" 2.0 > "$out/luma-$v.txt" 2>&1
+  sum+=("brightness $v: $(grep -o '"gate": "[^"]*"' "$out/luma-$v.txt" | head -1)")
+done
+# the edge checks on the packed page (no flat band at any side; edgeall.sh writes ~/edge-<tag>/)
+$N bash "$here/edgeall.sh" gates "file://$out/pack/index.html" > "$out/edge.txt" 2>&1
+sum+=("edges: $(awk '{print $2, $3, $5, $7, $9, $11}' "$out/edge.txt" | tr '\n' ';')")
 printf '%s\n' "${sum[@]}" | tee "$out/summary.txt"

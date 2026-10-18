@@ -20,8 +20,12 @@ const drive = (t) => {
   if (a > 0 && a < 6) rs.push({ id: 41, kind: 'laugh', strength: 0.9, age: a, level: 0.9 * Math.min(1, a / 0.4) * (a < 3 ? 1 : Math.max(0, 1 - (a - 3) / 2)) });
   return { attention: 0.8, warmth: 0.6, reactions: rs };
 };
-let seed = (+seedArg * 2654435761 + [...venue].reduce((a, c) => a * 31 + c.charCodeAt(0), 7)) >>> 0; // (the venue in the seed: each venue its own pick)
-const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+let seed = (Math.imul(+seedArg, 2654435761) + [...venue].reduce((a, c) => a * 31 + c.charCodeAt(0), 7)) >>> 0; // (the venue in the seed: each venue its own pick)
+const rnd = () => { // (mulberry32: consecutive seeds give unrelated picks)
+  seed = (seed + 0x6d2b79f5) >>> 0; let t = seed;
+  t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const log = { venue, seed: +seedArg, frames: {} };
 async function open() {

@@ -41,8 +41,8 @@ export function realMasks(mesh, geometry = mesh.geometry, ao = null) {
   return { eyes, hands };
 }
 
-const NOSPEC = { v: false, fillK: 1 };
-export function realOptions(o) { Object.assign(NOSPEC, { v: !!o.nospec, fill: !!o.fill, fillK: o.fillK ?? 1 }); } // (fill: the people fill's uniforms exist)
+const NOSPEC = { v: false, fillK: 1, wrap: 0.35 };
+export function realOptions(o) { Object.assign(NOSPEC, { v: !!o.nospec, fill: !!o.fill, fillK: o.fillK ?? 1, wrap: o.wrap ?? 0.35 }); } // (fill: the people fill's uniforms exist)
 
 /** The direct term for a front material: kind 'head' (skin everywhere but the eyes) or 'body' (skin on the hands). */
 export function realLit(m, kind) {
@@ -71,7 +71,7 @@ export function realLit(m, kind) {
 	vec3 al = material.diffuseColor;
 	float tone = saturate( ( al.r - al.b ) * 5.0 - 0.1 ) * step( al.b, al.g + 0.02 ) * step( al.g, al.r );
 	float skinK = ${kind === 'head' ? '( 1.0 - vReal.x ) * tone' : 'vReal.y'};
-	float skinWrap = saturate( ( skinNL + 0.35 ) / 1.35 );
+	float skinWrap = saturate( ( skinNL + ${NOSPEC.wrap.toFixed(3)} ) / ${(1 + NOSPEC.wrap).toFixed(3)} );
 	vec3 irradiance = ( dotNL + ( skinWrap - dotNL ) * vec3( 0.85, 0.36, 0.22 ) * skinK ) * directLight.color;
 	reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );${spec}`;
     // (the teeth, on the head: white, inside the closed lips in the bind pose, so the bake blacks them out; a laughing
@@ -243,3 +243,62 @@ export function clothHue(m, deg) {
   const e = (i, j) => (i === j ? c + k * (1 - c) : k * (1 - c) + ((j - i + 3) % 3 === 1 ? -1 : 1) * q * s);
   u.value.set(e(0, 0), e(0, 1), e(0, 2), e(1, 0), e(1, 1), e(1, 2), e(2, 0), e(2, 1), e(2, 2));
 }
+
+/**
+ * Hands on a table cast a contact shadow (&ab=nohandshadow): one instanced draw of soft dark discs on the club's table
+ * tops, under each front person's palms, each frame (scene.onBeforeRender). A disc is placed where the stage key would
+ * throw the palm's shadow onto the top, darker and tighter the nearer the palm is to it, gone above about 15 cm or off
+ * the table. The TV draws no real shadows; this is the one people notice most (the judges: "hands hover on the table").
+ */
+export class HandShadows {
+  constructor(scene, key, max = 24) {
+    this.key = key; this.hands = [];
+    const g = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+    this.k = new THREE.InstancedBufferAttribute(new Float32Array(max), 1).setUsage(THREE.DynamicDrawUsage);
+    g.setAttribute('aK', this.k);
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: /* glsl */ `attribute float aK; varying float vK; varying vec2 vP;
+        void main() { vK = aK; vP = position.xz * 2.0; gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4( position, 1.0 ); }`,
+      fragmentShader: /* glsl */ `varying float vK; varying vec2 vP;
+        void main() { float r = dot( vP, vP ); float a = vK * ( 1.0 - smoothstep( 0.0, 1.0, r ) ); if ( a < 0.01 ) discard; gl_FragColor = vec4( 0.0, 0.0, 0.0, a ); }`,
+      transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    });
+    this.mesh = new THREE.InstancedMesh(g, mat, max);
+    this.mesh.count = 0; this.mesh.frustumCulled = false; this.mesh.name = 'hand-shadows'; this.mesh.renderOrder = 3;
+    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.max = max;
+    scene.add(this.mesh);
+    const prev = scene.onBeforeRender;
+    scene.onBeforeRender = (r, s, cam, rt) => { if (prev) prev.call(scene, r, s, cam, rt); this.update(); };
+  }
+  /** A person's two palms over a round table top (centre x, z, top y, radius). */
+  add(person, b, table) {
+    for (const [h, tip] of [[b.lHand, b.lTip], [b.rHand, b.rTip]]) if (h) this.hands.push({ person, h, tip: tip || h, t: table });
+  }
+  update() {
+    let n = 0;
+    const M = this.mesh, kp = this.key.position;
+    for (const e of this.hands) {
+      if (n >= this.max) break;
+      const p = e.person;
+      if (p.hidden || !p.rig || !p.rig.model.visible) continue;
+      _ha.setFromMatrixPosition(e.h.matrixWorld); _hb.setFromMatrixPosition(e.tip.matrixWorld);
+      const palm = _ha.lerp(_hb, 0.5), t = e.t, hgt = palm.y - t.top;
+      if (hgt < -0.05 || hgt > 0.16) continue;
+      // (the key's shadow of the palm on the top: along the line from the key, down to the top's plane)
+      _hd.copy(palm).sub(kp).normalize();
+      const s = Math.max(0, hgt) / Math.max(0.2, -_hd.y);
+      const x = palm.x + _hd.x * s, z = palm.z + _hd.z * s;
+      if ((x - t.x) * (x - t.x) + (z - t.z) * (z - t.z) > (t.r - 0.03) * (t.r - 0.03)) continue;
+      const near = 1 - Math.min(1, Math.max(0, (hgt - 0.015) / 0.14));
+      const size = 0.11 + 0.5 * Math.max(0, hgt);
+      _hm.compose(_hp.set(x, t.top + 0.002, z), _hq.identity(), _hs.set(size, 1, size * 1.3));
+      M.setMatrixAt(n, _hm); this.k.array[n] = 0.6 * near * near;
+      n++;
+    }
+    M.count = n; M.visible = n > 0;
+    M.instanceMatrix.needsUpdate = true; this.k.needsUpdate = true;
+  }
+}
+const _ha = new THREE.Vector3(), _hb = new THREE.Vector3(), _hd = new THREE.Vector3(), _hp = new THREE.Vector3(), _hs = new THREE.Vector3();
+const _hm = new THREE.Matrix4(), _hq = new THREE.Quaternion();

@@ -61,7 +61,7 @@ import { ARENA } from './arena.js';
 import { makeTraffic } from './traffic.js';
 import { CrowdSound, cueFor } from './sound.js';
 import { applyLook } from './look.js';
-import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue } from './real.js';
+import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue, HandShadows } from './real.js';
 import { buildSetups, pickSetup, PACE } from './director.js';
 
 const Q = new URLSearchParams(location.search);
@@ -363,7 +363,11 @@ scene.add(hemi);
 const K = LT.key;
 const KEY = num('key', K.intensity);
 const key = new THREE.SpotLight(K.color || 0xffc48a, KEY, 0, K.angle, K.penumbra ?? 0.75, K.decay);
-key.position.set(...(Q.has('keypos') ? Q.get('keypos').split(',').map(Number) : K.pos)); // (&keypos=x,y,z: a test knob)
+// (real-v1: the stage spill comes from house left of the camera and a little higher, so the faces have a lit and a shadow
+// side, a source a viewer can place, instead of a flat light from the lens's own direction; &ab=nosidekey; &keypos=x,y,z
+// is a test knob)
+const KEY_POS = Q.has('keypos') ? Q.get('keypos').split(',').map(Number) : !ab('noreal') && !ab('nosidekey') && P.frontMat === 'lambert' && VENUE_ID !== 'arena' ? [K.pos[0] - 2.4, K.pos[1] + 0.4, K.pos[2] + 0.2] : K.pos;
+key.position.set(...KEY_POS);
 key.target.position.set(...K.target);
 scene.add(key, key.target);
 const RIM = { dir: new THREE.Vector3(...(LT.rim?.dir || [0, 0.6, 0.8])).normalize(), color: new THREE.Color(LT.rim?.color ?? 0xffb070), k: num('rim', LT.rim?.k ?? 1) };
@@ -624,7 +628,7 @@ const SKIN_DIRECT = [
 // real-v1 (real.js): the front people's skin, eyes and hands, the tv default (&ab=noreal turns it off, &ab=nospec drops
 // only the specular lobes)
 const REAL = !ab('noreal') && P.frontMat === 'lambert';
-realOptions({ nospec: ab('nospec'), fill: !!PEOPLE_LIGHT, fillK: num('frontfill', 1) }); // (&frontfill=: the front people's fill and house light, a test knob)
+realOptions({ nospec: ab('nospec'), fill: !!PEOPLE_LIGHT, fillK: num('frontfill', 0.6), wrap: num('wrap', 0.15) }); // (the front people's fill and house light at 0.6, the skin's wrap 0.15 (was 0.35, which flattened the faces); &frontfill= and &wrap= are test knobs)
 const catchlights = REAL && !ab('nocatch') ? new Catchlights(scene, key) : null; // (&ab=nocatch: none)
 let candles = null; // (real.js Candles: the club's table candles on the front people)
 function skinLit(m) {
@@ -1036,6 +1040,11 @@ async function buildRoom() {
   if (REAL && !ab('nocandle') && VENUE_ID === 'club') {
     candles = new Candles(scene, num('candle', 0.2));
     for (const p of people) if (p.kind === 'front' && p.src && p.src.twoTop) { const t = p.src.twoTop; candles.add(p, p.rig.model, new THREE.Vector3(t.x + 0.01, (t.y || 0) + 0.81, t.z - 0.06), t.x * 3.1 + t.z); }
+  }
+  // (the hands on the club's tables: contact shadows on the tops, real.js HandShadows; venue.js: the top at 0.75 m, r 0.4)
+  if (REAL && !ab('nohandshadow') && VENUE_ID === 'club') {
+    const hs = new HandShadows(scene, key);
+    for (const p of people) if (p.kind === 'front' && p.src && p.src.twoTop) { const t = p.src.twoTop; hs.add(p, p.rig.b, { x: t.x, z: t.z, top: (t.y || 0) + 0.75, r: 0.4 }); }
   }
   const hk = people.find((p) => p.kind === 'front' && p.src === hkSeat) || people.filter((p) => p.kind === 'front' && p.o.row === 0 && p.o.x < closeTable.x - 0.5).sort((a, b) => b.o.x - a.o.x)[0];
   if (hk) {

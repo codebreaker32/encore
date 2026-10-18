@@ -1,10 +1,10 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status:** round 02 judged (AO, candles, two-pass hair, per-venue clothes); the motion agent does life-v1 in `~/strumble-life`.
-**Last result:** round 02: flat (venue minimums club 2, theatre 1, open mic 2). By the brief's stop rule (two rounds under +0.5) the venues stop as wholes; next rounds go after the weakest categories (theatre contact and lighting, everyone's motion, mouths).
-**Next:** teeth in open mouths (the AO blacks them out), the DOF fringe, the theatre's grounding; merge the motion agent's life-v1 when it gates clean.
+**Status:** round 03 judged (bloom, toe, teeth, DOF taps); round 04 in progress (a side key, a narrower skin wrap, less fill, hand contact shadows). Motion agent: step 1 (blinks, saccades) merged; working on breathing, poses and laughs.
+**Last result:** round 03: flat again (club 1, theatre 1, open mic 2 on "real?"; every category 2–3). The judges' unanimous tells now are motion (laughs as head turns, identical hands-on-knees poses), the unmotivated flat front light, waxy faces, and the back rows as cut-outs.
+**Next:** judge round 04; run the full gates (incl. brightness and edges) on the frozen commit; merge the motion agent's next steps.
 **Needs the user:** nothing yet.
-**Updated:** 2026-10-18 13:40 UTC.
+**Updated:** 2026-10-18 14:10 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -65,3 +65,20 @@ Changes (each a switch; real.js, crowd.js, tools/bake_ao.mjs):
 Top tells: identical hands-on-knees / hands-on-table poses and laughs that move only heads (motion agent, told); waxy faces; open mouths now "black holes with no teeth" (the AO overshoots); a bright fringe where the DOF meets the subject; people floating in front of seats with no contact; the theatre's stretched pink arms on a row-2 instance (found with `&ab=nofront`: an instanced near-band body; passed to the motion agent, who owns the bake) and a translucent row-2 torso. Held-out: club "tables: group house right" t 15.2; theatre "stalls: group house right" t 17.9; open mic "from the side wall" t 11.6. `docs/mockups/judge/round-02/`.
 
 Honest reading: three judges agree these are Rocketbox-class game assets, and shading alone moves them by about a point at most; the 7/10 bar needs better source assets (scans, real hair) or real shadows, neither of which fits the TV's budget tonight. I keep fixing the named tells in order and say so plainly in the verdict.
+
+### 2026-10-18 14:00 UTC: round 03 (seed 1003): teeth, DOF taps, bloom, film toe; life-v1 step 1 merged
+Changes:
+- Teeth keep at least 0.6 of the light (the bake had blacked them out behind the closed lips).
+- DOF: four taps spread over the circle at a finer mip, taps that land on something much nearer left out (the bright fringe), the pixel's own blurred colour in the average (a dark ring when the gather was one-sided). The FXAA taps read mip 0 explicitly: implicit derivatives inside FXAA's edge-only branch picked wrong mips once the target had mips (a dark edge on every silhouette).
+- Bloom from the DOF's mips (two coarse reads, thresholded) and a film toe in the grade (blacks lifted 1%, warm).
+- Merged the motion agent's life-v1 step 1 (blinks 2–10 s with doubles and rapt skips, saccades to the performer, a neighbour and the room, lids following the gaze; gated by the agent: anatomy, handsweep, bindcheck, handocc 0).
+- Tried and dropped: Rocketbox body normal maps at 256² (`tools/render/nmap256`): no visible fold detail at TV framing, not worth 2.1 MB of a 30 MB budget. A club `depthFloor` lift: no visible change on the silhouettes.
+- The judge set's held-out picker used a weak LCG (consecutive seeds gave the same pick); now mulberry32. Round 03 was rendered after the fix.
+
+| Venue | skin | eyes/face | hair | clothes | contact | lighting | motion | real? | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 2 | 2 | 2 | 3 | 3 | 3 | 2 | 1 | no |
+| theatre | 2 | 2 | 2 | 3 | 2 | 2 | 2 | 1 | no |
+| openmic | 2 | 2 | 2 | 3 | 2 | 3 | 3 | 2 | no |
+
+Top tells: the laugh "switches on" at 12.8 s with only heads and mouths (motion); identical hands-on-knees and hands-on-table poses; faces lit flat from the lens's own direction with no source ("a softbox that isn't there"); waxy skin; back rows as cardboard silhouettes; a dark outline at the theatre jacket's edge (the model's own inner lining, not the DOF). Held-out: club "tables: group house left, from house left" t 9.8; theatre wide t 12.6; open mic wide t 16.3.
