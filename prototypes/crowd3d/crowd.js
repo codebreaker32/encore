@@ -274,6 +274,8 @@ function setBodyDetail() {
 const houseShot = () => shot === 'close' && curSetup && !curSetup.seats.length;
 const litNow = () => (shot === 'wide' || (shot === 'close' && curSetup && (curSetup.lit === 'wide' || !curSetup.seats.length)) ? 'wide' : shot);
 const fringes = []; // (the hair's blended second pass on each front person: shown in close and mid shots only)
+// (without its fringe the core cuts at 0.4 again, as before the two passes, or the hair thins)
+function showFringes(on) { for (const f of fringes) { f.visible = on; if (f.userData.core) f.userData.core.alphaTest = on ? 0.55 : 0.4; } }
 function applyShotLight() {
   const lit = litNow(), wideLit = lit === 'wide', spill = !wideLit || (houseShot() && curSetup.lit === 'close');
   curFog = wideLit ? FOG.wide : FOG[lit] || FOG.wide;
@@ -296,7 +298,7 @@ function applyShotLight() {
   if (V.closeDimEmissive && emissiveMat) emissiveMat.color.setScalar(wideLit ? 1 : V.closeDimEmissive);
   setBodyDetail();
   // (the hair's second pass only in close and mid shots: on the wide the heads are small and the draws add up)
-  if (fringes.length) for (const f of fringes) f.visible = !wideLit || ab('hair2wide');
+  showFringes(!wideLit || ab('hair2wide'));
 }
 /**
  * &ab=dynres: on a cut, never mid-shot, step the drawing size down (540 → 450 → 360) while p90 over the last 120
@@ -682,20 +684,20 @@ function prepFront(gltf, ao = null) {
     o.frustumCulled = false;
   });
   // real-v1 hair in two passes (&ab=nohair2): the cards' solid core alpha-tested at 0.55 and depth-written, then the
-  // same cards blended over it (alpha above 0.02, no depth write), so the strands' ends fade instead of stepping and
+  // same cards blended over it (alpha above 0.02), so the strands' ends fade instead of stepping and
   // crawling (the judges' "moire" and "stair-stepped alpha"). One more draw per person with hair cards.
   if (REAL && !ab('nohair2') && P.frontMat === 'lambert') {
     const hairs = [];
     gltf.scene.traverse((o) => { if (o.isSkinnedMesh && o.material.alphaTest && !/_fringe$/.test(o.name)) hairs.push(o); });
     for (const h of hairs) {
       h.material.alphaTest = 0.55;
-      const fm = new THREE.MeshLambertMaterial({ map: h.material.map, alphaTest: 0.02, transparent: true, depthWrite: false, side: h.material.side, name: h.material.name + '_fringe' });
+      const fm = new THREE.MeshLambertMaterial({ map: h.material.map, alphaTest: 0.02, transparent: true, depthWrite: true, side: h.material.side, name: h.material.name + '_fringe' }); // (depth written: the lens's DOF reads the strands as hair, not as the background behind them)
       if (!ab('nohairspec')) realHair(fm);
       peopleLit(fm); fm.userData.people = true;
       const f = new THREE.SkinnedMesh(h.geometry, fm);
       f.name = h.name + '_fringe'; f.frustumCulled = false; f.renderOrder = 2;
       h.parent.add(f); f.bind(h.skeleton, h.bindMatrix);
-      f.userData.fringe = true;
+      f.userData.fringe = true; f.userData.coreName = h.name;
     }
   }
   // the renderer walks every visible node each frame (80 bones a person, 480 of the club's 612 nodes); the bones need
@@ -1044,7 +1046,7 @@ async function buildRoom() {
   stats.front = frontSeats.length;
   for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.isMesh && !frontBgMats.has(o.material)) frontBgMats.set(o.material, p); });
   if (catchlights) for (const p of people) if (p.kind === 'front') catchlights.add(p, p.rig.model);
-  for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.userData.fringe) fringes.push(o); });
+  for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.userData.fringe) { o.userData.core = o.parent.getObjectByName(o.userData.coreName); if (o.userData.core) o.userData.core = o.userData.core.material; fringes.push(o); } });
   // (the club's table candles on the people at them: venue.js puts each candle at the table's middle, 6 cm stage-side)
   if (REAL && !ab('nocandle') && VENUE_ID === 'club') {
     candles = new Candles(scene, num('candle', 0.2));
@@ -2109,9 +2111,9 @@ async function main() {
   if (Q.has('debug') || CAPTURE) window.__renderWith = (cam) => {
     camera.position.copy(cam.position); camera.quaternion.copy(cam.quaternion); camera.fov = cam.fov; camera.near = cam.near;
     camera.updateProjectionMatrix(); camera.updateMatrixWorld(); lightView(); vlitFrame();
-    lensCam = true;
+    lensCam = true; const fr = fringes.length && fringes[0].visible; showFringes(true);
     if (FXAA) FXAA.render(room.now); else renderer.render(scene, camera);
-    lensCam = false;
+    lensCam = false; if (fringes.length) showFringes(fr);
     camera.near = 0.05; camera.updateProjectionMatrix();
   };
   if (Q.has('debug') || CAPTURE) window.__bodyDetail = (on) => { setBodyDetail(); for (const p of people) if (p.bodyMesh) p.bodyMesh.geometry = on ? p.bodyHi : p.bodyLow; };

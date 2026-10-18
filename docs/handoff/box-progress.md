@@ -4,7 +4,7 @@
 **Last result:** round 04 flat (real? club 1, theatre 1, open mic 2). The judges agree the remaining tells are mostly motion (frozen bodies, identical rest poses) plus the asset class itself.
 **Next:** gate results; merge the motion agent's next step; round 05 on the merged tree.
 **Needs the user:** nothing yet.
-**Updated:** 2026-10-18 14:50 UTC.
+**Updated:** 2026-10-18 15:45 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -107,3 +107,16 @@ Gates: a first run meant for the merged commit actually hit port 8094, which the
 - Theatre seats: per-seat colour and wear (vertex colours) and a velvet sheen on red upholstery (`&ab=novelvet`); subtle at TV size.
 - TV sweep round 10 written (`tools/render/tv-sweep.md`): base, old (all of real-v1 off), nodof, nohair2, noreal, nograde, nocatch per venue, with the rule for which term to drop first.
 - A wiring bug: the sheen and pore switches were never passed from crowd.js, so an earlier pore A/B compared identical builds; fixed and re-tested.
+
+### 2026-10-18 15:45 UTC: gates pass on round 04's code; life-v1 step 2 merged; round 05 (seed 1005)
+- **Gates on e3271e4** (rendering through round 04 plus life step 1; frozen copy at :8191): anatomy TOTAL 0, handsweep 0, bindcheck clean, handocc 0 flickers in all four venues, brightness gate pass ×4, pack 20.2 MB, packcheck ready ×4, edge bands 0 at 962×541 and 1018×541 in all four venues.
+- **Merged life-v1 step 2** (8605ace, the motion agent: breathing in the chest and shoulders, slow drift and weight shifts, laugh onsets squeezed to 0.1–0.6 s with an intake of breath and a heave on each "ha", looks between partners 1.6–3.4 s into a laugh, rare whispers, listening micro-expressions, face/hair touches, varied resting hands, and the theatre's stray arms fixed in the instanced bake; the agent's gates: all 0). Gates on the merge (6941f34) are running.
+- After the round: the hair's blended pass writes depth (the DOF had read its strands as background and smeared them), and when the fringe is hidden (wides) the core's cut goes back to 0.4; harness cameras show the fringe.
+
+| Venue | skin | eyes/face | hair | clothes | contact | lighting | motion | real? | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 1 | no |
+| theatre | 2 | 2 | 1 | 3 | 2 | 2 | 3 | 1 | no |
+| openmic | 2 | 2 | 2 | 3 | 2 | 3 | 4 | 1 | no |
+
+The motion step lifted motion to 3–4 but not "real?" (1–2); judges still see laughs carried by heads and jaws, hands parked on knees or tables, and the Rocketbox faces. New concrete tells: the open mic face close's hair edge "dithered" (the fringe-depth bug above), a few remaining dark matte edges at the DOF boundary, the theatre's back stands as a grid of identical figures. Held-out: club "low across the candles" t 13.1; theatre "two-shot, centre" t 9.3; open mic "low from the riser" t 10.2.
