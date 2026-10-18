@@ -22,7 +22,7 @@ try {
       for (let k = Math.max(0, t - 0.6); k <= t; k += 0.2) await page.evaluate((x) => window.__renderAt(x), k);
       const res = await page.evaluate(() => window.__bindCheck());
       if (res.length) found.push({ t, res });
-      if (t === times[Math.floor(times.length / 2)]) await page.screenshot({ path: `${outdir}/${venue}-${preset}-${mode}-t${t}.jpg`, type: 'jpeg', quality: 80 });
+      if (t === times[Math.floor(times.length / 2)]) await page.screenshot({ path: `${outdir}/${venue}-${preset}-${mode}-t${t}.jpg`, type: 'jpeg', quality: 80, timeout: 180000 });
     }
     if (found.length || errors.length) bad++;
     console.log(venue.padEnd(8), preset.padEnd(4), mode.padEnd(8), found.length ? 'BIND ' + JSON.stringify(found).slice(0, 400) : 'ok', errors.length ? 'ERR ' + errors[0] : '');

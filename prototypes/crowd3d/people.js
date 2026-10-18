@@ -810,6 +810,21 @@ export class Person {
     for (let t = r2(); t < 900; t += 0.6 + r2() * 2.4) this.saccades.push({ t, x: (r2() - 0.5) * 0.44, y: (r2() - 0.5) * 0.16 });
     this.exprs = [];
     for (let t = 1 + r2() * 6; t < 900; t += 4 + r2() * 11) this.exprs.push({ t, u: r2(), k: r2(), dur: 0.9 + r2() * 1.8 });
+    // ---- life-v1: blinks, looks and small events from a third stream (the draws above keep their values) ----
+    const r3 = rng((Math.imul(this.seed | 0, 13) + 5) | 0);
+    // blinks 2-10 s apart, mostly 3-5 (skewed short), one in ten a double; an attentive listener skips some (blinkAt)
+    this.blinks = [];
+    for (let t = r3() * 3; t < 900; t += 2 + 8 * Math.pow(r3(), 1.7)) { this.blinks.push(t); if (r3() < 0.1) this.blinks.push(t + 0.24 + r3() * 0.12); }
+    this.blinkSkip = this.blinks.map(() => r3());
+    // saccades between fixations: mostly on the performer (small corrections), sometimes a neighbour, sometimes the room
+    this.saccades = [];
+    for (let t = r3(); t < 900; t += 0.45 + r3() * 2.6) {
+      const u = r3();
+      if (u < 0.7) this.saccades.push({ t, x: (r3() - 0.5) * 0.14, y: (r3() - 0.5) * 0.07 });
+      else if (u < 0.85) this.saccades.push({ t, x: 0.38 + r3() * 0.1, y: 0.02 + r3() * 0.05, nb: 1 }); // (to the friend beside them: side at run time)
+      else this.saccades.push({ t, x: (r3() - 0.5) * 0.6, y: (r3() - 0.55) * 0.22 });
+    }
+    this.lifeSeed = r3() * 1000; // (weight shifts, head drift, whispers: each person's own phase)
     this.sylHz = 3.9 + r2() * 1.2;
     { const [lo, hi] = THETA[this.temper]; this.theta = lo + (hi - lo) * r2(); if (r2() < 0.05 && this.temper !== 'laugher') this.theta = 0.97; } // ~5% stone faces (never a laugher)
     this.rt = 0.12 + 0.25 * r2(); // reaction time, s
@@ -1657,7 +1672,7 @@ export class Person {
     this._evk = evk;
     if (!STEPPED && !this.fresh && !woke && !(this.src && this.src._loco)) {
       const hz = this._off ? 3 : this._calm ? 5 : 0;
-      if (hz) { const k = Math.floor(now * hz + (this._ph ??= hash(this.seed * 0.37 + 5))); if (k === this._slot) return; this._slot = k; }
+      if (hz) { const k = Math.floor(now * hz + (this._ph ??= hash(this.seed * 0.37 + 5))); if (k === this._slot) { this.faceTick(now); return; } this._slot = k; }
     }
     SEC && SEC.start();
     rig.seatChanged();
@@ -2454,15 +2469,20 @@ export class Person {
       while (lo < hi) { const m = (lo + hi + 1) >> 1; if (S[m].t <= now) lo = m; else hi = m - 1; }
       const cur = S[lo], prev = S[Math.max(0, lo - 1)], k = smooth((now - cur.t) / 0.045); // a saccade takes ~45 ms
       const busyEyes = 1 - 0.7 * clamp01(lb * 2 + W.phone);
-      let ex = lerp(prev.x, cur.x, k) * calm * busyEyes, ey = lerp(prev.y, cur.y, k) * calm * busyEyes;
+      const sx = (q) => (q.nb ? q.x * (this.side || 1) : q.x); // (a look to the friend: their side)
+      let ex = lerp(sx(prev), sx(cur), k) * calm * busyEyes, ey = lerp(prev.y, cur.y, k) * calm * busyEyes;
       if (walk) { ex *= 0.4; ey = ey * 0.4 + 0.06; }
       ey += 0.22 * W.phone + xp.down * 0.2;
       ex += xp.rollX; ey += xp.rollY;
       rig.euler(b.lEye, ey, ex, 0); rig.euler(b.rEye, ey, ex, 0);
+      this._eyeY = ey;
     }
     SEC && SEC.mark('legs2eyes'); // ---- face ----
     if (face && face.ok) {
-      const bl = this.blinkAt(now) * calm;
+      // (an attentive listener blinks less; the upper lids follow the eyes down; the lids alone go on between a calm
+      // person's held poses, faceTick: never a frozen face)
+      this._att = room.mode === 'live' && mur < 0.5 ? attention : 0; this._calmK = calm;
+      const bl = this.blinkAt(now, this._att) * calm, lid = clamp01((this._eyeY || 0) / 0.22) * 0.3;
       const cl = (tk ? tk.laugh : 0) * W.talk; // a laugh at a friend's line
       const M = this.moodAt(now, room, lb, ls, hk); // (the moment's expression, by temperament: faces-v1)
       const sm = clamp01(ls * (0.85 + 0.3 * this.eager) + this.smileBase * calm * (1 - W.phone) + cl * 0.9 + xp.smile + M.smile + speaking * 0.12);
@@ -2472,8 +2492,9 @@ export class Person {
       // A Duchenne laugh: the eyes narrow and the cheeks rise with it, the upper lip lifts, and the jaw opens only as
       // far as the smile allows (never a round "O"), pulsing with each "ha".
       const sk = xp.smirk + M.smirk + (st === 'nose' ? this.smirkSide * 0.6 * Math.min(1, ls * 1.6) : 0); // an asymmetric smile: one corner only
-      face.set('eyeBlinkLeft', Math.max(bl, bored * 0.3, phone * 0.25, 0.12 * g));
-      face.set('eyeBlinkRight', Math.max(bl, bored * 0.3, phone * 0.25, 0.115 * g));
+      this._lidL = Math.max(lid, bored * 0.3, phone * 0.25, 0.12 * g); this._lidR = Math.max(lid, bored * 0.3, phone * 0.25, 0.115 * g);
+      face.set('eyeBlinkLeft', Math.max(bl, this._lidL));
+      face.set('eyeBlinkRight', Math.max(bl, this._lidR));
       // (pushed: at TV distance the shapes must read; a big laugh near full at the peak, a chuckle a clear smile)
       // (the laugh's face follows the take: an open-mouthed roar head back or doubled over, a closed-mouth giggle or
       // shoulder shake, a crinkle-eyed grin turning to a friend or through the nose)
@@ -2523,13 +2544,20 @@ export class Person {
     if (vpi > 112 && !Person._vpWarned) { Person._vpWarned = true; console.warn('[crowd] Person.update used', vpi, 'scratch vectors of 112'); }
   }
 
-  blinkAt(t) {
+  /** Between a calm person's held poses: the eyelids only (blinks are 250 ms; a 5 Hz pose would miss most of them). */
+  faceTick(now) {
+    const face = this.face;
+    if (!face || !face.ok || this._lidL === undefined) return;
+    const bl = this.blinkAt(now, this._att || 0) * (this._calmK ?? 1);
+    face.set('eyeBlinkLeft', Math.max(bl, this._lidL)); face.set('eyeBlinkRight', Math.max(bl, this._lidR));
+  }
+  blinkAt(t, attentive = 0) {
     // binary search the schedule for the last blink before t; a blink closes in 80 ms and opens in 170 ms
     const a = this.blinks;
     let lo = 0, hi = a.length - 1;
     while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (a[mid] <= t) lo = mid; else hi = mid - 1; }
     const shape = (dt) => (dt < 0 ? 0 : dt < 0.08 ? smooth(dt / 0.08) : dt < 0.25 ? 1 - smooth((dt - 0.08) / 0.17) : 0);
-    let v = shape(t - a[lo]);
+    let v = this.blinkSkip && this.blinkSkip[lo] < 0.3 * attentive ? 0 : shape(t - a[lo]); // (held open a little longer while rapt)
     // and a big eye movement brings a blink with it
     const S = this.saccades;
     if (S && S.length) {
