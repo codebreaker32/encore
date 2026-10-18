@@ -923,3 +923,36 @@ The four rule changes the coordinator approved are in:
   4. add DOF in close-ups in the FXAA pass, from a DepthTexture and the setup's focus distance;
   5. bake per-vertex AO into the `.tv.glb` files.
   Each as an `&ab=` switch; the sheet is `docs/mockups/real-v1-<venue>.png`.
+
+## Box session: real-v1, the front people's realism (2026-10-18, branch `real-v1`)
+Progress log with every judge round: `docs/handoff/box-progress.md`. New module `real.js`; hooks in crowd.js (`prepFront`,
+the people set-up after `frontBgMats`, the FXAA pass). Every term is a switch:
+- **`realLit`** (head and body materials of the tv front people; `&ab=noreal` turns off everything below except the lens
+  and grade): masks from the skin weights at load (`aReal`: eye bones, hand and finger bones); skin wrap 0.15 (`&wrap=`),
+  a two-lobe normalized-Blinn sheen with Schlick (`&ab=nospec`), skin found by an albedo hue test so caps and beanies are
+  left alone; hands pulled towards the face's tone; teeth keep 0.6 of the light; a cloth sheen and wrap on garments
+  (`&ab=nosheen`); the front fill at 0.6 (`&frontfill=`); a procedural pore bump, off (`&pores=0.15`; invisible at TV size).
+- **Baked AO** (`tools/bake_ao.mjs` → `people/ao/<name>.json`, `&ab=noao`): per vertex, bind pose, 48 rays, 12 cm,
+  through smoothstep(0.12, 0.92): mouths, nostrils, sockets, collars and hoods go dark. Rebake after any model rebuild
+  (it checks vertex counts and warns on a mismatch).
+- **Catchlights** (`Catchlights`, one Points draw, `&ab=nocatch`): the key's mirror point on each eyeball (the eye bones
+  sit at the eyeballs' centres), cornea side only, scaled by the key's cone; lids hide it by depth.
+- **Club candles** on the people at tables (`Candles`, a shader term, `&ab=nocandle`, `&candle=0.2`) and **hand contact
+  shadows** on the table tops (`HandShadows`, one instanced draw, `&ab=nohandshadow`).
+- **Per-venue clothes** (`clothHue`, `&ab=nocloth`): each avatar's garments turned 25–55° in hue per venue, weighted by
+  saturation, never on skin-toned texels or hands.
+- **Hair**: two passes (core alpha 0.55 + blended fringe; `&ab=nohair2`; the fringe only in close and mid shots,
+  `&ab=hair2wide`) and a Kajiya-Kay strand highlight (`realHair`, `&ab=nohairspec`).
+- **Side key**: the stage key 2.4 m house left and 0.4 m up from the look's position, all three small venues
+  (`&ab=nosidekey`, `&keypos=x,y,z`).
+- **Lens** in the FXAA pass: DOF from the target's depth texture and mips with an autofocus on the front head nearest the
+  frame's centre (Super 35, f/2.4; taps that land on the sharp subject are left out), bloom from the same mips, a grade
+  (−14% saturation, slightly cooler, a 1% warm toe). DOF and bloom run only in close and mid shots (`&ab=lenswide` for
+  the wide too; `&ab=nodof`, `&ab=nograde`). The FXAA taps read mip 0 explicitly: implicit derivatives in its edge branch
+  picked wrong mips once the target had them. The target makes its mips once after each allocation, or it samples black.
+- **Tried and dropped:** Rocketbox body normal maps at 256² (no visible folds at TV framing; 2.1 MB), a club depthFloor
+  lift (no effect on the silhouettes), a stronger `&rim=` (no effect on the silhouettes).
+- **Tools:** `judgeset.mjs` (the strict judge's frame set), `gates.sh` (every gate in one run, incl. brightness and
+  edges), `sheetrv.sh` (the real-v1 before/after sheet; `BEFORE=` in realsheet.mjs), `bake_ao.mjs`.
+- **Ports on the box:** 8091 real-v1 tree, 8092 `~/c3d` (the baseline's files), 8093 the motion agent's worktree,
+  8094 the motion agent's dev copy, 8191 the frozen gate copy (`~/strumble-gate`).
