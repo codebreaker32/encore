@@ -61,7 +61,7 @@ import { ARENA } from './arena.js';
 import { makeTraffic } from './traffic.js';
 import { CrowdSound, cueFor } from './sound.js';
 import { applyLook } from './look.js';
-import { realMasks, realLit, realOptions, Catchlights } from './real.js';
+import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue } from './real.js';
 import { buildSetups, pickSetup, PACE } from './director.js';
 
 const Q = new URLSearchParams(location.search);
@@ -363,7 +363,7 @@ scene.add(hemi);
 const K = LT.key;
 const KEY = num('key', K.intensity);
 const key = new THREE.SpotLight(K.color || 0xffc48a, KEY, 0, K.angle, K.penumbra ?? 0.75, K.decay);
-key.position.set(...K.pos);
+key.position.set(...(Q.has('keypos') ? Q.get('keypos').split(',').map(Number) : K.pos)); // (&keypos=x,y,z: a test knob)
 key.target.position.set(...K.target);
 scene.add(key, key.target);
 const RIM = { dir: new THREE.Vector3(...(LT.rim?.dir || [0, 0.6, 0.8])).normalize(), color: new THREE.Color(LT.rim?.color ?? 0xffb070), k: num('rim', LT.rim?.k ?? 1) };
@@ -624,8 +624,9 @@ const SKIN_DIRECT = [
 // real-v1 (real.js): the front people's skin, eyes and hands, the tv default (&ab=noreal turns it off, &ab=nospec drops
 // only the specular lobes)
 const REAL = !ab('noreal') && P.frontMat === 'lambert';
-realOptions({ nospec: ab('nospec'), fill: !!PEOPLE_LIGHT });
+realOptions({ nospec: ab('nospec'), fill: !!PEOPLE_LIGHT, fillK: num('frontfill', 1) }); // (&frontfill=: the front people's fill and house light, a test knob)
 const catchlights = REAL && !ab('nocatch') ? new Catchlights(scene, key) : null; // (&ab=nocatch: none)
+let candles = null; // (real.js Candles: the club's table candles on the front people)
 function skinLit(m) {
   const prev = m.onBeforeCompile;
   m.onBeforeCompile = (sh, r) => {
@@ -646,12 +647,12 @@ function skinLit(m) {
 // drawn body's 1.4-2k): taken out of the model at load, then swapped onto the body of the people a close-up or a mid
 // shot frames, at the cut (setBodyDetail), so a shot never changes them while it is up
 const HI_BODY = new WeakMap(); // the drawn body's geometry → the full body's geometry
-function prepFront(gltf) {
+function prepFront(gltf, ao = null) {
   pruneEmptyMorphs(gltf.scene);
   {
     let low = null, hi = null;
     gltf.scene.traverse((o) => { if (o.isSkinnedMesh && /_bodyHi$/.test(o.name)) hi = o; else if (o.isSkinnedMesh && /_body$/.test(o.name)) low = o; });
-    if (hi && REAL) realMasks(hi);
+    if (hi && REAL) realMasks(hi, hi.geometry, ao && ao.bodyHi);
     if (hi) { hi.parent.remove(hi); if (low && !ab('nohibody')) HI_BODY.set(low.geometry, hi.geometry); else hi.geometry.dispose(); hi.material.dispose(); }
   }
   gltf.scene.traverse((o) => {
@@ -665,13 +666,28 @@ function prepFront(gltf) {
       m.roughness = 0.75; m.metalness = 0;
     }
     // (real-v1: skin and eyes on the heads, skin on the hands; &ab=noreal: skinLit on the heads, as before)
-    if (REAL && o.isSkinnedMesh && !o.material.alphaTest) { realMasks(o); realLit(o.material, /head/.test(o.material.name || '') ? 'head' : 'body'); }
+    if (REAL && o.isSkinnedMesh && !o.material.alphaTest) { realMasks(o, o.geometry, ao && (/head/.test(o.material.name || '') ? ao.head : /_body$/.test(o.name) ? ao.body : null)); realLit(o.material, /head/.test(o.material.name || '') ? 'head' : 'body'); }
     else if (/head/.test(o.material.name || '') && !o.material.alphaTest) skinLit(o.material);
     if (!o.material.userData.people) { peopleLit(o.material); o.material.userData.people = true; }
     if (o.material.map) o.material.map.anisotropy = 4;
     o.castShadow = SHADOWS;
     o.frustumCulled = false;
   });
+  // real-v1 hair in two passes (&ab=nohair2): the cards' solid core alpha-tested at 0.55 and depth-written, then the
+  // same cards blended over it (alpha above 0.02, no depth write), so the strands' ends fade instead of stepping and
+  // crawling (the judges' "moire" and "stair-stepped alpha"). One more draw per person with hair cards.
+  if (REAL && !ab('nohair2') && P.frontMat === 'lambert') {
+    const hairs = [];
+    gltf.scene.traverse((o) => { if (o.isSkinnedMesh && o.material.alphaTest && !/_fringe$/.test(o.name)) hairs.push(o); });
+    for (const h of hairs) {
+      h.material.alphaTest = 0.55;
+      const fm = new THREE.MeshLambertMaterial({ map: h.material.map, alphaTest: 0.02, transparent: true, depthWrite: false, side: h.material.side, name: h.material.name + '_fringe' });
+      peopleLit(fm); fm.userData.people = true;
+      const f = new THREE.SkinnedMesh(h.geometry, fm);
+      f.name = h.name + '_fringe'; f.frustumCulled = false; f.renderOrder = 2;
+      h.parent.add(f); f.bind(h.skeleton, h.bindMatrix);
+    }
+  }
   // the renderer walks every visible node each frame (80 bones a person, 480 of the club's 612 nodes); the bones need
   // none of it (a skinned mesh updates its own skeleton), so each bone tree with no mesh in it is left out of the walk
   gltf.scene.traverse((o) => {
@@ -983,7 +999,13 @@ async function buildRoom() {
   // (their bytes are prefetched; the parses, 2.5-4.6 s each on the TV's A55 and on the main thread, wait for addFront,
   // after the room's first frame, one at a time with a frame between them)
   const yieldFrame = () => new Promise((r) => (STILL || CAPTURE ? r() : requestAnimationFrame(() => setTimeout(r, 0))));
-  const loadFront = async () => { for (const n of new Set(frontNames)) { src[n] = prepFront(await load(`people/${n}${P.frontFile}.glb`)); await yieldFrame(); } tmark('front glbs'); };
+  // (real-v1: each avatar's baked per-vertex AO, people/ao/<name>.json, tools/bake_ao.mjs; &ab=noao)
+  const loadAO = (n) => (REAL && !ab('noao') && P.frontFile === '.tv' ? fetch(`people/ao/${n}.json`).then((r) => r.json()).catch(() => null) : Promise.resolve(null));
+  // (real-v1: each avatar's clothes take a hue of their own in each venue, so the two venues an avatar sits in show two
+  // different outfits; a seeded turn of 25-55° either way; &ab=nocloth keeps the textures' own)
+  const clothDeg = (n) => { let h = 7; for (const ch of n + VENUE_ID) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const u = (h % 1000) / 1000; return (u < 0.5 ? -1 : 1) * (25 + 60 * Math.abs(u - 0.5)); };
+  const dress = (root, n) => { if (REAL && !ab('nocloth')) root.traverse((o) => { if (o.isMesh && /_body$/.test(o.name)) clothHue(o.material, clothDeg(n)); }); return root; };
+  const loadFront = async () => { for (const n of new Set(frontNames)) { const [g, ao] = await Promise.all([load(`people/${n}${P.frontFile}.glb`), loadAO(n)]); src[n] = dress(prepFront(g, ao), n); await yieldFrame(); } tmark('front glbs'); };
   const addFront = async () => {
   await loadFront();
   await motionReady; // (the people's motion clips)
@@ -1010,6 +1032,11 @@ async function buildRoom() {
   stats.front = frontSeats.length;
   for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.isMesh && !frontBgMats.has(o.material)) frontBgMats.set(o.material, p); });
   if (catchlights) for (const p of people) if (p.kind === 'front') catchlights.add(p, p.rig.model);
+  // (the club's table candles on the people at them: venue.js puts each candle at the table's middle, 6 cm stage-side)
+  if (REAL && !ab('nocandle') && VENUE_ID === 'club') {
+    candles = new Candles(scene, num('candle', 0.2));
+    for (const p of people) if (p.kind === 'front' && p.src && p.src.twoTop) { const t = p.src.twoTop; candles.add(p, p.rig.model, new THREE.Vector3(t.x + 0.01, (t.y || 0) + 0.81, t.z - 0.06), t.x * 3.1 + t.z); }
+  }
   const hk = people.find((p) => p.kind === 'front' && p.src === hkSeat) || people.filter((p) => p.kind === 'front' && p.o.row === 0 && p.o.x < closeTable.x - 0.5).sort((a, b) => b.o.x - a.o.x)[0];
   if (hk) {
     hk.heckler = true;
@@ -2102,6 +2129,7 @@ async function main() {
     if (post) post.material.uniforms.uTime.value = now;
     for (const u of hazeTimes) u.value = now;
     if (candle) candle.intensity = 0.9 * (0.85 + 0.15 * Math.sin(now * 11) * Math.sin(now * 7.3));
+    if (candles) candles.now = now;
     soundTick(now);
     if (frames % 15 === 0) captionFor();
     if (FXAA) FXAA.render(now); else renderer.render(scene, camera);

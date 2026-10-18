@@ -14,9 +14,15 @@ import * as THREE from 'three';
 const EYE = /(^|[^a-z])[LR]Eye$/i, HAND = /(Hand|Finger\d*)$/;
 
 /** Per-vertex (eye, hand) weights from a skinned mesh's bones, as the geometry attribute aReal. */
-export function realMasks(mesh, geometry = mesh.geometry) {
+export function realMasks(mesh, geometry = mesh.geometry, ao = null) {
   const g = geometry, si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
   if (!si || !sw || !mesh.skeleton || g.attributes.aReal) return;
+  // the baked AO ([count, base64 of one byte a vertex], tools/bake_ao.mjs), or open everywhere (the shader reads aAO:
+  // a missing attribute would read 0, black)
+  let aoA = null;
+  if (ao && ao[0] === si.count) { const bin = atob(ao[1]); aoA = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) aoA[i] = bin.charCodeAt(i); }
+  else { if (ao) console.warn(`[crowd] ao: ${mesh.name} has ${si.count} vertices, the bake ${ao[0]}`); aoA = new Uint8Array(si.count).fill(255); }
+  g.setAttribute('aAO', new THREE.BufferAttribute(aoA, 1, true));
   const bones = mesh.skeleton.bones.map((b) => b.name.replace(/^.*Bip01[ _]?/, ''));
   const isEye = bones.map((n) => EYE.test(n)), isHand = bones.map((n) => HAND.test(n));
   const a = new Float32Array(si.count * 2);
@@ -35,17 +41,20 @@ export function realMasks(mesh, geometry = mesh.geometry) {
   return { eyes, hands };
 }
 
-const NOSPEC = { v: false };
-export function realOptions(o) { Object.assign(NOSPEC, { v: !!o.nospec, fill: !!o.fill }); } // (fill: the people fill's uniforms exist)
+const NOSPEC = { v: false, fillK: 1 };
+export function realOptions(o) { Object.assign(NOSPEC, { v: !!o.nospec, fill: !!o.fill, fillK: o.fillK ?? 1 }); } // (fill: the people fill's uniforms exist)
 
 /** The direct term for a front material: kind 'head' (skin everywhere but the eyes) or 'body' (skin on the hands). */
 export function realLit(m, kind) {
   const prev = m.onBeforeCompile;
+  // (each front material its own candle: the table candle in front of whoever wears it, Candles below)
+  const cu = (m.userData.candle = { uCandle: { value: new THREE.Vector4() }, uCandleColor: { value: new THREE.Color(1.0, 0.5, 0.2) }, uClothRot: { value: new THREE.Matrix3() } });
   m.onBeforeCompile = (sh, r) => {
     if (prev) prev.call(m, sh, r);
+    Object.assign(sh.uniforms, cu);
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute vec2 aReal;\nvarying vec2 vReal;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvReal = aReal;');
+      .replace('#include <common>', '#include <common>\nattribute vec2 aReal;\nvarying vec2 vReal;\nattribute float aAO;\nvarying float vAO;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvReal = aReal; vAO = aAO;');
     const spec = NOSPEC.v ? '' : /* glsl */ `
 	vec3 hv = normalize( directLight.direction + geometryViewDir );
 	float nh = saturate( dot( geometryNormal, hv ) ), vh = saturate( dot( geometryViewDir, hv ) );
@@ -65,6 +74,12 @@ export function realLit(m, kind) {
 	float skinWrap = saturate( ( skinNL + 0.35 ) / 1.35 );
 	vec3 irradiance = ( dotNL + ( skinWrap - dotNL ) * vec3( 0.85, 0.36, 0.22 ) * skinK ) * directLight.color;
 	reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );${spec}`;
+    // the table candle (club): a warm point a few tens of centimetres below the face, wrapped, inverse square; its
+    // strength (uCandle.w) is 0 for anyone without a candle
+    const CANDLE = /* glsl */ `
+	if ( uCandle.w > 0.0 ) { vec3 cl = uCandle.xyz - geometryPosition; float d2 = max( dot( cl, cl ), 0.03 );
+	  float cn = dot( geometryNormal, cl * inversesqrt( d2 ) );
+	  reflectedLight.directDiffuse += uCandleColor * ( uCandle.w / d2 ) * saturate( ( cn + 0.25 ) / 1.25 ) * BRDF_Lambert( material.diffuseColor ); }`;
     const c = 'lights_lambert_pars_fragment';
     const src = THREE.ShaderChunk[c];
     const i0 = src.indexOf('void RE_Direct_Lambert'), i1 = src.indexOf('{', i0), i2 = src.indexOf('}', i1);
@@ -75,11 +90,22 @@ export function realLit(m, kind) {
 	{ vec3 fh = normalize( uFillDir + geometryViewDir );
 	  reflectedLight.directDiffuse += uFillColor * vReal.x * 30.0 * pow( saturate( dot( geometryNormal, fh ) ), 300.0 ) * saturate( dot( geometryNormal, uFillDir ) ); }`;
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 vReal;\n#define REAL_SKIN_SPEC 1.0')
-      .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>' + fillEye)
+      .replace('#include <common>', '#include <common>\nvarying vec2 vReal;\nvarying float vAO;\nuniform vec4 uCandle; uniform vec3 uCandleColor; uniform mat3 uClothRot;\n#define REAL_SKIN_SPEC 1.0')
+      // the baked AO (open above 0.92, cavities under 0.12 black): all of the fill and house light, most of the key (a person's own small shadows, which the TV
+      // can't draw: the mouth's inside, under the chin, inside a collar)
+      .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>' + fillEye + CANDLE + `\n\t{ float aoK = smoothstep( 0.12, 0.92, vAO ); reflectedLight.indirectDiffuse *= aoK * ${NOSPEC.fillK.toFixed(3)}; reflectedLight.directDiffuse *= mix( 1.0, aoK, 0.85 ); }`)
       .replace(`#include <${c}>`, out)
       // the hands: their albedo a little darker and warmer, towards the face (the texture's hands are pale)
-      .replace('#include <color_fragment>', `#include <color_fragment>\n${kind === 'body' ? 'diffuseColor.rgb *= mix( vec3( 1.0 ), vec3( 0.8, 0.72, 0.66 ), vReal.y );' : ''}`);
+      .replace('#include <color_fragment>', `#include <color_fragment>\n${kind === 'body' ? `diffuseColor.rgb *= mix( vec3( 1.0 ), vec3( 0.8, 0.72, 0.66 ), vReal.y );
+	// the venue's own clothes (&ab=nocloth): the garments' hue turned about the grey axis by this person's angle in this
+	// venue, by how saturated each texel is (denim, black and white barely move); never the hands or skin-toned texels
+	{ vec3 cc = diffuseColor.rgb; float mx = max( cc.r, max( cc.g, cc.b ) ), mn = min( cc.r, min( cc.g, cc.b ) );
+	  float sat = ( mx - mn ) / max( mx, 1e-3 );
+	  float hueO = ( cc.g - cc.b ) / max( cc.r - cc.b, 1e-3 ); // (0 red, 1 yellow: skin sits at about 0.25-0.7)
+	  float skinT = step( cc.b, cc.g ) * step( cc.g, cc.r ) * smoothstep( 0.12, 0.25, hueO ) * ( 1.0 - smoothstep( 0.7, 0.85, hueO ) );
+	  float w = smoothstep( 0.3, 0.6, sat ) * ( 1.0 - vReal.y ) * ( 1.0 - skinT );
+	  vec3 rc = uClothRot * cc; rc = mix( vec3( dot( rc, vec3( 0.3, 0.59, 0.11 ) ) ), rc, 0.85 );
+	  diffuseColor.rgb = mix( cc, max( rc, 0.0 ), w ); }` : ''}`);
   };
   const key0 = m.customProgramCacheKey.bind(m);
   m.customProgramCacheKey = () => key0() + '|real-' + kind + (NOSPEC.v ? '-nospec' : '');
@@ -177,3 +203,41 @@ export class Catchlights {
 }
 const _v2 = new THREE.Vector2(), _kd = new THREE.Vector3(), _m = new THREE.Matrix4(), _c = new THREE.Vector3(), _s = new THREE.Vector3();
 const _l = new THREE.Vector3(), _vv = new THREE.Vector3(), _n = new THREE.Vector3(), _f = new THREE.Vector3();
+
+/**
+ * Table candles light the people at them (&ab=nocandle): each front person at a two-top gets its candle's position in
+ * view space and a flicker, every frame (scene.onBeforeRender), in their own materials' uniforms. No scene light: the
+ * TV pays one point term in the front people's shaders only.
+ */
+export class Candles {
+  constructor(scene, strength = 0.05) {
+    this.list = []; this.k = strength; this.now = 0;
+    const prev = scene.onBeforeRender;
+    scene.onBeforeRender = (r, s, cam, rt) => { if (prev) prev.call(scene, r, s, cam, rt); this.update(cam); };
+  }
+  add(person, model, pos, seed) {
+    const us = [];
+    model.traverse((o) => { if (o.isMesh && o.material.userData.candle) us.push(o.material.userData.candle.uCandle); });
+    if (us.length) this.list.push({ person, us, pos: pos.clone(), seed });
+  }
+  update(cam) {
+    cam.updateMatrixWorld();
+    const t = this.now;
+    for (const c of this.list) {
+      const fl = 0.85 + 0.15 * Math.sin(t * 11 + c.seed) * Math.sin(t * 7.3 + c.seed * 2.1);
+      _cp.copy(c.pos).applyMatrix4(cam.matrixWorldInverse);
+      for (const u of c.us) u.value.set(_cp.x, _cp.y, _cp.z, this.k * fl);
+    }
+  }
+}
+const _cp = new THREE.Vector3();
+
+/** A hue turn of `deg` about the grey axis (luminance kept), for a front material's clothes (uClothRot). */
+export function clothHue(m, deg) {
+  const u = m.userData.candle && m.userData.candle.uClothRot;
+  if (!u) return;
+  const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a), k = 1 / 3, q = Math.sqrt(k);
+  // Rodrigues about (1,1,1)/sqrt(3)
+  const e = (i, j) => (i === j ? c + k * (1 - c) : k * (1 - c) + ((j - i + 3) % 3 === 1 ? -1 : 1) * q * s);
+  u.value.set(e(0, 0), e(0, 1), e(0, 2), e(1, 0), e(1, 1), e(1, 2), e(2, 0), e(2, 1), e(2, 2));
+}

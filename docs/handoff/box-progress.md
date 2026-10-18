@@ -1,10 +1,10 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status:** round 01 judged (skin, eyes, hands, lens); the motion agent does life-v1 in `~/strumble-life` (branch `real-v1-life`).
-**Last result:** round 01: still fails everywhere (minimums 1–4; "real footage?" 1–2). Small gains in contact and lighting; judge noise is about ±1.
-**Next:** round 02: per-vertex AO (mouth interiors, chin, collar), a more directional key with candle uplight, two-pass hair, the theatre's stray strap and card edges.
+**Status:** round 02 judged (AO, candles, two-pass hair, per-venue clothes); the motion agent does life-v1 in `~/strumble-life`.
+**Last result:** round 02: flat (venue minimums club 2, theatre 1, open mic 2). By the brief's stop rule (two rounds under +0.5) the venues stop as wholes; next rounds go after the weakest categories (theatre contact and lighting, everyone's motion, mouths).
+**Next:** teeth in open mouths (the AO blacks them out), the DOF fringe, the theatre's grounding; merge the motion agent's life-v1 when it gates clean.
 **Needs the user:** nothing yet.
-**Updated:** 2026-10-18 13:20 UTC.
+**Updated:** 2026-10-18 13:40 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -46,3 +46,22 @@ Changes (real.js, crowd.js; each a switch):
 | openmic | 3 | 2 | 2 | 3 | 3 | 4 | 3 | 2 | no |
 
 Top tells now: (1) motion: laughs are head turns only, hands frozen (the motion agent's, in progress); (2) mouth interiors as flat grey bars, smiles without cheek lift; (3) flat, unmotivated frontal light and candles that light nothing; (4) hair cards with moire; (5) no contact shadows or AO (chin, collar, hands on tables); plus concrete bugs: a stray pink diagonal strap across a theatre seat (`theatre-2-mid.png` ~760,380), a hard rectangular light edge round a back-left figure (`theatre-6-held.png`), a half-ghosted blonde at the open mic's right edge. Held-out picks: club "tables: group house right" t 16.1; theatre "stalls: group house right" t 8.8; open mic "from the side wall" t 12.5. Frames and judges' JSON in `docs/mockups/judge/round-01/`.
+
+### 2026-10-18 13:40 UTC: round 02 (seed 1002): AO, candles, two-pass hair, per-venue clothes
+Changes (each a switch; real.js, crowd.js, tools/bake_ao.mjs):
+- Per-vertex AO baked offline in the bind pose (`tools/bake_ao.mjs`: 48 cosine rays, 12 cm, against the head plus that body; 0.6–0.9 s per avatar; `people/ao/<name>.json`, 124 KB for all 12), loaded beside each .tv.glb (`&ab=noao`). The shader maps it through smoothstep(0.12, 0.92) so open skin is untouched and cavities go dark: the mouth's inside, nostrils, eye sockets, inside hoods and collars. All of the fill, 85% of the key.
+- Table candles light the people at them in the club (`&ab=nocandle`, `&candle=` strength, default 0.2): a wrapped inverse-square point term in the front people's shaders, the candle's view-space position and flicker set per frame; no scene light.
+- Two-pass hair (`&ab=nohair2`): the cards' core alpha-tested at 0.55, then blended at alpha > 0.02 without depth writes. Cost: one draw per front person with hair cards (+10 calls and +5.7k tris in the club, +8–10 elsewhere).
+- Each avatar's clothes take a seeded hue turn of 25–55° per venue (`&ab=nocloth`), weighted by saturation, never on hands or skin-toned texels (a hue test on the albedo), so the two venues an avatar sits in show different outfits. A first try at 40–140° made lime hoodies and green jeans; narrowed.
+- Test knobs: `&frontfill=` (the front people's fill), `&keypos=x,y,z` (the key's position). A house-left key and half the fill changed the faces little; not adopted.
+- Cost (calls / tris): club 54 / 85.4k wide, 54 / 133.7k mids; theatre 47 / 102.9k, 47 / 118.3–120.8k; open mic 59 / 90.0k, 59 / 107.7k. Textures unchanged (the AO is a vertex attribute: about 3 KB a person on the GPU).
+
+| Venue | skin | eyes/face | hair | clothes | contact | lighting | motion | real? | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 2 | no |
+| theatre | 2 | 2 | 2 | 3 | 2 | 2 | 2 | 1 | no |
+| openmic | 3 | 2 | 2 | 3 | 2 | 3 | 3 | 2 | no |
+
+Top tells: identical hands-on-knees / hands-on-table poses and laughs that move only heads (motion agent, told); waxy faces; open mouths now "black holes with no teeth" (the AO overshoots); a bright fringe where the DOF meets the subject; people floating in front of seats with no contact; the theatre's stretched pink arms on a row-2 instance (found with `&ab=nofront`: an instanced near-band body; passed to the motion agent, who owns the bake) and a translucent row-2 torso. Held-out: club "tables: group house right" t 15.2; theatre "stalls: group house right" t 17.9; open mic "from the side wall" t 11.6. `docs/mockups/judge/round-02/`.
+
+Honest reading: three judges agree these are Rocketbox-class game assets, and shading alone moves them by about a point at most; the 7/10 bar needs better source assets (scans, real hair) or real shadows, neither of which fits the TV's budget tonight. I keep fixing the named tells in order and say so plainly in the verdict.
