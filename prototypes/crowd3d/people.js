@@ -552,6 +552,8 @@ const MASK = {}; // filled by initMotion()
 // facepalm on every avatar); the thoughtful chin touch stays, rarely; dead air and chat keep a little of the rest)
 const FIDGETS = {
   listen: [['sit_chair_gestic_thoughtful', 0.35], ['sit_chair_idle_cough', 0.3], ['sit_chair_idle_look_around', 0.12]],
+  // (life-v1: a hand to the face, the hair or the head, rarely, at a lower rate than dead air's; &lifeoff=fidget for the old list)
+  listenLife: [['sit_chair_gestic_thoughtful', 0.35], ['sit_chair_idle_cough', 0.25], ['sit_chair_idle_look_around', 0.12], ['sit_chair_idle_touch_face', 0.1], ['sit_chair_idle_touch_hair', 0.09], ['sit_chair_idle_scratch_head', 0.08]],
   dead: [['sit_chair_idle_look_around', 3], ['sit_chair_idle_yawn', 1.2], ['sit_chair_idle_roll_head', 1.4], ['sit_chair_idle_cough', 0.8], ['sit_chair_idle_touch_hair', 0.5], ['sit_chair_gestic_thoughtful', 0.6]],
   social: [['sit_chair_idle_look_around', 2], ['sit_chair_idle_touch_hair', 0.8], ['sit_chair_idle_roll_head', 1], ['sit_chair_idle_cough', 0.4]],
 };
@@ -674,6 +676,15 @@ const RAW = typeof location !== 'undefined' && new URLSearchParams(location.sear
 // &off=look,lean,shrug,rest,gest,legs,clamps,fix: one correction layer at a time off (tools/render/layers.mjs)
 const OFF = Object.fromEntries((typeof location !== 'undefined' ? new URLSearchParams(location.search).get('off') || '' : '').split(',').filter(Boolean).map((k) => [k, true]));
 // &restpose=thighs|clasped|folded|chin|chairBack|tableOne|glass|forearmsTable: every resting person in that pose (the sheets)
+// life-v1 switches: &life=off turns every life-v1 layer off (the baseline's motion, the WIP's blinks and looks kept);
+// &lifeoff=breath,drift,look,whisper,onset,comp,hands,face,fidget one at a time
+const BAKE_FAR_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('bake') === 'old';
+const LIFE_OFF = (() => {
+  const q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null, all = !!q && q.get('life') === 'off';
+  const o = Object.fromEntries((q ? q.get('lifeoff') || '' : '').split(',').filter(Boolean).map((k) => [k, true]));
+  if (all) for (const k of ['breath', 'drift', 'look', 'whisper', 'onset', 'comp', 'hands', 'face', 'fidget']) o[k] = true;
+  return o;
+})();
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
 // (a check view's one gesture for every response: &gesture=clap)
 // (&reuse=0: every arm gets the full anatomy pass every frame, for A/B checks)
@@ -825,6 +836,24 @@ export class Person {
       else this.saccades.push({ t, x: (r3() - 0.5) * 0.6, y: (r3() - 0.55) * 0.22 });
     }
     this.lifeSeed = r3() * 1000; // (weight shifts, head drift, whispers: each person's own phase)
+    // (life-v1: each person's own way of resting the hands: further along or nearer the hip, a little in or out, one hand
+    // ahead of the other, the palm turned more or less over, the fingers more or less curled; and how deep they breathe)
+    this.restVar = { zL: (r3() - 0.5) * 0.07, zR: (r3() - 0.5) * 0.07, xL: (r3() - 0.5) * 0.03, xR: (r3() - 0.5) * 0.03 }; r3(); // (a draw kept for the seeds: the resting fingers' own aim along the thigh was tried, and taken out)
+    { const rr = 0.95 + 0.45 * r3(); if (!LIFE_OFF.hands && !LIFE_OFF.roll && !opts.noParty) this.rollRest = rr; }
+    this.breathAmp = 0.8 + 0.45 * r3();
+    this.whisperU = r3();
+    this.restVar.edgeL = r3() < 0.4; this.restVar.edgeR = r3() < 0.4; // (a resting hand on its little finger's edge, the palm in, not flat)
+    { const c1 = 0.12 + 0.22 * r3(), c2 = 0.3 + 0.3 * r3(), spread = 0.05 * r3();
+      if (rig && !LIFE_OFF.hands && !LIFE_OFF.fingers && !opts.noParty) for (const side of ['L', 'R']) { // (relaxed fingers, each person's own curl: the Rig's one curl made every hand alike)
+        const sgn = side === 'L' ? -1 : 1;
+        FINGERS.forEach((f, i) => {
+          const bone = rig.model.getObjectByName(`Bip01_${side}_${f}`), r = bone && rig.rest.get(bone);
+          if (!r) return;
+          const fi = Math.floor(i / 3); // (index finger 0 … little finger 3: the little finger curls a little more)
+          rig.setRot(bone, _q[0].setFromAxisAngle(Z, sgn * ((f.length === 7 ? c1 : c2) + fi * spread)));
+          if (!bone.matrixAutoUpdate) bone.updateMatrix();
+        });
+      } }
     this.sylHz = 3.9 + r2() * 1.2;
     { const [lo, hi] = THETA[this.temper]; this.theta = lo + (hi - lo) * r2(); if (r2() < 0.05 && this.temper !== 'laugher') this.theta = 0.97; } // ~5% stone faces (never a laugher)
     this.rt = 0.12 + 0.25 * r2(); // reaction time, s
@@ -1134,7 +1163,7 @@ export class Person {
     // (and within a resting arm's reach: the elbow bent to about 128° at most, never locked straight to the leg; the
     // limbs rules want 90-130°. Someone leaning back rests the hands nearer the hip.)
     // (one hand on the table, the other rests further along its thigh: drawn back to the hip, its fingers dug in)
-    const reach = (kind === 'tableOne' ? 0.985 : 0.9) * (rig.len.arm[0] + rig.len.arm[1]);
+    const reach = (kind === 'tableOne' ? 0.985 : this.force && !LIFE_OFF.hands && !LIFE_OFF.bake ? 0.8 : 0.9) * (rig.len.arm[0] + rig.len.arm[1]); // (a baked low-detail pose: the elbows bent, no IK fix after it; life-v1)
     // (nor so close that the elbow folds up behind the back)
     const near = 0.72 * (rig.len.arm[0] + rig.len.arm[1]); // (0.72: an elbow bent to about 92°, relaxed)
     const placed = (side, u, out) => {
@@ -1201,6 +1230,12 @@ export class Person {
     // (both hands on the table's top, relaxed, a hand's width apart, the palms 6 cm over it; as far ahead as the arm
     // reaches with the elbows well bent: 20 cm ahead of the seat for an arm of 49 cm, more for a longer one)
     else if (kind === 'tableBoth') { const z = 0.2 + (rig.len.arm[0] + rig.len.arm[1] - 0.49); R.tL.set(0.14, 0.81, z); R.tR.set(-0.14, 0.81, z - 0.01); R.pL.set(0.5, -1, -0.3); R.pR.set(-0.5, -1, -0.3); }
+    // (life-v1: each person's own variant of the pose, one hand a little ahead of the other, in or out; never the same
+    // pair of hands down a row. On a table's top the fit below keeps them on it and clear of the glasses)
+    if (!LIFE_OFF.hands && !LIFE_OFF.restvar && this.restVar && !this.force && kind !== 'clasped' && kind !== 'folded' && kind !== 'chin' && kind !== 'chairBack') {
+      const V = this.restVar, k = /^table|^forearms/.test(kind) ? (this.o.table && this.o.neighbour ? 0 : 0.6) : 1; // (a two-top's planted hands are fitted to its top and its glasses: there each hand varies by its roll only)
+      R.tL.z += V.zL * k; R.tR.z += V.zR * k; R.tL.x += V.xL * k; R.tR.x -= V.xR * k;
+    }
     // (at a two-top, hands on the table are fitted to the table itself (venue.js cabaretTables): on its top, and 5 cm
     // clear of the two glasses and the candle jar)
     // (and, once fitted, kept: a hand planted on the top stays where it was put for as long as that rest lasts, the
@@ -1313,12 +1348,12 @@ export class Person {
       let d = this._fdec.get(j);
       if (d === undefined) {
         const dead = room.murmur > 0.5 || (room.deadBits || 0) >= 2, social = room.mode === 'preview' || room.mode === 'after';
-        let lam = social ? 0.06 : 0.012 + 0.08 * clamp01(room.murmur) + 0.015 * Math.min(room.deadBits || 0, 3) + 0.03 * (1 - (room.attention ?? 0.6)); // (listening: hands mostly at rest)
+        let lam = social ? 0.06 : (LIFE_OFF.fidget ? 0.012 : 0.017) + 0.08 * clamp01(room.murmur) + 0.015 * Math.min(room.deadBits || 0, 3) + 0.03 * (1 - (room.attention ?? 0.6)); // (listening: hands mostly at rest)
         lam *= this.temper === 'shy' ? 1.3 : this.temper === 'talker' ? 1.15 : 1;
         d = null;
         if (ev.u < lam / 0.22) {
           const tw = TEMPER_FIDGET[this.temper] || {};
-          const list = (dead ? FIDGETS.dead : social ? FIDGETS.social : FIDGETS.listen).map(([n, w]) => [n, w * (tw[n] || 1)]);
+          const list = (dead ? FIDGETS.dead : social ? FIDGETS.social : LIFE_OFF.fidget ? FIDGETS.listen : FIDGETS.listenLife).map(([n, w]) => [n, w * (tw[n] || 1)]);
           const names = family(pick(list, ev.k), C.g);
           const nm = names.length ? names[Math.floor(hash(this.seed + j) * names.length)] : null;
           d = nm ? ANIM.clips[nm] : null;
@@ -1628,7 +1663,10 @@ export class Person {
       k: 1 / Math.max(s, 0.05), hold: (ev.hold || 0.5 + 1.5 * s * Math.max(reach, 0.3)) + this.eager * 0.4, tail: ev.tail || 0.65,
       gs, go: gs.map((G) => ({ g: G.g, w: 0, rate: G.rate, phase: G.phase, hand: G.hand, high: G.high, a: 0 })),
     };
-    c.res = { reach, body: 0, smile: 0, t: 0, jitter, style, gestures: [], kind, id, take: T, pulse: 0.5, bout: 1 };
+    // (life-v1: in the front rows a laugh lands on everyone within 0.1-0.6 s of the measured moment, each at their own
+    // delay, the order kept: the spread and the row ripple squeezed, not shuffled; the attack no slower than 0.35 s)
+    if (kind === 'laugh' && this.kind === 'front' && !LIFE_OFF.onset) c.delay = 0.1 + 0.5 * (1 - Math.exp(-Math.max(0, c.delay - 0.1) / 0.45));
+    c.res = { reach, smileOnly, body: 0, smile: 0, t: 0, jitter, style, gestures: [], kind, id, take: T, pulse: 0.5, bout: 1 };
     this._rc.set(id, c);
     if (this._rc.size > 16) this._rc.delete(this._rc.keys().next().value);
     return c;
@@ -1642,7 +1680,8 @@ export class Person {
   envAt(c, ev, a) {
     if (c.together) return this.env0(c, ev, a);
     const T = c.T;
-    return Math.max(this.env0(c, ev, a * T.warp) * smooth(a / T.attack), T.keepAmp * this.env0(c, ev, (a - T.keepLag) * T.warp) * 0.7);
+    const at = this.kind === 'front' && !LIFE_OFF.onset ? Math.min(T.attack, 0.35) : T.attack;
+    return Math.max(this.env0(c, ev, a * T.warp) * smooth(a / at), T.keepAmp * this.env0(c, ev, (a - T.keepLag) * T.warp) * 0.7);
   }
 
   /** A response boiled down for the shader-animated instances: clap amount and rate, arm up, calling out. */
@@ -1948,6 +1987,64 @@ export class Person {
     if (G.knee) lean += 0.12 * G.knee.w; // (the hand goes to the knee; the body bends a little for it)
     lean += (ha - 0.5) * (0.03 + 0.04 * big) * lb; // bouncing with each "ha" (the capture bounces too)
     if (clip && lb > 0.02) { const k = 0.5; lean = lq0 + (lean - lq0) * k; turn = lq1 + (turn - lq1) * k; side = lq2 + (side - lq2) * k; headPitch = lq3 + (headPitch - lq3) * k; headYaw = lq4 + (headYaw - lq4) * k; headRoll = lq5 + (headRoll - lq5) * k; }
+    // ---- life-v1: breathing, slow drift and weight shifts, a look between friends in a laugh, a rare whisper while
+    // listening; a laugh's intake of breath at its start and the chest's heave with each "ha" (small layers on top of the
+    // captures, each fading in and out, each person on their own phase: never in step with a neighbour) ----
+    let breathC = 0, breathS = 0, lifeLook = 0, whisper = 0, onsetUp = 0, comp = 0, heaveS = 0;
+    const lsd = this.lifeSeed || 0, sitting = !o.stand && stand < 0.3 && !(T && !T.hidden) && walk < 0.05, pq = this.partner;
+    if (clip && calm) {
+      if (!LIFE_OFF.breath) { // (in through the chest and shoulders, about 0.22-0.3 Hz, deeper for a while after a laugh; a laugh's own heave takes over)
+        const ph = now * this.breathHz * 6.283 + lsd, inb = 0.5 - 0.5 * Math.cos(ph + 0.35 * Math.sin(ph)); // (the in-breath a little quicker than the out)
+        const deep = (this.breathAmp || 1) * (1 + 0.7 * clamp01((this.laughScore || 0) - lb)) * (1 - clamp01(lb * 2.5));
+        breathC = 0.012 * deep * (inb - 0.5) * 2; breathS = 0.022 * deep * inb;
+      }
+      if (!LIFE_OFF.drift && sitting) { // (a slow drift, and a weight shift every 12-35 s eased over 1.6 s, never a pop)
+        const per = 12 + 23 * hash(lsd + 0.5), u = now + lsd * 3.1, k = Math.floor(u / per), f = smooth((u - k * per) / 1.6);
+        const ws = lerp(hash(lsd + k), hash(lsd + k + 1), f) * 2 - 1, wt = lerp(hash(lsd * 1.3 + k + 7), hash(lsd * 1.3 + k + 8), f) * 2 - 1;
+        const dk = 1 - clamp01(lb * 2);
+        side += (0.022 * noise(lsd + 1, now * 0.045) + 0.035 * ws) * dk;
+        turn += (0.03 * noise(lsd + 2, now * 0.035) + 0.04 * wt) * dk;
+        lean += (0.015 * noise(lsd + 5, now * 0.05) - 0.012 * Math.abs(ws)) * dk;
+        headRoll += (0.03 * noise(lsd + 3, now * 0.06) - 0.02 * ws) * dk;
+        headYaw += 0.025 * noise(lsd + 4, now * 0.08) * dk;
+      }
+      // a look to the friend beside them, 1.6-3.4 s into a laugh (the pair's own draw, so the two look at once)
+      if (!LIFE_OFF.look && isLaugh && pq && pq.rig && L.t > 1.2) {
+        const key = Math.min(this.seed, pq.seed) * 0.013 + (L.id | 0) * 1.77, VL = VENUE_LAUGH[this._venue] || VENUE_LAUGH.club;
+        if (hash(key) < 0.45 + VL.pair) {
+          const t1 = 1.6 + 1.8 * hash(key + 3.1), dur = 0.9 + 0.8 * hash(key + 5.3), a = L.t - t1;
+          if (a > 0 && a < dur) lifeLook = smooth(a / 0.3) * smooth((dur - a) / 0.45) * clamp01(L.body * 2 + L.smile);
+        }
+      }
+      if (lifeLook > 0) { headYaw += this.side * 0.5 * lifeLook; turn += this.side * 0.07 * lifeLook; }
+      // a whisper to the friend while listening, rare (the party's own clock, about one in two minutes): the one leans
+      // in and turns to the friend's ear, the other tilts towards it, eyes on the stage
+      if (!LIFE_OFF.whisper && pq && pq.rig && this.party && room.mode === 'live' && mur < 0.5 && !L && sitting && W.talk < 0.05) {
+        const P = this.party, per = 45 + 40 * hash(P.seed * 0.1 + 0.3), u = now + hash(P.seed * 0.9) * per, k = Math.floor(u / per), a = u - k * per;
+        const dur = 1.8 + 1.2 * hash(P.seed * 0.5 + k * 1.3);
+        if (hash(P.seed * 0.7 + k * 2.9) < 0.5 && a < dur) {
+          const who = hash(P.seed * 0.3 + k * 5.1) < 0.5 ? 0 : 1, w = smooth(a / 0.5) * smooth((dur - a) / 0.5);
+          if (this.pk === who) { whisper = w; headYaw += this.side * 0.6 * w; headRoll += this.side * 0.07 * w; lean += 0.05 * w; turn += this.side * 0.05 * w; }
+          else if (this.pk === 1 - who) { whisper = -w; headRoll += this.side * 0.09 * w; headYaw += this.side * 0.16 * w; }
+        }
+      }
+      // a laugh's start: the intake of breath as it lands, the chest and shoulders up and the head back a little, then
+      // let go into the laugh (everyone it reaches, the ones who only smile a little)
+      if (!LIFE_OFF.onset && isLaugh && L.t > -0.05 && L.t < 0.7) {
+        const a = L.t, amp = L.reach > 0.02 ? 0.55 + 0.45 * L.reach : 0.7 * (L.smileOnly || 0);
+        onsetUp = amp * smooth(a / 0.14) * (1 - smooth((a - 0.18) / 0.4));
+        headPitch -= 0.07 * onsetUp;
+      }
+      // and the heave: the belly and chest contract on each "ha" (the shoulders come up with it), the gasp between bouts
+      // lets go; a small laugh, a small heave; a smile alone, a silent chuckle in the shoulders
+      if (!LIFE_OFF.comp && isLaugh) {
+        const bt = L.bout ?? 1, hv = Math.min(1, lb * 1.6) * (0.6 + 0.4 * big) * bt + (lb < 0.05 ? 0.5 * (L.smileOnly || 0) * clamp01(L.smile * 2.5) : 0);
+        comp = hv * (ha - 0.3); heaveS = hv * (0.03 + 0.05 * ha); headPitch += 0.03 * hv * ha;
+      }
+    }
+    this._lifeAct = Math.max(lifeLook, Math.abs(whisper), onsetUp);
+    this._lookE = (this.side || 1) * (0.3 * lifeLook + 0.2 * Math.max(0, whisper));
+    this._whisper = whisper;
     lean -= 0.05 * upW;
     lean += 0.1 * vocal; headPitch += 0.1 * vocal; // calling out: head forward
     lean += 0.45 * Math.sin(Math.PI * stand) * (o.stand ? 0 : 1) * seatK; // rising out of (or lowering into) the seat
@@ -2012,14 +2109,14 @@ export class Person {
     const ys = T && !T.hidden ? 0 : 1;
     rig.euler(b.spine, lean * 0.3 + 0.05 * (1 - stand) * seatK + breath, turn * 0.25, side * 0.35);
     if (keepLegs) { const D = _qk[1].copy(b.pelvis.quaternion).multiply(b.spine.quaternion).invert().multiply(_qk[0]); b.lThigh.quaternion.premultiply(D); b.rThigh.quaternion.premultiply(D); this._legsMoved = true; }
-    rig.euler(b.spine1, lean * 0.32 + 0.04 * (1 - stand) * seatK, turn * 0.25 + yaw * 0.2 * ys, side * 0.35); // (the look's share on Spine1: the legs hang from Spine)
-    rig.euler(b.spine2, lean * 0.3 + 0.03 * (1 - stand) * seatK - breath * 0.5, turn * 0.25 + yaw * 0.3 * ys, 0);
+    rig.euler(b.spine1, lean * 0.32 + 0.04 * (1 - stand) * seatK + comp * 0.12 - onsetUp * 0.02, turn * 0.25 + yaw * 0.2 * ys, side * 0.35); // (the look's share on Spine1: the legs hang from Spine)
+    rig.euler(b.spine2, lean * 0.3 + 0.03 * (1 - stand) * seatK - breath * 0.5 - breathC + comp * 0.1 - onsetUp * 0.05, turn * 0.25 + yaw * 0.3 * ys, 0);
     let pitch = gPitch * look + headPitch + nod - lean * 0.55;
     if (OFF.look) { pitch = -lean * 0.55; yaw = 0; headRoll = 0; }
     rig.euler(b.neck, pitch * 0.4, yaw * (0.4 - 0.2 * ys), headRoll * 0.4);
     rig.euler(b.head, pitch * 0.6, yaw * (0.6 - 0.3 * ys), headRoll * 0.6);
     // shoulders: a shrug bounce with the laugh, up with the arms
-    let shrug = lb * (st === 'shake' ? 0.26 : 0.13 + 0.08 * clamp01((lb - 0.5) / 0.4)) * ha + 0.14 * (this._laughBig || 0) + 0.08 * ha * (isLaugh ? lb : 0) + (this._chuck || 0) * (0.06 + 0.08 * ha) + clapW * 0.03 + Math.sin(Math.PI * coat) * 0.12 + (tk ? tk.laugh : 0) * W.talk * 0.08 * ha;
+    let shrug = lb * (st === 'shake' ? 0.26 : 0.13 + 0.08 * clamp01((lb - 0.5) / 0.4)) * ha + 0.14 * (this._laughBig || 0) + 0.08 * ha * (isLaugh ? lb : 0) + (this._chuck || 0) * (0.06 + 0.08 * ha) + clapW * 0.03 + Math.sin(Math.PI * coat) * 0.12 + (tk ? tk.laugh : 0) * W.talk * 0.08 * ha + breathS + heaveS + 0.1 * onsetUp;
     // (at a two-top the forearms are on its top: the shoulders shake with the laugh, a third as far, not up and back off them)
     const shrugK = o.table && o.neighbour && stand < 0.3 && this._planted ? 0.5 : 1;
     if (OFF.shrug) shrug = 0;
@@ -2033,6 +2130,7 @@ export class Person {
     let talk = speaking * phrase * (0.05 + 0.3 * syl * (0.65 + 0.35 * noise(sd + 35, now * 2.3)));
     if (!tk) talk = W.talk * Math.max(0, noise(sd + 6, now * 3.2)) * 0.5; // (no party: the old murmur)
     if (idle === 'heckle') talk = hk * (0.25 + 0.55 * Math.max(0, noise(sd + 8, now * 4.0)));
+    if (this._whisper > 0) talk = Math.max(talk, this._whisper * phrase * (0.04 + 0.1 * syl)); // (a whisper: the lips barely part)
     const jaw = (st === 'giggle' ? 0.15 + 0.1 * ha : 0.3 + 0.2 * ha) * lb * (1 - vocal) + talk + vocal * 0.5;
     if (b.jaw && !face?.ok) rig.euler(b.jaw, jaw * 0.32, 0, 0);
     rig.upd(rig.model); SEC && SEC.mark('body');
@@ -2110,7 +2208,10 @@ export class Person {
     if (clip) hands = [toL(worldPos(b.lHand, NV())), toL(worldPos(b.rHand, NV()))];
     p.tL.copy(hands[0]); p.tR.copy(hands[1]); p.pL.set(0.7, -0.3, -1); p.pR.set(-0.7, -0.3, -1);
     // (a baked pose for the low-detail people names a rest pose from the library, placed on that body's fitted thighs)
-    if (!clip && F.rest && rig.fit && rig.fit.ok && rig.fit.thighs.length && stand < 0.3) { refreshFit(rig.fit); const A = this.restTargets(F.rest); p.tL.copy(A.tL); p.tR.copy(A.tR); p.pL.copy(A.pL); p.pR.copy(A.pR); }
+    // (life-v1: a baked low-detail body without fitted thighs rests its hands on the thighs near the hips, the elbows bent;
+    // the lap 19 cm ahead put the arms out straight, 173°, diagonally past the seat in front: the theatre's 'strap' arms)
+    if (!clip && F.rest && !(rig.fit && rig.fit.ok && rig.fit.thighs.length) && stand < 0.3 && !LIFE_OFF.hands && !LIFE_OFF.bake && !BAKE_FAR_OLD) { p.tL.set(0.16, sh + 0.23, 0.06); p.tR.set(-0.16, sh + 0.23, 0.06); p.pL.set(0.35, -0.85, -0.35); p.pR.set(-0.35, -0.85, -0.35); }
+    if (!clip && F.rest && rig.fit && rig.fit.ok && rig.fit.thighs.length && stand < 0.3) { refreshFit(rig.fit); const A = this.restTargets(F.rest); p.tL.copy(A.tL); p.tR.copy(A.tR); p.pL.copy(A.pL); p.pR.copy(A.pR); if (!LIFE_OFF.hands) { p.pL.set(0.35, -0.85, -0.35); p.pR.set(-0.35, -0.85, -0.35); } } // (life-v1: the baked pose's elbows down and a little out: straight back, on a body leaning back, they went through the chair and the flank, and the fix then swung the hands out beside the hips)
     // at the rail the elbows hang down and back, close to the body, rather than flaring out to the sides
     const railW = 0; // (no hands on the rail: see above)
     if (railW > 0) { p.pL.lerp(V(0.25, -1, -0.45), railW); p.pR.lerp(V(-0.25, -1, -0.45), railW); }
@@ -2268,8 +2369,11 @@ export class Person {
     // palms: down on the lap/table, turned towards each other when clapping
     const palm = lerp(this.rollRest, this.rollClap, clamp01(clapW * 1.5 + upW));
     // (a hand holding a glass grips it upright)
-    if (ikL) rig.roll(b.lHand, b.lFore, glassSide === 0 ? lerp(palm, 0.35, restW) : palm, rig.armRestQ.l);
-    if (ikR) rig.roll(b.rHand, b.rFore, glassSide === 1 ? -lerp(palm, 0.35, restW) : -palm, rig.armRestQ.r);
+    // (life-v1: some resting hands lie on the little finger's edge, the palm turned in: each hand its own way)
+    const eK = clip && !LIFE_OFF.hands && !LIFE_OFF.edge && this.restVar && !this.force ? restW * (1 - clamp01(clapW * 1.5 + upW)) : 0;
+    const palmL = eK && this.restVar.edgeL ? lerp(palm, 0.5, eK) : palm, palmR = eK && this.restVar.edgeR ? lerp(palm, 0.5, eK) : palm;
+    if (ikL) rig.roll(b.lHand, b.lFore, glassSide === 0 ? lerp(palmL, 0.35, restW) : palmL, rig.armRestQ.l);
+    if (ikR) rig.roll(b.rHand, b.rFore, glassSide === 1 ? -lerp(palmR, 0.35, restW) : -palmR, rig.armRestQ.r);
     // a hand resting on a thigh or a knee lies along it, the fingers forward and over (the wrist straight, the knuckles
     // not dug into the leg)
     // (and a hand on the table lies flat on it, the fingers towards its middle, not dug into the top)
@@ -2473,7 +2577,7 @@ export class Person {
       let ex = lerp(sx(prev), sx(cur), k) * calm * busyEyes, ey = lerp(prev.y, cur.y, k) * calm * busyEyes;
       if (walk) { ex *= 0.4; ey = ey * 0.4 + 0.06; }
       ey += 0.22 * W.phone + xp.down * 0.2;
-      ex += xp.rollX; ey += xp.rollY;
+      ex += xp.rollX + (this._lookE || 0); ey += xp.rollY;
       rig.euler(b.lEye, ey, ex, 0); rig.euler(b.rEye, ey, ex, 0);
       this._eyeY = ey;
     }
@@ -2485,6 +2589,24 @@ export class Person {
       const bl = this.blinkAt(now, this._att) * calm, lid = clamp01((this._eyeY || 0) / 0.22) * 0.3;
       const cl = (tk ? tk.laugh : 0) * W.talk; // a laugh at a friend's line
       const M = this.moodAt(now, room, lb, ls, hk); // (the moment's expression, by temperament: faces-v1)
+      // (life-v1: listening is never a held face: a faint smile coming and going with the room's warmth, the brows up a
+      // little as the room leans in (attention rising: a setup), the lips pressed now and then, the mouth parting, the
+      // eyes narrowing with interest; slow, each on the person's own phase)
+      if (!LIFE_OFF.face) {
+        const lsd = this.lifeSeed || 0, dtA = now - (this._attT ?? -1e9);
+        this._attS = this._attS === undefined || !(dtA > 0 && dtA < 0.5) ? attention : this._attS + (attention - this._attS) * (1 - Math.exp(-dtA / 2.5));
+        this._attT = now;
+        const mic = calm * (room.mode === 'live' || room.mode === undefined ? 1 : 0.6) * (1 - clamp01(lb * 4)) * (1 - clamp01(ls * 2)) * (1 - W.phone) * (mur < 0.5 ? 1 : 0.5);
+        const setup = clamp01((attention - this._attS) * 6);
+        const mk = (M._mk ||= {});
+        mk.smile = mic * (0.03 + 0.07 * warmth) * clamp01(noise(lsd + 21, now * 0.09) * 1.5 + 0.4);
+        mk.inner = mic * (0.1 * Math.max(0, noise(lsd + 23, now * 0.17)) + 0.3 * setup);
+        mk.outer = mic * (0.08 * Math.max(0, noise(lsd + 29, now * 0.12)) + 0.2 * setup);
+        mk.press = mic * 0.35 * clamp01((noise(lsd + 25, now * 0.13) - 0.25) * 2);
+        mk.jaw = mic * 0.05 * clamp01(noise(lsd + 27, now * 0.07) + 0.2);
+        mk.squint = mic * 0.12 * clamp01(noise(lsd + 31, now * 0.1));
+        M.smile += mk.smile; M.inner += mk.inner; M.press += mk.press; M.squint += mk.squint; this._mkJaw = mk.jaw; this._mkOuter = mk.outer;
+      } else { this._mkJaw = 0; this._mkOuter = 0; }
       const sm = clamp01(ls * (0.85 + 0.3 * this.eager) + this.smileBase * calm * (1 - W.phone) + cl * 0.9 + xp.smile + M.smile + speaking * 0.12);
       const g = clamp01(lb * 1.25 + cl * 0.7); // the laugh, graded: 0 a smile … 1 a full laugh
       const bored = W.chin, phone = W.phone;
@@ -2507,13 +2629,13 @@ export class Person {
       const fr = xp.frown + M.frown, frTV = face.slots.mouthFrownLeft.length ? 0 : fr * 0.4;
       face.set('mouthSmileLeft', 1.85 * sm + 0.35 * g + 0.1 + (sk > 0 ? sk * 1.3 : 0) - frTV); face.set('mouthSmileRight', 1.8 * sm + 0.35 * g + 0.1 + (sk < 0 ? -sk * 1.3 : 0) - frTV);
       face.set('mouthUpperUpLeft', 0.6 * g + M.upper); face.set('mouthUpperUpRight', 0.56 * g + M.upper);
-      face.set('jawOpen', Math.min(0.15 + 0.62 * sm + speaking * 0.3, Math.max(jaw * fk.jaw, g * (0.45 + 0.25 * ha) * fk.jaw))); // (a big laugh's mouth visibly open, within the smile)
+      face.set('jawOpen', Math.min(0.15 + 0.62 * sm + speaking * 0.3, Math.max(jaw * fk.jaw + (this._mkJaw || 0), g * (LIFE_OFF.face ? (0.45 + 0.25 * ha) * fk.jaw : (0.35 + 0.5 * ha) * fk.jaw))));  // (life-v1: the mouth opens wider on each "ha", closes a little between) // (a big laugh's mouth visibly open, within the smile)
       face.set('eyeLookDownLeft', phone * 0.7 + (xp.down + M.down) * 0.5); face.set('eyeLookDownRight', phone * 0.7 + (xp.down + M.down) * 0.5);
       const surprise = Math.max(L && L.t > -0.1 && L.t < 0.35 && st === 'back' ? Math.sin(((L.t + 0.1) / 0.45) * Math.PI) * 0.6 : 0, xp.wide);
       face.set('eyeWideLeft', surprise + vocal * 0.3); face.set('eyeWideRight', surprise + vocal * 0.3);
       const emph = speaking * 0.3 * clamp01((noise(sd + 37, now * 1.1) - 0.25) * 3); // brows up on the stressed words
-      const bL = surprise * 0.5 + 0.12 * g + vocal * 0.3 + emph * 0.7 + xp.browL + (M.browOne && this.smirkSide > 0 ? M.browOne : 0);
-      const bR = surprise * 0.5 + 0.12 * g + vocal * 0.3 + emph * 0.7 + xp.browR + (M.browOne && this.smirkSide < 0 ? M.browOne : 0);
+      const bL = surprise * 0.5 + 0.12 * g + vocal * 0.3 + emph * 0.7 + xp.browL + (this._mkOuter || 0) + (M.browOne && this.smirkSide > 0 ? M.browOne : 0);
+      const bR = surprise * 0.5 + 0.12 * g + vocal * 0.3 + emph * 0.7 + xp.browR + (this._mkOuter || 0) * 0.9 + (M.browOne && this.smirkSide < 0 ? M.browOne : 0);
       const inner = 0.05 + 0.16 * g + surprise * 0.5 + mur * 0.12 + vocal * 0.3 + emph + xp.inner + M.inner;
       // (the TV has the left outer brow only: one brow up is the left one, both up goes to the inner brows)
       // (the brow and the press overdriven like the smile: at weight 1 they move a few millimetres, too little to read)
@@ -2533,7 +2655,7 @@ export class Person {
     }
     const S = (this.state ||= {});
     SEC && SEC.mark('face'); this._off = !inShot(NV().setFromMatrixPosition(b.pelvis.matrixWorld));
-    this._calm = !L && clapW < 0.03 && upW < 0.03 && lb < 0.05 && W.talk < 0.05 && (this._fidW || 0) < 0.05 && !OV && !(T && !T.hidden) && (o.stand || stand < 0.05);
+    this._calm = !L && clapW < 0.03 && upW < 0.03 && lb < 0.05 && W.talk < 0.05 && (this._fidW || 0) < 0.05 && (this._lifeAct || 0) < 0.02 && !OV && !(T && !T.hidden) && (o.stand || stand < 0.05);
     S.lb = lb; S.ls = ls; S.clap = clapW; S.up = upW; S.vocal = vocal; S.idle = idle; S.busy = busy; S.style = st; S.take = L && L.take ? L.take.sig : null; S.gestures = L ? L.gestures : NONE;
     // this person's matrices, up to date for the renderer (three's traversal skips the seat: see the Rig). Everything
     // posed after the full pass above refreshed its own subtree (the IK, rolls, aims, clamps), except the eyes.

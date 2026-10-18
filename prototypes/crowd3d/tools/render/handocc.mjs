@@ -12,7 +12,7 @@ const { chromium } = await import(process.env.PW || `${os.homedir()}/tools/pw/no
 const [base, venue] = process.argv.slice(2);
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 480, height: 270 } });
-await page.goto(`${base}?venue=${venue}&host=1&preset=tv&capture=1&hud=0&debug=1&venue-lock=1`, { timeout: 240000 });
+await page.goto(`${base}?venue=${venue}&host=1&preset=tv&capture=1&hud=0&debug=1&venue-lock=1${process.env.EXTRA || ""}`, { timeout: 240000 });
 await page.waitForFunction(() => typeof window.__renderAt === 'function' && window.__people && window.encoreMessage, null, { timeout: 240000 });
 const out = await page.evaluate(({ HITS, arena, KEY, KEYT0 }) => {
   const T = window.__THREE, sc = window.__scene;
