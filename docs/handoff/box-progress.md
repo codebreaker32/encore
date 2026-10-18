@@ -1,10 +1,10 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status:** round 03 judged (bloom, toe, teeth, DOF taps); round 04 in progress (a side key, a narrower skin wrap, less fill, hand contact shadows). Motion agent: step 1 (blinks, saccades) merged; working on breathing, poses and laughs.
-**Last result:** round 03: flat again (club 1, theatre 1, open mic 2 on "real?"; every category 2–3). The judges' unanimous tells now are motion (laughs as head turns, identical hands-on-knees poses), the unmotivated flat front light, waxy faces, and the back rows as cut-outs.
-**Next:** judge round 04; run the full gates (incl. brightness and edges) on the frozen commit; merge the motion agent's next steps.
+**Status:** round 04 judged and fixed after (DOF halo, cloth sheen, hair highlight, theatre velvet); the lens and the hair's second pass now run only in close and mid shots so the wide keeps its TV cost. Gates running on a frozen copy (:8191). Motion agent working on breathing, poses and laughs.
+**Last result:** round 04 flat (real? club 1, theatre 1, open mic 2). The judges agree the remaining tells are mostly motion (frozen bodies, identical rest poses) plus the asset class itself.
+**Next:** gate results; merge the motion agent's next step; round 05 on the merged tree.
 **Needs the user:** nothing yet.
-**Updated:** 2026-10-18 14:35 UTC.
+**Updated:** 2026-10-18 14:50 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -99,3 +99,11 @@ Changes (all switchable):
 Top tells (unchanged in substance): the laugh as a mouth swap on still bodies; identical hands-on-knees and hands-on-table poses (both the motion agent's); waxy faces; the DOF's dark halo (fixed after this round); back rows as cut-outs; theatre bodies floating above seats. Held-out: club "low across the candles: centre table" t 12.1; theatre "stalls: group house right" t 17.7; open mic "the chairs: group house right" t 13.0.
 
 Gates: a first run meant for the merged commit actually hit port 8094, which the motion agent's dev server held (my server never bound), so its findings (openmic clap anatomy 1, club handocc 1 flicker) describe the agent's working copy, not real-v1; the agent was told. Rerun on my own frozen copy at :8191 (below).
+
+### 2026-10-18 14:50 UTC: after round 04 (cost decision, hair, seats)
+- **TV cost decision:** DOF, bloom and the hair's blended second pass run only in close and mid shots (and a harness camera). The wide, the TV's frame-rate floor, is back to the baseline's cost plus 2 calls (club wide 45 calls / 79.8k tris against 43 / 79.7k). The target makes its mips once after each allocation (a mipmapped target with none samples black: caught on the first wide), then only while the lens is on. `&ab=lenswide`, `&ab=hair2wide` put them back on the wide. The cheap shader terms stay on everywhere.
+- Hair: a Kajiya-Kay strand highlight (`&ab=nohairspec`), kept faint (a stronger one read as grey hair).
+- Pores: a procedural bump, invisible at 800×450 even at 25× its first strength; off by default (`&pores=`).
+- Theatre seats: per-seat colour and wear (vertex colours) and a velvet sheen on red upholstery (`&ab=novelvet`); subtle at TV size.
+- TV sweep round 10 written (`tools/render/tv-sweep.md`): base, old (all of real-v1 off), nodof, nohair2, noreal, nograde, nocatch per venue, with the rule for which term to drop first.
+- A wiring bug: the sheen and pore switches were never passed from crowd.js, so an earlier pore A/B compared identical builds; fixed and re-tested.
