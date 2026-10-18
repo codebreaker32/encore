@@ -319,3 +319,32 @@ export class HandShadows {
 }
 const _ha = new THREE.Vector3(), _hb = new THREE.Vector3(), _hd = new THREE.Vector3(), _hp = new THREE.Vector3(), _hs = new THREE.Vector3();
 const _hm = new THREE.Matrix4(), _hq = new THREE.Quaternion();
+
+/**
+ * Hair cards (&ab=nohairspec): a strand highlight instead of a matte shell. Kajiya-Kay's anisotropic lobe with the
+ * strands taken as falling down the head (world up, projected onto the card), two shifted lobes (a white primary, a
+ * tinted secondary), from the stage key only, plus a soft wrap so the hair's dark side isn't a cut-out.
+ */
+export function realHair(m) {
+  const prev = m.onBeforeCompile;
+  m.onBeforeCompile = (sh, r) => {
+    if (prev) prev.call(m, sh, r);
+    const c = 'lights_lambert_pars_fragment';
+    const src = THREE.ShaderChunk[c];
+    const i0 = src.indexOf('void RE_Direct_Lambert'), i1 = src.indexOf('{', i0), i2 = src.indexOf('}', i1);
+    const body = /* glsl */ `
+	float nl = dot( geometryNormal, directLight.direction );
+	float dotNL = saturate( nl ), wrapNL = saturate( ( nl + 0.4 ) / 1.4 );
+	reflectedLight.directDiffuse += wrapNL * directLight.color * BRDF_Lambert( material.diffuseColor );
+	vec3 up = normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
+	vec3 T = normalize( up - geometryNormal * dot( up, geometryNormal ) + 1e-4 );
+	vec3 H = normalize( directLight.direction + geometryViewDir );
+	float th1 = dot( normalize( T + geometryNormal * 0.12 ), H ), th2 = dot( normalize( T - geometryNormal * 0.1 ), H );
+	float s1 = pow( sqrt( max( 0.0, 1.0 - th1 * th1 ) ), 80.0 ), s2 = pow( sqrt( max( 0.0, 1.0 - th2 * th2 ) ), 20.0 );
+	reflectedLight.directDiffuse += directLight.color * wrapNL * ( 0.025 * s1 + 0.03 * s2 * ( material.diffuseColor + 0.1 ) );`;
+    sh.fragmentShader = sh.fragmentShader.replace(`#include <${c}>`, src.slice(0, i1 + 1) + body + '\n' + src.slice(i2));
+  };
+  const key0 = m.customProgramCacheKey.bind(m);
+  m.customProgramCacheKey = () => key0() + '|hair';
+  return m;
+}

@@ -61,7 +61,7 @@ import { ARENA } from './arena.js';
 import { makeTraffic } from './traffic.js';
 import { CrowdSound, cueFor } from './sound.js';
 import { applyLook } from './look.js';
-import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue, HandShadows } from './real.js';
+import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue, HandShadows, realHair } from './real.js';
 import { buildSetups, pickSetup, PACE } from './director.js';
 
 const Q = new URLSearchParams(location.search);
@@ -672,6 +672,7 @@ function prepFront(gltf, ao = null) {
     // (real-v1: skin and eyes on the heads, skin on the hands; &ab=noreal: skinLit on the heads, as before)
     if (REAL && o.isSkinnedMesh && !o.material.alphaTest) { realMasks(o, o.geometry, ao && (/head/.test(o.material.name || '') ? ao.head : /_body$/.test(o.name) ? ao.body : null)); realLit(o.material, /head/.test(o.material.name || '') ? 'head' : 'body'); }
     else if (/head/.test(o.material.name || '') && !o.material.alphaTest) skinLit(o.material);
+    else if (REAL && o.isSkinnedMesh && o.material.alphaTest && !ab('nohairspec')) realHair(o.material); // (the hair cards: a strand highlight)
     if (!o.material.userData.people) { peopleLit(o.material); o.material.userData.people = true; }
     if (o.material.map) o.material.map.anisotropy = 4;
     o.castShadow = SHADOWS;
@@ -686,6 +687,7 @@ function prepFront(gltf, ao = null) {
     for (const h of hairs) {
       h.material.alphaTest = 0.55;
       const fm = new THREE.MeshLambertMaterial({ map: h.material.map, alphaTest: 0.02, transparent: true, depthWrite: false, side: h.material.side, name: h.material.name + '_fringe' });
+      if (!ab('nohairspec')) realHair(fm);
       peopleLit(fm); fm.userData.people = true;
       const f = new THREE.SkinnedMesh(h.geometry, fm);
       f.name = h.name + '_fringe'; f.frustumCulled = false; f.renderOrder = 2;
