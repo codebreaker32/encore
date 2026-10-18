@@ -93,3 +93,19 @@ You are the **generator**. After every round of changes, run an independent **ju
    - **Never game the judge:** don't crop, darken or blur to hide problems; don't change the camera to avoid a tell; don't drop the held-out set. Make sure the performance and anatomy gates still pass.
    - **Stop for a venue** when it passes twice in a row, or when two rounds in a row improve its minimum score by less than 0.5. Then move to the next venue or the weakest category.
 5. **The judges can't see the TV's speed.** Keep the GPU cost honest (calls, tris, texture MB, box 8× frame time), and write the TV checks for the user in tv-sweep.md. The TV decides whether a change becomes a default.
+
+## Judge retuned (the user, 18 Oct, about 16:00 UTC)
+The "could pass as real camera footage" bar is unreachable with Rocketbox-class avatars on the TV's GPU. Rounds 00–05 held "real?" at 1–2. The user agreed to change the bar. **From the next round:**
+- **The question for the judges:** "Is this a believable, alive live audience in a TV app, seen at living-room distance (a 43–55" TV, 720p, 2–3 m away)? Would a viewer accept these as real people reacting to the performer, or be pulled out by something?" Stay strict and default to "not believable" unless the frames prove otherwise.
+- **The categories** (each 0–10, the venue's score being the minimum of three judges):
+  1. **Life and individuality:** nobody frozen, nobody in sync, varied resting poses.
+  2. **Reactions:** the timing reads as caused by the line; the laugh builds and decays; the people laughing differ from laugh to laugh.
+  3. **Posture and anatomy:** natural, not stiff or twisted, no clipping.
+  4. **Faces at TV distance:** expressions readable, eyes alive.
+  5. **Light and mood:** coherent, flattering, depth separation, the stage look.
+  6. **Artefacts:** popping, shimmer, halos, dithering, black or empty frames, aliasing. Scored as 10 minus their severity.
+  7. **Overall: a believable audience?**
+- **Pass:** every category 7 or more. The same held-out pick, the same no-gaming rules, the same stop rules.
+- **Where the effort goes:** behaviour and light, which carry believability. The stage look may push further, with lit front faces, silhouettes and haze behind, to hide the asset limits, as long as at least the front rows read as clearly lit people. Stop spending time on skin and hair micro-detail unless a judge names it as a top tell.
+- **Keep** the old "real footage?" score as one extra column for reference only. It doesn't gate anything.
+- **Freeze:** as before, stop new features at 02:30 UTC on 19 Oct. Leave a clean, gated, packed tree with the TV and emulator APKs built and the final judge round logged.
