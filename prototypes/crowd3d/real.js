@@ -74,6 +74,8 @@ export function realLit(m, kind) {
 	float skinWrap = saturate( ( skinNL + 0.35 ) / 1.35 );
 	vec3 irradiance = ( dotNL + ( skinWrap - dotNL ) * vec3( 0.85, 0.36, 0.22 ) * skinK ) * directLight.color;
 	reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );${spec}`;
+    // (the teeth, on the head: white, inside the closed lips in the bind pose, so the bake blacks them out; a laughing
+    // mouth shows them, so they keep at least 0.6 of the light)
     // the table candle (club): a warm point a few tens of centimetres below the face, wrapped, inverse square; its
     // strength (uCandle.w) is 0 for anyone without a candle
     const CANDLE = /* glsl */ `
@@ -93,7 +95,7 @@ export function realLit(m, kind) {
       .replace('#include <common>', '#include <common>\nvarying vec2 vReal;\nvarying float vAO;\nuniform vec4 uCandle; uniform vec3 uCandleColor; uniform mat3 uClothRot;\n#define REAL_SKIN_SPEC 1.0')
       // the baked AO (open above 0.92, cavities under 0.12 black): all of the fill and house light, most of the key (a person's own small shadows, which the TV
       // can't draw: the mouth's inside, under the chin, inside a collar)
-      .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>' + fillEye + CANDLE + `\n\t{ float aoK = smoothstep( 0.12, 0.92, vAO ); reflectedLight.indirectDiffuse *= aoK * ${NOSPEC.fillK.toFixed(3)}; reflectedLight.directDiffuse *= mix( 1.0, aoK, 0.85 ); }`)
+      .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>' + fillEye + CANDLE + `\n\t{ float aoK = smoothstep( 0.12, 0.92, vAO );${kind === 'head' ? ' vec3 tw = material.diffuseColor; aoK = max( aoK, 0.6 * smoothstep( 0.42, 0.62, min( tw.r, min( tw.g, tw.b ) ) ) * ( 1.0 - vReal.x ) );' : ''} reflectedLight.indirectDiffuse *= aoK * ${NOSPEC.fillK.toFixed(3)}; reflectedLight.directDiffuse *= mix( 1.0, aoK, 0.85 ); }`)
       .replace(`#include <${c}>`, out)
       // the hands: their albedo a little darker and warmer, towards the face (the texture's hands are pale)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${kind === 'body' ? `diffuseColor.rgb *= mix( vec3( 1.0 ), vec3( 0.8, 0.72, 0.66 ), vReal.y );

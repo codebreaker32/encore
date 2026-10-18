@@ -1801,9 +1801,9 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
       float hash( vec2 p ) { return fract( sin( dot( p, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ); }
       void main() {
         const vec3 W = vec3( 0.299, 0.587, 0.114 );
-        vec3 cM = texture2D( tDiffuse, vUv ).rgb;
-        vec3 cNW = texture2D( tDiffuse, vUv + vec2( -1.0, -1.0 ) * uPx ).rgb, cNE = texture2D( tDiffuse, vUv + vec2( 1.0, -1.0 ) * uPx ).rgb;
-        vec3 cSW = texture2D( tDiffuse, vUv + vec2( -1.0, 1.0 ) * uPx ).rgb, cSE = texture2D( tDiffuse, vUv + vec2( 1.0, 1.0 ) * uPx ).rgb;
+        vec3 cM = textureLod( tDiffuse, vUv, 0.0 ).rgb;
+        vec3 cNW = textureLod( tDiffuse, vUv + vec2( -1.0, -1.0 ) * uPx, 0.0 ).rgb, cNE = textureLod( tDiffuse, vUv + vec2( 1.0, -1.0 ) * uPx, 0.0 ).rgb;
+        vec3 cSW = textureLod( tDiffuse, vUv + vec2( -1.0, 1.0 ) * uPx, 0.0 ).rgb, cSE = textureLod( tDiffuse, vUv + vec2( 1.0, 1.0 ) * uPx, 0.0 ).rgb;
         float lM = dot( cM, W ), lNW = dot( cNW, W ), lNE = dot( cNE, W ), lSW = dot( cSW, W ), lSE = dot( cSE, W );
         float lMin = min( lM, min( min( lNW, lNE ), min( lSW, lSE ) ) ), lMax = max( lM, max( max( lNW, lNE ), max( lSW, lSE ) ) );
         vec3 c = cM;
@@ -1811,8 +1811,8 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
           vec2 dir = vec2( -( ( lNW + lNE ) - ( lSW + lSE ) ), ( lNW + lSW ) - ( lNE + lSE ) );
           float red = max( ( lNW + lNE + lSW + lSE ) * 0.03125, 1.0 / 128.0 );
           dir = clamp( dir / ( min( abs( dir.x ), abs( dir.y ) ) + red ), -8.0, 8.0 ) * uPx;
-          vec3 a = 0.5 * ( texture2D( tDiffuse, vUv - dir * 0.1667 ).rgb + texture2D( tDiffuse, vUv + dir * 0.1667 ).rgb );
-          vec3 b = a * 0.5 + 0.25 * ( texture2D( tDiffuse, vUv - dir * 0.5 ).rgb + texture2D( tDiffuse, vUv + dir * 0.5 ).rgb );
+          vec3 a = 0.5 * ( textureLod( tDiffuse, vUv - dir * 0.1667, 0.0 ).rgb + textureLod( tDiffuse, vUv + dir * 0.1667, 0.0 ).rgb );
+          vec3 b = a * 0.5 + 0.25 * ( textureLod( tDiffuse, vUv - dir * 0.5, 0.0 ).rgb + textureLod( tDiffuse, vUv + dir * 0.5, 0.0 ).rgb );
           float lB = dot( b, W );
           c = ( lB < lMin || lB > lMax ) ? a : b;
         }
@@ -1827,11 +1827,20 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
           float z = uDof.z * uDof.w / ( uDof.w - zb * ( uDof.w - uDof.z ) );
           float coc = uDof.y * abs( z - uDof.x ) / z;
           if ( coc > 0.8 ) {
-            float lod = clamp( log2( coc ) - 0.6, 0.0, 4.0 );
-            vec2 o = uPx * coc * 0.3;
-            vec3 b = 0.25 * ( textureLod( tDiffuse, vUv + vec2( o.x, o.y ), lod ).rgb + textureLod( tDiffuse, vUv + vec2( -o.x, o.y ), lod ).rgb
-              + textureLod( tDiffuse, vUv + vec2( o.x, -o.y ), lod ).rgb + textureLod( tDiffuse, vUv - o, lod ).rgb );
-            c = mix( c, b, smoothstep( 0.8, 2.5, coc ) );
+            // (four taps spread over the circle at a mip a level finer; behind the focus, a tap that lands on something
+            // much nearer, the sharp subject, is left out, or its colour bleeds a bright fringe round the subject)
+            float lod = clamp( log2( coc ) - 1.2, 0.0, 3.0 );
+            vec2 o = uPx * coc * 0.42;
+            vec3 b = textureLod( tDiffuse, vUv, lod ).rgb; float wsum = 1.0; // (the pixel's own blurred colour, so a one-sided gather near the subject keeps its tone)
+            for ( int i = 0; i < 4; i++ ) {
+              vec2 d = i == 0 ? vec2( o.x, o.y ) : i == 1 ? vec2( -o.x, o.y ) : i == 2 ? vec2( o.x, -o.y ) : -o;
+              float zt = texture2D( tDepth, vUv + d ).x;
+              zt = uDof.z * uDof.w / ( uDof.w - zt * ( uDof.w - uDof.z ) );
+              float w = z > uDof.x ? step( z * 0.75, zt ) : 1.0;
+              b += w * textureLod( tDiffuse, vUv + d, lod ).rgb; wsum += w;
+            }
+            c = mix( c, b / wsum, smoothstep( 0.8, 2.5, coc ) );
+            ${ab('dofdbg') ? 'gl_FragColor = vec4( wsum / 4.0, coc / 20.0, 0.0, 1.0 ); return;' : ''}
           }
         }` : ''}
         ${GRADE ? `// a gentle grade: the stage's orange pulled a little towards neutral, as a camera balanced for tungsten would
