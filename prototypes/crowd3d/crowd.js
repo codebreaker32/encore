@@ -61,6 +61,7 @@ import { ARENA } from './arena.js';
 import { makeTraffic } from './traffic.js';
 import { CrowdSound, cueFor } from './sound.js';
 import { applyLook } from './look.js';
+import { realMasks, realLit, realOptions, Catchlights } from './real.js';
 import { buildSetups, pickSetup, PACE } from './director.js';
 
 const Q = new URLSearchParams(location.search);
@@ -620,6 +621,11 @@ const SKIN_DIRECT = [
 	float skinWrap = saturate( ( skinNL + 0.35 ) / 1.35 );
 	vec3 irradiance = ( dotNL + ( skinWrap - dotNL ) * vec3( 0.85, 0.36, 0.22 ) ) * directLight.color;`,
 ];
+// real-v1 (real.js): the front people's skin, eyes and hands, the tv default (&ab=noreal turns it off, &ab=nospec drops
+// only the specular lobes)
+const REAL = !ab('noreal') && P.frontMat === 'lambert';
+realOptions({ nospec: ab('nospec'), fill: !!PEOPLE_LIGHT });
+const catchlights = REAL && !ab('nocatch') ? new Catchlights(scene, key) : null; // (&ab=nocatch: none)
 function skinLit(m) {
   const prev = m.onBeforeCompile;
   m.onBeforeCompile = (sh, r) => {
@@ -645,6 +651,7 @@ function prepFront(gltf) {
   {
     let low = null, hi = null;
     gltf.scene.traverse((o) => { if (o.isSkinnedMesh && /_bodyHi$/.test(o.name)) hi = o; else if (o.isSkinnedMesh && /_body$/.test(o.name)) low = o; });
+    if (hi && REAL) realMasks(hi);
     if (hi) { hi.parent.remove(hi); if (low && !ab('nohibody')) HI_BODY.set(low.geometry, hi.geometry); else hi.geometry.dispose(); hi.material.dispose(); }
   }
   gltf.scene.traverse((o) => {
@@ -657,7 +664,9 @@ function prepFront(gltf) {
     } else {
       m.roughness = 0.75; m.metalness = 0;
     }
-    if (/head/.test(o.material.name || '') && !o.material.alphaTest) skinLit(o.material);
+    // (real-v1: skin and eyes on the heads, skin on the hands; &ab=noreal: skinLit on the heads, as before)
+    if (REAL && o.isSkinnedMesh && !o.material.alphaTest) { realMasks(o); realLit(o.material, /head/.test(o.material.name || '') ? 'head' : 'body'); }
+    else if (/head/.test(o.material.name || '') && !o.material.alphaTest) skinLit(o.material);
     if (!o.material.userData.people) { peopleLit(o.material); o.material.userData.people = true; }
     if (o.material.map) o.material.map.anisotropy = 4;
     o.castShadow = SHADOWS;
@@ -1000,6 +1009,7 @@ async function buildRoom() {
   });
   stats.front = frontSeats.length;
   for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.isMesh && !frontBgMats.has(o.material)) frontBgMats.set(o.material, p); });
+  if (catchlights) for (const p of people) if (p.kind === 'front') catchlights.add(p, p.rig.model);
   const hk = people.find((p) => p.kind === 'front' && p.src === hkSeat) || people.filter((p) => p.kind === 'front' && p.o.row === 0 && p.o.x < closeTable.x - 0.5).sort((a, b) => b.o.x - a.o.x)[0];
   if (hk) {
     hk.heckler = true;
@@ -1720,6 +1730,28 @@ function finalPass() {
   m.name = 'final';
   return m;
 }
+// real-v1 lens (tv, with FXAA): depth of field (&ab=nodof) and a gentle grade (&ab=nograde)
+const DOF = !ab('nodof'), GRADE = !ab('nograde');
+const _af = new THREE.Vector3(), _afh = new THREE.Vector3();
+/**
+ * Autofocus, as a focus puller would: the front person whose head is nearest the frame's centre (a little above it),
+ * and the circle of confusion a 16:9 Super 35 camera at f/2.4 gives behind and before them at this lens. Wide shots
+ * focus the same way; at their short lens the circle stays under a pixel except far back.
+ */
+function autofocus(u) {
+  let best = 1e9, dist = 0;
+  for (const p of people) {
+    if (p.kind !== 'front' || p.hidden || !p.rig || !p.rig.model.visible) continue;
+    _afh.setFromMatrixPosition(p.rig.b.head.matrixWorld);
+    _af.copy(_afh).project(camera);
+    if (_af.z > 1 || Math.abs(_af.x) > 0.9 || Math.abs(_af.y) > 0.95) continue;
+    const sc = Math.hypot(_af.x, (_af.y - 0.15) * 1.3);
+    if (sc < best) { best = sc; dist = _afh.distanceTo(camera.position); }
+  }
+  if (!dist || ab('nodof')) { u.y = 0; return; }
+  const f = 0.007 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), N = 2.4; // (the focal length from the lens: a 14 mm-high gate)
+  u.set(dist, ((f * f) / (N * Math.max(0.05, dist - f)) / 0.014) * RH, camera.near, camera.far);
+}
 const post = VIEW === 'avatar' || ab('nopost') || (FOLD && HEJL) || ab('fxaa') || (P.fast && !ab('nofxaa')) ? null : finalPass(); // (FXAA, below, does the final pass's work on tv)
 if (post) scene.add(post);
 /**
@@ -1729,13 +1761,16 @@ if (post) scene.add(post);
  * two. The target follows the drawing size (dynres).
  */
 const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab('nopost'))) ? (() => { // (tv default since 2026-10-16; &ab=nofxaa)
-  const rt = new THREE.WebGLRenderTarget(RW, RH, { depthBuffer: true, stencilBuffer: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: false });
+  // (real-v1 lens, DOF: the target keeps its depth as a texture and its colour gets mips, so a defocused pixel is one
+  // mip read, not a gather; &ab=nodof)
+  const rt = new THREE.WebGLRenderTarget(RW, RH, { depthBuffer: true, stencilBuffer: false, minFilter: DOF ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: DOF });
+  if (DOF) rt.depthTexture = new THREE.DepthTexture(RW, RH);
   rt.isXRRenderTarget = true; // (tone mapping and the output colour space as for the canvas)
   rt.texture.colorSpace = THREE.LinearSRGBColorSpace;
   const mat = new THREE.ShaderMaterial({
-    uniforms: { tDiffuse: { value: rt.texture }, uPx: { value: new THREE.Vector2(1 / RW, 1 / RH) }, uTime: { value: 0 } },
+    uniforms: { tDiffuse: { value: rt.texture }, uPx: { value: new THREE.Vector2(1 / RW, 1 / RH) }, uTime: { value: 0 }, tDepth: { value: rt.depthTexture }, uDof: { value: new THREE.Vector4() } },
     vertexShader: 'varying vec2 vUv; void main() { vUv = position.xy * 0.5 + 0.5; gl_Position = vec4( position.xy, 0.0, 1.0 ); }',
-    fragmentShader: /* glsl */ `uniform sampler2D tDiffuse; uniform vec2 uPx; uniform float uTime; varying vec2 vUv;
+    fragmentShader: /* glsl */ `uniform sampler2D tDiffuse; uniform vec2 uPx; uniform float uTime; varying vec2 vUv;${DOF ? '\n      uniform sampler2D tDepth; uniform vec4 uDof;' : ''}
       float hash( vec2 p ) { return fract( sin( dot( p, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ); }
       void main() {
         const vec3 W = vec3( 0.299, 0.587, 0.114 );
@@ -1759,6 +1794,21 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
         float low = 1.0 - 0.6 * clamp( ( 0.28 - vUv.y ) / 0.28, 0.0, 1.0 );
         float gr = length( ( vUv - vec2( 0.5, 0.52 ) ) * vec2( 1.6, 1.0 ) );
         float g = ${ab('nograin') ? '0.0' : '( hash( gl_FragCoord.xy + fract( uTime ) * 91.0 ) - 0.5 ) * mix( 0.016, 0.05, smoothstep( 0.35, 0.95, gr ) )'};
+        ${DOF ? `// the lens: depth of field from the autofocus distance (uDof: focus m, the circle at infinity in px, near, far)
+        if ( uDof.y > 0.0 ) {
+          float zb = texture2D( tDepth, vUv ).x;
+          float z = uDof.z * uDof.w / ( uDof.w - zb * ( uDof.w - uDof.z ) );
+          float coc = uDof.y * abs( z - uDof.x ) / z;
+          if ( coc > 0.8 ) {
+            float lod = clamp( log2( coc ) - 0.6, 0.0, 4.0 );
+            vec2 o = uPx * coc * 0.3;
+            vec3 b = 0.25 * ( textureLod( tDiffuse, vUv + vec2( o.x, o.y ), lod ).rgb + textureLod( tDiffuse, vUv + vec2( -o.x, o.y ), lod ).rgb
+              + textureLod( tDiffuse, vUv + vec2( o.x, -o.y ), lod ).rgb + textureLod( tDiffuse, vUv - o, lod ).rgb );
+            c = mix( c, b, smoothstep( 0.8, 2.5, coc ) );
+          }
+        }` : ''}
+        ${GRADE ? `// a gentle grade: the stage's orange pulled a little towards neutral, as a camera balanced for tungsten would
+        { float l = dot( c, W ); c = mix( vec3( l ), c, 0.86 ) * vec3( 0.97, 1.0, 1.05 ); }` : ''}
         gl_FragColor = vec4( c * ( vig * low + 2.0 * g ), 1.0 );
       }`,
     depthTest: false, depthWrite: false, toneMapped: false,
@@ -1771,6 +1821,7 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
     render(now) {
       if (rt.width !== RW || rt.height !== RH) { rt.setSize(RW, RH); mat.uniforms.uPx.value.set(1 / RW, 1 / RH); }
       mat.uniforms.uTime.value = now;
+      if (DOF) autofocus(mat.uniforms.uDof.value);
       renderer.info.autoReset = false; renderer.info.reset(); // (the stats count the scene's draws and the pass's)
       renderer.setRenderTarget(rt);
       renderer.render(scene, camera);
@@ -1981,7 +2032,7 @@ async function main() {
   const readyAnyway = () => { frontShown = true; if (frames >= 3) { holdOff(); reportReady(); } };
   if (streamFront) { setTimeout(() => frontIn().catch((e) => { console.error(e); readyAnyway(); }), 0); setTimeout(readyAnyway, 20000); } else fileBytes.clear();
   phonesOff.forEach((m) => (m.visible = false));
-  if (Q.has('debug') || CAPTURE) Object.assign(window, { __scene: scene, __camera: camera, __THREE: THREE, __people: people, __room: room });
+  if (Q.has('debug') || CAPTURE) Object.assign(window, { __scene: scene, __camera: camera, __THREE: THREE, __people: people, __room: room, __catch: catchlights });
   // (box harnesses: every front person's full body on or off, whatever the shot)
   // (box harnesses: one frame through the whole pipeline, post passes included, from a camera of theirs)
   if (Q.has('debug') || CAPTURE) window.__renderWith = (cam) => {
