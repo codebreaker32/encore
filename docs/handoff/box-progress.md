@@ -4,7 +4,7 @@
 **Last result:** round 03: flat again (club 1, theatre 1, open mic 2 on "real?"; every category 2–3). The judges' unanimous tells now are motion (laughs as head turns, identical hands-on-knees poses), the unmotivated flat front light, waxy faces, and the back rows as cut-outs.
 **Next:** judge round 04; run the full gates (incl. brightness and edges) on the frozen commit; merge the motion agent's next steps.
 **Needs the user:** nothing yet.
-**Updated:** 2026-10-18 14:10 UTC.
+**Updated:** 2026-10-18 14:35 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -82,3 +82,20 @@ Changes:
 | openmic | 2 | 2 | 2 | 3 | 2 | 3 | 3 | 2 | no |
 
 Top tells: the laugh "switches on" at 12.8 s with only heads and mouths (motion); identical hands-on-knees and hands-on-table poses; faces lit flat from the lens's own direction with no source ("a softbox that isn't there"); waxy skin; back rows as cardboard silhouettes; a dark outline at the theatre jacket's edge (the model's own inner lining, not the DOF). Held-out: club "tables: group house left, from house left" t 9.8; theatre wide t 12.6; open mic wide t 16.3.
+
+### 2026-10-18 14:35 UTC: round 04 (seed 1004): a side key, narrower skin wrap, less front fill, hand contact shadows
+Changes (all switchable):
+- The stage key moved 2.4 m house left and 0.4 m up from each venue's look position (the club, theatre and open mic; `&ab=nosidekey`), so faces have a lit and a shadow side from a source a viewer can place, not a flat light from the lens's direction. The skin wrap is 0.15 (was 0.35; the wide wrap flattened faces), the front people's fill 0.6 (`&wrap=`, `&frontfill=` knobs).
+- Hand contact shadows on the club's table tops (`&ab=nohandshadow`): one instanced draw of soft discs where the key throws each palm's shadow, darker and tighter as the palm nears the top, gone above 15 cm (+1 call).
+- After the round: DOF taps reject only *sharp* taps (a nearer person who is blurred too now spreads over what's behind, as through a lens: this was the "dark matte halo" round blurred heads), and less blur right next to the sharp subject; a cloth sheen and soft wrap on garments (`&ab=nosheen`), since Lambert falls to a dark line at a garment's outline where real fibres brighten.
+- Cost: club 55 / 85.4k wide, 55 / 133.7k mids; theatre and open mic unchanged from round 03 (47, 59 calls).
+
+| Venue | skin | eyes/face | hair | clothes | contact | lighting | motion | real? | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 2 | 2 | 2 | 3 | 3 | 4 | 2 | 1 | no |
+| theatre | 2 | 2 | 2 | 3 | 2 | 3 | 2 | 1 | no |
+| openmic | 3 | 3 | 2 | 3 | 3 | 4 | 3 | 2 | no |
+
+Top tells (unchanged in substance): the laugh as a mouth swap on still bodies; identical hands-on-knees and hands-on-table poses (both the motion agent's); waxy faces; the DOF's dark halo (fixed after this round); back rows as cut-outs; theatre bodies floating above seats. Held-out: club "low across the candles: centre table" t 12.1; theatre "stalls: group house right" t 17.7; open mic "the chairs: group house right" t 13.0.
+
+Gates on the merged commit 07afa52 (frozen copy at :8094): handsweep 0, bindcheck clean, handocc theatre/openmic 0, **anatomy 1** (openmic clap t 4.2, Male_Adult_04 L 1.1 cm into the other arm) and **handocc club 1 flicker** (Male_Adult_17 R from the bar side). Both reproduce with `&ab=noreal`, so they come from life-v1 step 1; sent to the motion agent to fix in its next commit.

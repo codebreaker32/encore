@@ -1836,8 +1836,8 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
           float z = uDof.z * uDof.w / ( uDof.w - zb * ( uDof.w - uDof.z ) );
           float coc = uDof.y * abs( z - uDof.x ) / z;
           if ( coc > 0.8 ) {
-            // (four taps spread over the circle at a mip a level finer; behind the focus, a tap that lands on something
-            // much nearer, the sharp subject, is left out, or its colour bleeds a bright fringe round the subject)
+            // (four taps spread over the circle at a mip a level finer; behind the focus, a tap that lands on the sharp
+            // subject is left out, or its colour bleeds a bright fringe round the subject)
             float lod = clamp( log2( coc ) - 1.2, 0.0, 3.0 );
             vec2 o = uPx * coc * 0.42;
             vec3 b = textureLod( tDiffuse, vUv, lod ).rgb; float wsum = 1.0; // (the pixel's own blurred colour, so a one-sided gather near the subject keeps its tone)
@@ -1845,11 +1845,14 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
               vec2 d = i == 0 ? vec2( o.x, o.y ) : i == 1 ? vec2( -o.x, o.y ) : i == 2 ? vec2( o.x, -o.y ) : -o;
               float zt = texture2D( tDepth, vUv + d ).x;
               zt = uDof.z * uDof.w / ( uDof.w - zt * ( uDof.w - uDof.z ) );
-              float w = z > uDof.x ? step( z * 0.75, zt ) : 1.0;
+              // (only a sharp, in-focus tap is left out: a nearer person who is blurred too spreads over what is behind,
+              // as through a real lens)
+              float cocT = uDof.y * abs( zt - uDof.x ) / zt;
+              float w = z > uDof.x ? max( step( z * 0.75, zt ), step( coc * 0.3, cocT ) ) : 1.0;
               b += w * textureLod( tDiffuse, vUv + d, lod ).rgb; wsum += w;
             }
-            c = mix( c, b / wsum, smoothstep( 0.8, 2.5, coc ) );
-            ${ab('dofdbg') ? 'gl_FragColor = vec4( wsum / 4.0, coc / 20.0, 0.0, 1.0 ); return;' : ''}
+            c = mix( c, b / wsum, smoothstep( 0.8, 2.5, coc ) * ( wsum - 1.0 ) * 0.25 ); // (next to the sharp subject, where taps were left out, less blur: no dark line on its outline)
+            ${ab('dofdbg') ? 'gl_FragColor = vec4( b / wsum, 1.0 ); return;' : ''}
           }
         }` : ''}
         ${GRADE && DOF ? `// the lens's glow (bloom, with the grade; it reads the DOF's mips): what is bright spreads a little into the dark round it,

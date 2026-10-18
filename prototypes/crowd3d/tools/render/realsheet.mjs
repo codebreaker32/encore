@@ -12,7 +12,7 @@ const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--ena
 const T = 1.6; // (the laugh starts at 0.3: its peak)
 try {
   const res = {};
-  for (const [tag, base, q] of [['before', base0, beforeQ], ['after', base0, afterQ]]) {
+  for (const [tag, base, q] of [['before', process.env.BEFORE || base0, beforeQ], ['after', base0, afterQ]]) { // (BEFORE=<url>: the before frames from another tree)
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     await page.goto(`${base}?preset=tv&venue=${venue}&capture=1&shot=close&state=laugh&s=0.9&hud=0&debug=1${q}`, { timeout: 240000 });
     await page.waitForFunction(() => window.__renderAt, null, { timeout: 240000 });
