@@ -5,7 +5,7 @@
 // frame from the room's state, the person's temperament and the clock, so nothing loops in step and every pose is a
 // function of (seed, time): any frame can be reproduced.
 import * as THREE from 'three';
-import { fitBody, refreshFit, fixArms, joints, armCollisions, posture, clampSpine, clampHead, shareYaw, limbs, limbMetrics, guardElbows, bestElbow, clearHeads } from './anatomy.js';
+import { fitBody, refreshFit, fixArms, joints, armCollisions, posture, clampSpine, clampHead, clampRoll, shareYaw, limbs, limbMetrics, guardElbows, bestElbow, clearHeads, depthIn } from './anatomy.js';
 import { ANIM, loadClips, newPose, sample, sampleCycle, mix, addLayer, addLayerMirror, maskOf, applyPose, family, meanPose } from './anim.js';
 
 /**
@@ -406,6 +406,7 @@ export function anatomyCheck(list = REG) {
 }
 if (typeof window !== 'undefined') window.__anatomy = () => anatomyCheck();
 // (the elbow and knee numbers themselves, for the limbs sheets and for tuning the rules: tools/render/limbstats.mjs)
+if (typeof window !== 'undefined') window.__depthIn = depthIn; // (for the box probes: tablegeo.mjs)
 if (typeof window !== 'undefined') window.__limbMetrics = () => REG.filter((p) => p.rig && p.rig.fit && p.rig.fit.ok && !p.hidden && p.rig.model.visible).map((p) => {
   const M = limbMetrics(p), r = (x) => (Number.isFinite(x) ? +x.toFixed(3) : null);
   return { name: p.name, kind: p.kind, stand: !!p.o.stand, loco: !!(p.src && p.src._loco), ov: !!p._ovOn, row: p.o.row, seated: !p.o.stand && !(p.src && p.src._loco) && !p._ovOn, resting: !!p._resting, rest: p._restKind || '', cheer: +(p._cheerW || 0).toFixed(2), doing: p._doing || '', idle: p.idle, reused: !!(p._aq && p._aq.n),
@@ -636,7 +637,7 @@ function assignRest(list) {
   for (const { t, p } of ev) {
     // (a deep belly keeps the knees out of reach: the hands would end beside the leg; those bodies rest on the thighs)
     const fr = p.rig && p.rig.fit && p.rig.fit.front ? p.rig.fit.front.spine || p.rig.fit.front.pelvis || 0 : 0;
-    const lib0 = p.o.table && p.o.neighbour ? REST_TABLE : REST_SEAT, lib = fr > 0.155 ? lib0.filter(([k]) => k !== 'knees' && k !== 'thighKnee' && k !== 'clasped') : lib0, row = rows.get(p.o.row) || [];
+    const lib0 = p.o.table && p.o.neighbour ? REST_TABLE : REST_SEAT, lib1 = fr > 0.155 ? lib0.filter(([k]) => k !== 'knees' && k !== 'thighKnee' && k !== 'clasped') : lib0, lib = lib1.length ? lib1 : [['thighs', 1]], row = rows.get(p.o.row) || [];
     const cap = Math.max(1, Math.floor(row.length / 3));
     const held = (k) => row.reduce((n, q) => n + (q !== p && q._rsCur === k ? 1 : 0), 0);
     const nb = (k) => (p.rowL && p.rowL._rsCur === k) || (p.rowR && p.rowR._rsCur === k);
@@ -667,6 +668,11 @@ const NONE = [];
 const DEG = Math.PI / 180;
 // &anatomy=off: the old behaviour (no anatomy fixes, no rest library, the old folded arms), to show the validator finds it
 const ANATOMY_OFF = typeof location !== 'undefined' && new URLSearchParams(location.search).get('anatomy') === 'off';
+// &raw=1: the captures as authored, every correction layer off (no rest poses, IK, gestures, leg passes, procedural
+// lean or head, clamps or anatomy): the A/B view for the motion sheets (tools/render/motionstrip.mjs)
+const RAW = typeof location !== 'undefined' && new URLSearchParams(location.search).get('raw') === '1';
+// &off=look,lean,shrug,rest,gest,legs,clamps,fix: one correction layer at a time off (tools/render/layers.mjs)
+const OFF = Object.fromEntries((typeof location !== 'undefined' ? new URLSearchParams(location.search).get('off') || '' : '').split(',').filter(Boolean).map((k) => [k, true]));
 // &restpose=thighs|clasped|folded|chin|chairBack|tableOne|glass|forearmsTable: every resting person in that pose (the sheets)
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
 // (a check view's one gesture for every response: &gesture=clap)
@@ -698,12 +704,48 @@ const GESTURE_FORCE = typeof location !== 'undefined' ? new URLSearchParams(loca
 // (folded arms likewise: the hands can't grip the upper arms yet, so they splay; the 'folded' idle gets clasped hands)
 // each hand on its own thigh, each on its own knee, one of each, or (rarely) clasped well forward on the lap; every
 // seat's schedule is drawn with its row (assignRest): no two neighbours in the same pose, at most a third of a row in one
-const REST_SEAT = [['thighs', 2.2], ['knees', 1.6], ['thighKnee', 2], ['clasped', 0.8]];
+// (mostly on the thighs, elbows bent and relaxed; both hands out on the knees, arms near straight, read stiff in a row)
+const REST_SEAT = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
 // A cabaret table stands in front of its pair, off to one side of each of them: only the close-up pair knows which side
 // (o.neighbour), so only they use the table, with the hand on its side (both forearms on it would leave one in the air)
 // (the glass: nobody holds one yet, so it's out until there is a glass to hold)
-const REST_TABLE = [['tableOne', 2], ['thighs', 1.5], ['knees', 1], ['thighKnee', 1.4], ['clasped', 0.5]];
-const _rv = [...Array(8)].map(() => new THREE.Vector3());
+// (at a two-top (the club's cabaret tables) both hands rest on the table's top, planted there: in the lap, a few
+// centimetres under the top, every small move crossed its edge from one camera or another, a hand that came and went
+// (tools/render/handocc.mjs); on the top, fitted to it once and kept, the body moving about them, they stay in view)
+const TABLE_R = 0.4; // (venue.js TABLE_R: the club's two-tops, an 80 cm top)
+// (venue.js: a glass on each sitter's outer side of the rim, 14 and 8 cm tall, the candle jar 7 cm in the middle; x, z off
+// the table's middle, radius, height)
+const TABLE_THINGS = [[-0.32, 0.11, 0.036, 0.14], [0.32, 0.10, 0.041, 0.084], [0.01, -0.06, 0.045, 0.07]];
+/**
+ * Where a laugh's capture may start: the moments, every 0.1 s over its first dur − 3 s, where its torso and head are
+ * nearest the clip's own mean pose (the quietest quarter), so the additive layer it makes begins near zero and the body
+ * goes on from wherever it is; the one nearest `want` (a take's seeded start). Worked out once per clip.
+ */
+const _qs = new WeakMap();
+function quietStart(clip, ref, want) {
+  // (once per clip: every person's reference for it is the same clip's mean pose)
+  let list = _qs.get(clip);
+  if (!list) {
+    const P = newPose(), span = Math.max(0, clip.dur - 3), ts = [], ds = [], mk = MASK.torso;
+    for (let t = 0; t <= span + 1e-6; t += 0.1) {
+      sample(clip, t, P);
+      let d = 0;
+      for (let i = 0, n = 0; i < ANIM.NB; i++, n += 4) { const w = mk ? mk[i] : 1; if (w <= 0) continue; const dot = Math.abs(P[n] * ref[n] + P[n + 1] * ref[n + 1] + P[n + 2] * ref[n + 2] + P[n + 3] * ref[n + 3]); d += w * 2 * Math.acos(Math.min(1, dot)); }
+      ts.push(+t.toFixed(2)); ds.push(d);
+    }
+    const thr = ds.length ? [...ds].sort((a, b) => a - b)[Math.floor((ds.length - 1) * 0.25)] : 0;
+    list = ts.filter((t, i) => ds[i] <= thr + 1e-9);
+    if (!list.length) list = [0];
+    _qs.set(clip, list);
+  }
+  let best = list[0];
+  for (const t of list) if (Math.abs(t - want) < Math.abs(best - want)) best = t;
+  return best;
+}
+/** A two-top's middle, world (venue.js cabaretTables keeps it on each of its seats as twoTop). */
+const tableOf = (s, nb, out) => (s.twoTop ? out.set(s.twoTop.x, s.twoTop.y || 0, s.twoTop.z) : out.set(s.x + nb * 0.31, s.y || 0, s.z - 0.4));
+const REST_TABLE = [['tableBoth', 2], ['forearmsTable', 1]];
+const _rv = [...Array(10)].map(() => new THREE.Vector3());
 const LAUGH_P = { laugher: 0.45, talker: 0.25, plain: 0.18, shy: 0.16, sceptic: 0.05 };
 
 /**
@@ -909,6 +951,39 @@ export class Person {
    * A capture (standing up, a coat, a turn) can swing an upper arm out to the rig's bind direction (down and out at
    * about 45°), which reads as the T/A pose: swing it towards hanging down until it is at least 23° clear.
    */
+  /**
+   * Crossed ankles are how many people sit, and the women's seated capture sits so: only shins that pass through each
+   * other (centre lines nearer than 7.5 cm) are turned apart at the hips, each away from the other where they are
+   * nearest, crossed or side by side, and only as far as that. Run after the leg passes and again after the spine's
+   * clamps (the thighs hang from Spine: a clamp swings them).
+   */
+  shinsApart() {
+    const rig = this.rig, b = rig.b;
+    if (!b.lThigh || !b.rThigh || !b.lCalf || !b.rCalf || !b.lFoot || !b.rFoot) return;
+    const K = (this._sa ||= [...Array(14)].map(() => new THREE.Vector3()));
+    for (let pass = 0; pass < 3; pass++) {
+      const KL = worldPos(b.lCalf, K[0]), AL = worldPos(b.lFoot, K[1]), KR = worldPos(b.rCalf, K[2]), AR = worldPos(b.rFoot, K[3]);
+      const dR = K[4].copy(AR).sub(KR), L2 = Math.max(dR.lengthSq(), 1e-9), pL = K[5], pR = K[6], q = K[7];
+      let sdist = Infinity, fL = 1, fR = 1;
+      for (let i = 0; i <= 8; i++) { q.copy(KL).lerp(AL, i / 8); const u = clamp01(K[8].copy(q).sub(KR).dot(dR) / L2), c = K[9].copy(KR).addScaledVector(dR, u), d = c.distanceTo(q); if (d < sdist) { sdist = d; pL.copy(q); pR.copy(c); fL = i / 8; fR = u; } }
+      if (sdist >= 0.075) return;
+      const sep = K[10].copy(pL).sub(pR).setY(0);
+      if (sep.lengthSq() < 1e-8) sep.set(1, 0, 0).transformDirection(rig.seat.matrixWorld);
+      sep.normalize();
+      for (const [th, ca, ft, sg, f] of [[b.lThigh, b.lCalf, b.lFoot, 1, fL], [b.rThigh, b.rCalf, b.rFoot, -1, fR]]) {
+        const H = worldPos(th, K[11]), Kn = worldPos(ca, K[12]), A = worldPos(ft, K[13]);
+        const ax = K[8].copy(Kn).sub(H).normalize(), r = A.sub(Kn), push = K[9].copy(sep).multiplyScalar(sg); // (r: knee to ankle)
+        const sw = K[2].crossVectors(ax, r), k = sw.dot(push), len = Math.max(0.2, r.length());
+        if (Math.abs(k) < 1e-4) continue;
+        // (as far as the shins' nearest points need: a turn of the thigh moves a point on the shin by its distance down it)
+        const beta = Math.sign(k) * Math.asin(Math.min(0.5, (0.082 - sdist) / 2 / Math.max(0.08, len * f)));
+        const Wq = worldQuat(th, _q[2]).premultiply(_q[3].setFromAxisAngle(ax, beta));
+        th.quaternion.copy(worldQuat(th.parent, _q[4]).invert().multiply(Wq));
+        rig.upd(th);
+      }
+    }
+  }
+
   armsOffBind() {
     const rig = this.rig, b = rig.b, seat = rig.seat;
     const K = (this._kb ||= [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector3()));
@@ -920,6 +995,13 @@ export class Person {
       const down = K[4].set(0.12 * sx, -1, 0.1).normalize().transformDirection(seat.matrixWorld);
       const want = K[5].copy(d);
       for (const k of [0.35, 0.6, 0.85, 1]) { want.copy(d).lerp(down, k).normalize(); if (want.angleTo(bind) >= 0.4) break; }
+      // (a hand planted on a table's top stays there: the elbow turned on its circle towards that way instead, the
+      // whole arm swung would lift the hand off the top)
+      if (this._planted) {
+        const left = up === b.lUpper, hand = left ? b.lHand : b.rHand, W = worldPos(hand, K[1]), P = K[2].copy(want);
+        rig.solve(up, fore, hand, W, P, left ? rig.bend.lArm : rig.bend.rArm, rig.len.arm);
+        rig.upd(up); moved++; continue;
+      }
       const Wq = worldQuat(up, _q[2]).premultiply(_q[3].setFromUnitVectors(d, want));
       up.quaternion.copy(worldQuat(up.parent, _q[4]).invert().multiply(Wq));
       rig.upd(up);
@@ -1038,8 +1120,8 @@ export class Person {
     // limbs rules want 90-130°. Someone leaning back rests the hands nearer the hip.)
     // (one hand on the table, the other rests further along its thigh: drawn back to the hip, its fingers dug in)
     const reach = (kind === 'tableOne' ? 0.985 : 0.9) * (rig.len.arm[0] + rig.len.arm[1]);
-    // (nor so close that the elbow folds up behind the back: at least 0.78 of the arm's length away, about 100°)
-    const near = 0.78 * (rig.len.arm[0] + rig.len.arm[1]);
+    // (nor so close that the elbow folds up behind the back)
+    const near = 0.72 * (rig.len.arm[0] + rig.len.arm[1]); // (0.72: an elbow bent to about 92°, relaxed)
     const placed = (side, u, out) => {
       const sh0 = toL(worldPos(side > 0 ? b.lUpper : b.rUpper, _rv[0]));
       for (let uu = u; ; uu -= 0.04) { onThigh(side, uu, out); if (uu <= (belly > 0 ? 0.42 + belly * 2 : 0.5) || out.distanceTo(sh0) <= reach) break; } // (not far back into a belly's way)
@@ -1097,14 +1179,102 @@ export class Person {
       // (out of reach, as when the body turns to a heckler: that hand stays on its thigh rather than hover short of the table)
       const tp = _rv[0].set(sd > 0 ? 0.16 : -0.16, 0.775, 0.38), shT = toL(worldPos(sd > 0 ? b.lUpper : b.rUpper, _rv[2]));
       // (and with room to spare, 92% of the arm: a talker's turn or a lean moves the shoulder after this is placed)
-      if (tp.distanceTo(shT) <= 0.92 * (rig.len.arm[0] + rig.len.arm[1])) one(_rv[0].set(0.16, 0.775, 0.38), _rv[1].set(0.5, -1, -0.3));
+      if (tp.distanceTo(shT) <= 0.92 * (rig.len.arm[0] + rig.len.arm[1])) one(_rv[0].set(0.16, 0.81, 0.38), _rv[1].set(0.5, -1, -0.3));
     } // on the table's near edge, towards its middle
     else if (kind === 'glass') { one(_rv[0].set(0.15, 0.8, 0.37), _rv[1].set(0.6, -1, -0.2)); R.roll = sd; }
-    else if (kind === 'forearmsTable') { R.tL.set(0.13, 0.775, 0.45); R.tR.set(-0.13, 0.775, 0.45); R.pL.set(0.4, -1, -0.2); R.pR.set(-0.4, -1, -0.2); }
+    else if (kind === 'forearmsTable') { const z = 0.21 + (rig.len.arm[0] + rig.len.arm[1] - 0.49); R.tL.set(0.12, 0.805, z); R.tR.set(-0.12, 0.805, z); R.pL.set(0.4, -1, -0.2); R.pR.set(-0.4, -1, -0.2); }
+    // (both hands on the table's top, relaxed, a hand's width apart, the palms 6 cm over it; as far ahead as the arm
+    // reaches with the elbows well bent: 20 cm ahead of the seat for an arm of 49 cm, more for a longer one)
+    else if (kind === 'tableBoth') { const z = 0.2 + (rig.len.arm[0] + rig.len.arm[1] - 0.49); R.tL.set(0.14, 0.81, z); R.tR.set(-0.14, 0.81, z - 0.01); R.pL.set(0.5, -1, -0.3); R.pR.set(-0.5, -1, -0.3); }
+    // (at a two-top, hands on the table are fitted to the table itself (venue.js cabaretTables): on its top, and 5 cm
+    // clear of the two glasses and the candle jar)
+    // (and, once fitted, kept: a hand planted on the top stays where it was put for as long as that rest lasts, the
+    // body moving about it, a laugh, a turn, a clap and back; refitted once the rest has been off for half a second)
+    const PC = /^(tableBoth|forearmsTable)$/.test(kind) && this.o.table && this.o.neighbour ? ((this._pc ||= {})[kind] ||= { tL: new THREE.Vector3(), tR: new THREE.Vector3(), at: -9 }) : null;
+    const nowT = this._laT ?? 0;
+    if (PC && nowT - PC.at < 0.5 && nowT >= PC.at) { R.tL.copy(PC.tL); R.tR.copy(PC.tR); PC.at = nowT; }
+    else if (/^(tableBoth|tableOne|forearmsTable)$/.test(kind) && this.o.table && this.o.neighbour && this.src) {
+      const s0 = this.src, tc = tableOf(s0, this.o.neighbour, _rv[8]); // (venue.js cabaretTables)
+      const things = [[-0.32, 0.11, 0.036], [0.32, 0.10, 0.041], [0.01, -0.06, 0.045]]; // (venue.js: a glass on each sitter's outer side of the rim, beside the hands, the candle jar in the middle)
+      const tcL = toL(_rv[9].copy(tc));
+      for (const t of [R.tL, R.tR]) {
+        if (t.y < 0.77) continue; // (a hand this pose keeps off the table)
+        // each hand ahead of its own shoulder, as the pose has it, and on the top: a hand beyond its edge (the pair sit
+        // either side of it) slides across, in front of the body, to 8 cm inside the rim; then 5 cm clear of the glasses
+        // and the jar. (Never drawn along the line to the table's middle: that reaches the arm out straight, and the
+        // rules that keep the forearms apart then lift or swing a hand off its place, frame to frame)
+        const m = TABLE_R - 0.08, dz0 = Math.max(-m * 0.8, Math.min(m * 0.8, t.z - tcL.z)), hw = Math.sqrt(m * m - dz0 * dz0);
+        t.z = tcL.z + dz0; t.x = tcL.x + Math.max(-hw, Math.min(hw, t.x - tcL.x));
+        // (a hand that would cross the body's middle to get onto the top goes further in instead, where the top is
+        // wider, back towards its own side: an outer hand pulled across tucks its elbow behind the body)
+        { const own = t === R.tL ? 1 : -1;
+          if (own * t.x < 0.03) { const z2 = Math.max(t.z, tcL.z - 0.2), d2 = z2 - tcL.z, hw2 = Math.sqrt(Math.max(0, m * m - d2 * d2)); t.z = z2; t.x = clamp(own * 0.1, tcL.x - hw2, tcL.x + hw2); } }
+        const w = rig.seat.localToWorld(_rv[6].copy(t));
+        let dx = w.x - tc.x, dz = w.z - tc.z;
+        // (on this sitter's own half of the top, 7 cm clear of the line between the two: the tablemate's hands keep
+        // to theirs, and the rule that keeps neighbours' hands apart doesn't move either)
+        { const own = Math.sign(s0.x - tc.x) || 1; if (own * dx < 0.07) dx = own * 0.07; }
+        // (the wrist 5 cm and a hand's length, 9 cm, clear of the glasses and the jar: the fingers may lie any way on
+        // the top, the wrist's own limits turn them)
+        for (let k = 0; k < 4; k++) for (const [ox, oz, r] of things) for (const f of [0]) {
+          const ex = dx - ox, ez = dz - oz, e = Math.hypot(ex, ez), need = r + 0.05 + 0.09;
+          if (e < need && e > 1e-4) { dx += (ex / e) * (need - e); dz += (ez / e) * (need - e); }
+        }
+        { const d = Math.hypot(dx, dz), m2 = TABLE_R - 0.06; if (d > m2) { dx *= m2 / d; dz *= m2 / d; } }
+        t.copy(toL(_rv[6].set(tc.x + dx, (s0.y || 0) + 0.81, tc.z + dz)));
+        // (within 74% of the arm's reach, the elbow well bent, with room for a laugh's lean back: slid on the top towards the shoulder, never off it nor
+        // into the belly; an arm at the end of its reach is drawn in below and its hand then follows every shrug. The
+        // shoulder as it has been over the last second or so, so a laugh's bounce doesn't carry the hand about)
+        const si = t === R.tL ? 0 : 1, E = (this._shE ||= [new THREE.Vector3(), new THREE.Vector3(), 0]), S = toL(worldPos(si ? b.rUpper : b.lUpper, _rv[4]));
+        if (!(E[2] & (1 << si))) { E[si].copy(S); E[2] |= 1 << si; } else E[si].lerp(S, 0.06);
+        const len = 0.74 * (rig.len.arm[0] + rig.len.arm[1]), Sh = E[si];
+        if (t.distanceTo(Sh) > len) {
+          const hx = Sh.x - t.x, hz = Sh.z - t.z, hn = Math.hypot(hx, hz) || 1, ux = hx / hn, uz = hz / hn;
+          // |t + s u - Sh|^2 = len^2 (u horizontal): s = hn - sqrt(len^2 - dy^2), when that has a root
+          const dy = Sh.y - t.y, h2 = len * len - dy * dy;
+          let s1 = h2 > 0 ? hn - Math.sqrt(h2) : hn;
+          // (not off the top, nor nearer than 13 cm ahead of the seat: the belly)
+          for (let k = 0; k < 2; k++) {
+            const nx = t.x + ux * s1, nz = t.z + uz * s1;
+            if (nz < 0.13) s1 = Math.max(0, (0.13 - t.z) / Math.min(-1e-3, uz));
+            const ex = t.x + ux * s1 - tcL.x, ez = t.z + uz * s1 - tcL.z;
+            if (Math.hypot(ex, ez) > TABLE_R - 0.05) s1 *= 0.8;
+          }
+          t.x += ux * Math.max(0, s1); t.z += uz * Math.max(0, s1);
+        }
+      }
+      // (and the two hands a forearm's width apart, 15 cm: the hand on the table's side moves on along it. Two hands
+      // side by side there crossed the forearms, and the rule that lifts one clear lifted either, by turns)
+      const gap = kind === 'forearmsTable' ? 0.19 : 0.15; // (forearms on the top converge on the wrists: wider)
+      if (R.tL.y >= 0.77 && R.tR.y >= 0.77 && Math.hypot(R.tL.x - R.tR.x, R.tL.z - R.tR.z) < gap) {
+        if (tcL.x > 0) R.tL.x = R.tR.x + Math.sqrt(Math.max(0, gap * gap - (R.tL.z - R.tR.z) ** 2));
+        else R.tR.x = R.tL.x - Math.sqrt(Math.max(0, gap * gap - (R.tL.z - R.tR.z) ** 2));
+      }
+      // (and within the sitter's own place, 25 cm either side of the seat's middle: keepHandsOut's rule, which would
+      // otherwise draw a planted hand in by turns)
+      for (const t of [R.tL, R.tR]) if (t.y >= 0.77) t.x = clamp(t.x, -0.25, 0.25);
+      // (a forearm's width apart still: the other hand, away from the table's side, comes in instead)
+      if (R.tL.y >= 0.77 && R.tR.y >= 0.77 && Math.hypot(R.tL.x - R.tR.x, R.tL.z - R.tR.z) < gap - 0.005) {
+        const w2 = Math.sqrt(Math.max(0, gap * gap - (R.tL.z - R.tR.z) ** 2));
+        if (tcL.x > 0) R.tR.x = R.tL.x - w2; else R.tL.x = R.tR.x + w2;
+      }
+      // (and the glasses and the jar have the last word: whatever the steps above did, a wrist a hand's length clear)
+      for (const t of [R.tL, R.tR]) {
+        if (t.y < 0.77) continue;
+        const w = rig.seat.localToWorld(_rv[6].copy(t));
+        let dx = w.x - tc.x, dz = w.z - tc.z;
+        for (let k = 0; k < 4; k++) for (const [ox, oz, r] of things) { const ex = dx - ox, ez = dz - oz, e = Math.hypot(ex, ez), need = r + 0.05 + 0.09; if (e < need && e > 1e-4) { dx += (ex / e) * (need - e); dz += (ez / e) * (need - e); } }
+        t.copy(toL(_rv[6].set(tc.x + dx, (s0.y || 0) + 0.81, tc.z + dz)));
+      }
+      if (PC) { PC.tL.copy(R.tL); PC.tR.copy(R.tR); PC.at = nowT; }
+    }
     // (a target the arm can't reach, as when a talker turns away from that side: drawn in to 95% of the arm along its
     // line, so the hand rests short of it instead of stretching for it with the fingers driven into the leg)
     { const Ls = 0.95 * (rig.len.arm[0] + rig.len.arm[1]);
-      for (const [t, up] of [[R.tL, b.lUpper], [R.tR, b.rUpper]]) { const sh0 = toL(worldPos(up, _rv[2])), d = t.distanceTo(sh0); if (d > Ls) t.lerp(sh0, 1 - Ls / d); } }
+      // (a hand planted on a table's top: from the shoulder as it has been of late, above, so a shrug or a turn of the
+      // body doesn't draw it about the top)
+      const planted = /^(tableBoth|forearmsTable)$/.test(kind) && this._shE && this.o.table;
+      for (const [t, up, si] of [[R.tL, b.lUpper, 0], [R.tR, b.rUpper, 1]]) { const sh0 = planted ? _rv[2].copy(this._shE[si]) : toL(worldPos(up, _rv[2])), d = t.distanceTo(sh0); if (d > Ls) t.lerp(sh0, 1 - Ls / d); } }
     return R;
   }
 
@@ -1227,7 +1397,7 @@ export class Person {
     const tk = c.talk;
     if (tk && c.W.talk > 0.01 && C.talk) {
       // (a standing capture's beats on a seated body: half strength, or its side bends become a hard lean over the chair)
-      if (tk.speaking) { sample(C.talk, t * 1.1, A); addLayer(pose, A, C.talkRef, c.W.talk * (walking ? 0.4 : seated ? 0.5 : 1), pose, MASK.talk); }
+      if (tk.speaking) { sample(C.talk, t * 1.1, A); addLayer(pose, A, C.talkRef, c.W.talk * (walking ? 0.4 : seated ? 0.5 : 1), pose, seated && this.o.table && this.o.neighbour && !RAW ? MASK.head : MASK.talk); } // (at a two-top the talk is the head's and the beat gesture's: the capture's arms pulled the hands off the top, one arm straight, the other's elbow behind)
       else if (tk.nod > 0 && C.nod) { sample(C.nod, tk.nod * Math.min(2, C.nod.dur), A); addLayer(pose, A, C.nodRef, c.W.talk * Math.sin(Math.PI * tk.nod), pose, MASK.head); }
     }
     // a laugh's torso and head (the hands keep the gesture vocabulary, driven by the room's envelope)
@@ -1240,8 +1410,10 @@ export class Person {
       const set = C.laughSet[k], j = Tk && Tk.other && set[1] ? 1 : 0, lc = set[j] || set[0];
       if (lc) {
         const ref = C.laughRefs[k][set[j] ? j : 0];
-        sample(lc, (Tk ? Tk.t0 * Math.max(0, lc.dur - 3) : 0) + c.L.t * (Tk ? Tk.rate : 1), A);
-        const w = Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1); // (a big one rocks the body more)
+        // (from a moment of the capture near its own mean pose, so the laugh starts from the pose the body is in now and
+        // grows out of it, the seeded start only choosing among those moments; quietStart)
+        sample(lc, (Tk ? quietStart(lc, ref, Tk.t0 * Math.max(0, lc.dur - 3)) : 0) + c.L.t * (Tk ? Tk.rate : 1), A);
+        const w = Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? 0.8 : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
         if (Tk && Tk.mirror) addLayerMirror(pose, A, ref, w, pose, MASK.torso, rig); else addLayer(pose, A, ref, w, pose, MASK.torso);
       }
     }
@@ -1262,7 +1434,7 @@ export class Person {
     // (a big laugh: the little clap and the hand on the chest give way to the knee; arms up only on a strong finale)
     const big = kind === 'laugh' && s > 0.7 ? { none: 0.45, clapShort: 0.35, chest: 0.6, knee: 1.5, slap: 1.4, mouth: 1.3 } : {};
     const VG = kind === 'laugh' ? (VENUE_LAUGH[this._vplan] || {}) : {}, vg = VG.gestures || {};
-    const list = base.map(([g, w]) => [g, w * (sw[g] ?? 1) * (big[g] ?? 1) * (vg[g] ?? 1) * (g === 'armsUp' && vocab === 'club' && s < 0.75 ? 0 : 1)]);
+    const list = base.map(([g, w]) => [g, w * (sw[g] ?? 1) * (big[g] ?? 1) * (vg[g] ?? 1) * (g === 'armsUp' && vocab === 'club' && s < 0.75 ? 0 : 1) * (this.o.table && (g === 'knee' || g === 'slap' || g === 'clapLow') ? 0 : 1)]); // (at a table nothing at the table's own height, where a hand comes and goes behind its edge: no slap on it, no low clap, no grab at the knee; their weight goes to the rest)
     if (VG.bigExtra && s > 0.8) for (const e of VG.bigExtra) list.push(e); // (the arena's big laughs: arms up, whistles)
     const mk = (g) => {
       const [a, b] = SHORT[g] || [Infinity, Infinity];
@@ -1370,7 +1542,7 @@ export class Person {
       const inB = u - start;
       if (u < 0) { pulse = 0.5; bout = 0.6; }
       else if (inB > len) { pulse = 0.3; bout = 0.45; } // the gasp between bouts
-      else { pulse = 0.5 + 0.5 * Math.sin(6.283 * T.hz * inB); bout = 0.55 + 0.45 * Math.pow(T.decay, k) * smooth(inB / 0.08) * smooth((len - inB) / 0.08); }
+      else { pulse = 0.5 + 0.5 * Math.sin(6.283 * T.hz * inB); bout = 0.55 + 0.45 * Math.pow(T.decay, k) * smooth(inB / 0.2) * smooth((len - inB) / 0.2); } // (each bout eases in and out over 0.2 s: no snap of the body between them)
     }
     R.body = body * (kind === 'laugh' ? 0.75 + 0.25 * bout : 1); R.smile = smile; R.t = t; R.pulse = pulse; R.bout = bout;
     return R;
@@ -1512,7 +1684,7 @@ export class Person {
     const F = this.force || {};
     const calm = F.still ? 0 : 1;
     const G = {}; // gesture weights and their parameters
-    if (L) for (const g of L.gestures) if (!G[g.g] || g.w > G[g.g].w) G[g.g] = g;
+    if (L && !OFF.gest) for (const g of L.gestures) if (!G[g.g] || g.w > G[g.g].w) G[g.g] = g;
     if (F.lc) G.clap = { w: F.lc, rate: this.clapHz, phase: 0, hand: 1, high: 0.5 };
     if (F.lu) G.oneArm = { w: F.lu, rate: 1, phase: 0, hand: 1, high: 0.5 };
     if (F.both) G.armsUp = { w: F.both, rate: 1, phase: 0, hand: 1, high: 0.5 };
@@ -1579,6 +1751,11 @@ export class Person {
       const cb = (this._cb ||= {});
       cb.T = T; cb.lb = lb; cb.clapW = clapW; cb.upW = upW; cb.busyW = Math.min(1, W.phone + W.chin + W.folded + W.drink); cb.W = W; cb.L = L; cb.talk = tk;
       SEC && SEC.mark('pre'); this.clipBody(now, room, cb); SEC && SEC.mark('clip');
+      if (RAW) { // (the capture alone: matrices for the renderer, nothing on top)
+        rig.model.updateMatrixWorld(true); this._full = true;
+        for (let i = 0; i < rig.skeletons.length; i++) rig.skeletons[i].dirty = true;
+        this._calm = false; this._doing = 'raw'; return;
+      }
       // standing (the arena's floor), the feet stay under the hips whatever the capture does with them (a laugh steps
       // them back): each ankle within 8 cm behind and 6 cm in front of the pelvis, on its own line; the limbs rules
       if ((o.stand || (OV && stand > 0.9)) && walk < 0.05 && !(T && !T.hidden) && rig.b.lThigh) {
@@ -1600,7 +1777,7 @@ export class Person {
       const LB = legSeated ? [rig.b.lThigh, rig.b.rThigh, rig.b.lCalf, rig.b.rCalf, rig.b.lFoot, rig.b.rFoot] : null;
       if (!legSeated) LC.ok = false;
       if (legSeated && LC.ok && !STEPPED && !this.fresh && LC.n++ % 4) { for (let i = 0; i < 6; i++) LB[i].quaternion.copy(LC.q[i]); }
-      else if (legSeated) {
+      else if (legSeated && !OFF.legs) {
         LC.n = 1;
         rig.updChain(rig.b.spine); // (the capture just moved the pelvis and spine: the legs are measured from them)
         const sp = (this._legSp ??= (hash(sd * 3.7 + 1) - 0.4) * 0.24), as = (this._legAs ??= (hash(sd * 5.3 + 2) - 0.5) * 0.16);
@@ -1612,37 +1789,27 @@ export class Person {
         }
         // and the knees a natural hand's width apart at least (12 cm centre to centre, the limbs rules): each thigh turned out
         // about the vertical at its hip by half of what's missing
-        { rig.upd(rig.b.lThigh); rig.upd(rig.b.rThigh);
+        const kneesApart = (outerOnly = false) => { rig.upd(rig.b.lThigh); rig.upd(rig.b.rThigh);
           const kL = toL(worldPos(rig.b.lCalf, NV())), kR = toL(worldPos(rig.b.rCalf, NV())), hL0 = toL(worldPos(rig.b.lThigh, NV())), hR0 = toL(worldPos(rig.b.rThigh, NV()));
-          const sx0 = Math.sign(hL0.x - hR0.x) || 1, kg = (kL.x - kR.x) * sx0;
-          if (kg < 0.12) for (const [th, h, k, sgn] of [[rig.b.lThigh, hL0, kL, sx0], [rig.b.rThigh, hR0, kR, -sx0]]) {
+          // (across the body's own hip line: turned on the seat, as at a two-top, it isn't the seat's)
+          const hdx = hL0.x - hR0.x, hdz = hL0.z - hR0.z, sx0 = Math.sign(hdx) || 1, kg = ((kL.x - kR.x) * hdx + (kL.z - kR.z) * hdz) / (Math.hypot(hdx, hdz) || 1);
+          const nbL = outerOnly && o.neighbour ? toL(NV().set(o.neighbour, 0, 0).add(worldPos(rig.seat, NV()))).x : 0; // (the tablemate's side, seat frame)
+          if (kg < 0.125) for (const [th, h, k, sgn] of [[rig.b.lThigh, hL0, kL, sx0], [rig.b.rThigh, hR0, kR, -sx0]]) {
+            if (outerOnly && nbL && Math.sign(h.x - (th === rig.b.lThigh ? hR0.x : hL0.x)) === Math.sign(nbL)) continue; // (not the one beside them)
             const r = Math.hypot(k.x - h.x, k.z - h.z);
             if (r < 0.1) continue;
-            const ang = Math.min(0.3, ((0.12 - kg) / 2 + 0.005) / r) * sgn; // (+angle about the seat's up turns +z towards +x)
+            const ang = Math.min(0.3, ((0.125 - kg) / 2 + 0.005) / r) * sgn; // (+angle about the seat's up turns +z towards +x)
             const Wq = worldQuat(th, _q[2]).premultiply(_q[3].setFromAxisAngle(up, ang));
             th.quaternion.copy(worldQuat(th.parent, _q[4]).invert().multiply(Wq));
             rig.upd(th);
-          } }
+          } };
+        kneesApart();
         // and the feet never crossed or together (the women's seated capture crosses the ankles; the limbs rules want
         // them apart, at least 13 cm centre to centre): the thigh turned about its own long axis (the hip's rotation)
         // swings the shin out with the knee where it is
         rig.upd(rig.b.lThigh); rig.upd(rig.b.rThigh);
         const hL = toL(worldPos(rig.b.lThigh, NV())), hR = toL(worldPos(rig.b.rThigh, NV())), sx = Math.sign(hL.x - hR.x) || 1;
-        const uncross = () => {
-        for (let pass = 0; pass < 2; pass++) {
-        const gap = (toL(worldPos(rig.b.lFoot, NV())).x - toL(worldPos(rig.b.rFoot, NV())).x) * sx;
-        if (gap < 0.13) for (const [th, ca, ft, s] of [[rig.b.lThigh, rig.b.lCalf, rig.b.lFoot, sx], [rig.b.rThigh, rig.b.rCalf, rig.b.rFoot, -sx]]) {
-          const H = worldPos(th, NV()), K = worldPos(ca, NV()), A = worldPos(ft, NV());
-          const ax = NV().copy(K).sub(H).normalize(), r = NV().copy(A).sub(K), out = NV().set(s, 0, 0).transformDirection(rig.seat.matrixWorld);
-          const sw = NV().crossVectors(ax, r), k = sw.dot(out), len = Math.max(0.2, r.length());
-          if (Math.abs(k) < 1e-4) continue;
-          const beta = Math.sign(k) * Math.asin(Math.min(0.5, (0.13 - gap) / 2 / len));
-          const Wq = worldQuat(th, _q[2]).premultiply(_q[3].setFromAxisAngle(ax, beta));
-          th.quaternion.copy(worldQuat(th.parent, _q[4]).invert().multiply(Wq));
-          rig.upd(th);
-        }
-        }
-        };
+        const uncross = () => this.shinsApart();
         uncross();
         // and clear of the neighbours' legs (a tablemate turned to talk brings the knees together under the table): the
         // thigh turned away about the vertical at the hip until its knee and shin are 12 cm from theirs
@@ -1670,6 +1837,8 @@ export class Person {
             rig.upd(th);
           }
         }
+        // (and again once clear of the neighbours: turning a knee away from theirs can bring it in to its own other one)
+        if (this.near && this.near.length) kneesApart(true);
         // and the thighs near level and the shins near vertical together: a knee dropped more than 28° below its hip (the
         // feet drawn back under the seat in a laugh) has its foot brought forward, a foot more than 13 cm in front of its
         // knee comes back, 3 cm a step
@@ -1706,7 +1875,7 @@ export class Person {
     const sway = calm * seatK * noise(sd + 2, now * 0.08 * speed) * 0.05 + (room.beat ? Math.sin(now * room.beat * 6.283 + sd * 0.3) * 0.035 : 0);
     let lean = this.slouch * (1 - stand) * (clip ? 0.5 : 1) + shift * 0.6, turn = sway * 0.5, side = calm * seatK * noise(sd + 3, now * 0.07) * 0.03;
     let headPitch = 0, headYaw = 0, headRoll = this.headTilt;
-    if (W.phone > 0) { lean += 0.16 * W.phone; headPitch += 0.55 * W.phone; }
+    if (W.phone > 0) { lean += 0.16 * W.phone * (o.table && o.neighbour ? 0.25 : 1); headPitch += 0.55 * W.phone; } // (at a two-top: the head looks down, the belly stays off the top's rim)
     if (W.chin > 0) { lean += 0.2 * W.chin; headRoll += 0.12 * W.chin; headPitch += 0.08 * W.chin; }
     if (W.talk > 0) {
       // towards whoever is speaking (a speaker looks at the listener most of the time, and away while thinking)
@@ -1723,42 +1892,47 @@ export class Person {
       const RS = this.restPoseAt(now), kn = (k) => (k === 'knees' ? 1 : k === 'thighKnee' ? 0.6 : 0);
       lean += 0.13 * lerp(kn(RS.prev), kn(RS.kind), RS.k) * (1 - clamp01((this._fidW || 0) * 1.6));
     }
-    lean += (attention - 0.55) * 0.18 * calm * (1 - stand); // locked in leans in, a lost room sits back
+    lean += (attention - 0.55) * 0.08 * calm * (1 - stand); // locked in leans in a little, a lost room sits back
     // the seat's sitting style, with a slow weight shift (sitting up, settling back) every 20-60 s, never a pop
     if (clip && !o.stand && stand < 0.3) {
       const ps = this.posture || 'upright', drift = noise(sd + 71, now * 0.025) * 0.05 + noise(sd + 73, now * 0.011) * 0.03;
-      lean += (ps === 'upright' ? 0.06 + 0.06 * clamp01((attention - 0.6) * 3) : ps === 'back' ? -0.17 : ps === 'slouch' ? 0.13 : 0) + drift;
-      if (ps === 'slouch') headPitch -= 0.08; // (the head kept up over a rounded back)
-      if (ps === 'shoulder') side += (this.side || 1) * 0.09;
-      if (ps === 'turnIn') turn += (this.side || 1) * 0.2;
+      // (small: the capture sits its own way already; these only vary it from seat to seat)
+      lean += (ps === 'upright' ? 0.02 + 0.03 * clamp01((attention - 0.6) * 3) : ps === 'back' ? -0.08 : ps === 'slouch' ? 0.06 : 0) + drift;
+      if (ps === 'slouch') headPitch -= 0.04; // (the head kept up over a rounded back)
+      if (ps === 'shoulder') side += (this.side || 1) * 0.05;
+      if (ps === 'turnIn') turn += (this.side || 1) * 0.1;
     }
     const hk = room.heckle ? room.heckle.level : 0;
     if (idle === 'heckle') { lean += 0.12 * hk; headPitch -= 0.08 * hk; } // (a bigger lean folds the belly onto the forearms)
     // laugh posture (the style is drawn per reaction too)
     // a laugh reads from the body at TV distance: a big one rocks the torso forward and back (~10°, on the person's own
     // slow rhythm), bounces on each "ha" and lifts the shoulders (below); a chuckle dips the head on each "ha"
+    // (with the captures on, a laugh's own capture already rocks the torso and throws the head: what this block adds on
+    // top is a flavour of the style, at half strength, not a second laugh stacked on the first)
+    const lq0 = lean, lq1 = turn, lq2 = side, lq3 = headPitch, lq4 = headYaw, lq5 = headRoll;
     const isLaugh = !!(L && L.kind === 'laugh');
     const big = isLaugh ? clamp01((lb - 0.45) / 0.45) : 0, chuck = isLaugh ? lb * (1 - big) : 0;
     this._laughBig = big;
-    if (big > 0) lean += big * (0.08 + 0.14 * Math.sin(now * (0.85 + 0.45 * hash(sd + 61)) * 6.283 + sd * 2.3)); // (rocking about a little forward)
-    if (big > 0 && st !== 'over' && st !== 'back') headPitch -= 0.14 * big * (0.6 + 0.4 * ha); // (the head goes back on a big one, whatever the style)
+    if (big > 0) lean += big * (0.05 + 0.06 * Math.sin(now * (0.85 + 0.45 * hash(sd + 61)) * 6.283 + sd * 2.3)); // (rocking about a little forward; the capture's own laugh rocks the body too)
+    if (big > 0 && st !== 'over' && st !== 'back') headPitch -= 0.06 * big * (0.6 + 0.4 * ha); // (the head goes back a little on a big one, whatever the style)
     // a chuckle at ~60% of a big laugh: the head dips and tilts, the body leans in and rocks a little, the shoulders
     // bounce (below), and some glance at the neighbour (seeded per reaction)
     if (chuck > 0) {
-      headPitch += chuck * (0.16 + 0.14 * ha); headRoll += 0.11 * chuck * (this.side || 1);
-      lean += chuck * (0.1 + 0.06 * ha + 0.08 * Math.sin(now * (0.85 + 0.45 * hash(sd + 61)) * 6.283 + sd * 2.3));
-      if (L && hash(this.seed * 0.71 + (L.id | 0) * 1.3) < 0.45) headYaw += (this.side || 1) * 0.5 * chuck;
+      headPitch += chuck * (0.08 + 0.07 * ha); headRoll += 0.05 * chuck * (this.side || 1);
+      lean += chuck * (0.05 + 0.03 * ha + 0.04 * Math.sin(now * (0.85 + 0.45 * hash(sd + 61)) * 6.283 + sd * 2.3));
+      if (L && hash(this.seed * 0.71 + (L.id | 0) * 1.3) < 0.45) headYaw += (this.side || 1) * 0.35 * chuck;
     }
     this._chuck = chuck;
-    if (st === 'back') { lean -= 0.12 * lb; headPitch -= (0.21 + 0.14 * big) * lb * (0.8 + 0.2 * ha); } // head back: ~12°, ~20° on a big one
-    if (st === 'over') { lean += 0.42 * lb * (1 - 0.5 * stand) * (clip ? 0.45 : 1); headPitch += 0.28 * lb * (clip ? 0.6 : 1); } // (a capture's laugh bends too)
-    if (st === 'giggle') { lean += 0.06 * lb; headRoll += 0.1 * lb; }
-    if (st === 'turn') { turn += this.side * 0.25 * lb; headYaw += this.side * 0.75 * lb; side -= this.side * 0.1 * lb; }
+    if (st === 'back') { lean -= 0.06 * lb; headPitch -= (0.1 + 0.06 * big) * lb * (0.8 + 0.2 * ha); } // head back: ~6°, ~9° on a big one, on top of the capture's own
+    if (st === 'over') { lean += 0.42 * lb * (1 - 0.5 * stand) * (clip ? 0.3 : 1); headPitch += 0.28 * lb * (clip ? 0.4 : 1); } // (a capture's laugh bends too)
+    if (st === 'giggle') { lean += 0.04 * lb; headRoll += 0.05 * lb; }
+    if (st === 'turn') { turn += this.side * 0.06 * lb; headYaw += this.side * 0.3 * lb; side -= this.side * 0.02 * lb; } // (the head turns to the friend, the shoulders follow a little; the capture turns too)
     if (st === 'shake') lean += 0.04 * lb; // upright, the shoulders doing the laughing (below)
     if (st === 'nose') headPitch += 0.07 * lb * (0.5 + ha); // a breath out through the nose, the head dipping
-    if (G.neighbour) { const w = G.neighbour.w; turn += this.side * 0.3 * w; headYaw += this.side * 0.6 * w; side -= this.side * 0.14 * w; }
-    if (G.knee) lean += 0.3 * G.knee.w;
-    lean += (ha - 0.5) * (0.07 + 0.09 * big) * lb; // bouncing with each "ha"
+    if (G.neighbour) { const w = G.neighbour.w; turn += this.side * 0.08 * w; headYaw += this.side * 0.35 * w; side -= this.side * 0.03 * w; }
+    if (G.knee) lean += 0.12 * G.knee.w; // (the hand goes to the knee; the body bends a little for it)
+    lean += (ha - 0.5) * (0.03 + 0.04 * big) * lb; // bouncing with each "ha" (the capture bounces too)
+    if (clip && lb > 0.02) { const k = 0.5; lean = lq0 + (lean - lq0) * k; turn = lq1 + (turn - lq1) * k; side = lq2 + (side - lq2) * k; headPitch = lq3 + (headPitch - lq3) * k; headYaw = lq4 + (headYaw - lq4) * k; headRoll = lq5 + (headRoll - lq5) * k; }
     lean -= 0.05 * upW;
     lean += 0.1 * vocal; headPitch += 0.1 * vocal; // calling out: head forward
     lean += 0.45 * Math.sin(Math.PI * stand) * (o.stand ? 0 : 1) * seatK; // rising out of (or lowering into) the seat
@@ -1768,7 +1942,17 @@ export class Person {
     // straightArm below) sits a little more upright, learnt over the next frames and forgotten over ~30 s)
     { const dt = now - (this._laT ?? now); this._laT = now; this._leanAdj = Math.max(0, (this._leanAdj || 0) - (dt > 0 && dt < 4 ? dt * 0.008 : 0)); }
     lean += this._leanAdj || 0;
-    if (stand < 0.3) { lean = clamp(lean, -0.2, 0.3 + 0.3 * lb * (st === 'over' ? 1 : 0.4)); side = clamp(side, -0.12, 0.12); } // (nor lying back across it)
+    // (at a two-top, sitting forward to it, the shoulders over the hips: the hands reach its top with the elbows bent,
+    // and stay planted on it through a laugh; see REST_TABLE)
+    const atTable = o.table && o.neighbour && stand < 0.3;
+    if (atTable) lean += 0.06;
+    // (and turned half way towards the table's middle: a seat set square to the row leaves the outer hand a long
+    // reach across the body to the top, an arm straight out at the end of its reach that follows every shrug)
+    if (atTable) turn *= 0.6; // (hands on the top: the shoulders turn less, the head does more of a look's turn)
+    // (and the laugh's bounce taken mostly by the head and shoulders: the body's lean follows it over a third of a
+    // second, so the planted hands' arms aren't pulled straight and let go by turns)
+    if (atTable) { const dtL = clamp(now - (this._leanT ?? now), 0, 0.5); this._leanT = now; this._leanS = this._leanS === undefined || dtL >= 0.5 ? lean : this._leanS + (lean - this._leanS) * (1 - Math.exp(-dtL / 0.15)); lean = this._leanS; } else this._leanS = undefined; // (its own clock: _lsT is the laugh score's)
+    if (stand < 0.3) { lean = clamp(lean, -0.2, (atTable ? 0.4 : 0.3) + 0.3 * lb * (st === 'over' ? 1 : 0.4)); side = clamp(side, -0.12, 0.12); } // (nor lying back across it)
     else if (walk < 0.05) lean = clamp(lean, -0.15, 0.2); // (standing, a laugh bends forward only as far as the feet keep the weight: the limbs rules)
 
     // nods while listening (and a couple of small ones as a laugh begins)
@@ -1786,7 +1970,8 @@ export class Person {
     const eyeY = lerp(sh + 0.75, 1.6, stand);
     const hx = perf.x, hz = perf.z, hy = perf.y - eyeY;
     const gYaw = Math.atan2(hx, hz) + calm * noise(sd + 4, now * 0.25 * speed) * (room.mode === 'live' && mur < 0.5 ? 0.1 : 0.18); // (listening: within ~±6° of the performer)
-    const gPitch = -Math.atan2(hy, Math.hypot(hx, hz)) + calm * noise(sd + 5, now * 0.2) * 0.05;
+    // (the stage is up and ahead: the eyes take most of that, the face tips up a few degrees at most, never chin-up)
+    const gPitch = clamp(-Math.atan2(hy, Math.hypot(hx, hz)) * 0.5, -0.08, 0.08) + calm * noise(sd + 5, now * 0.2) * 0.04;
     const look = (1 - busyW * 0.6) * (0.55 + 0.45 * attention) * (1 - walk);
     let yaw = (gYaw - turn * 0.75) * look + headYaw;
     const gl = calm * clamp01((noise(sd + 11, now * 0.13) - (room.mode === 'live' && mur < 0.5 ? 0.68 : 0.55) + this.glance * 0.25 + mur * 0.2) * 4) * (1 - clamp01(lb * 2)); // (listening: fewer glances away)
@@ -1803,6 +1988,7 @@ export class Person {
     if (!clip) rig.model.position.set(0, lerp(seatedY, 0, stand) + bob, lerp(-0.11 + Math.min(lean, 0.3) * 0.05, -Math.max(0, lean) * 0.3 * (1 - walk), stand));
     // (seated or standing, the legs stay where the seat and the leg pass put them: the thighs hang from Spine, so the pelvis's and
     // the spine's lean and turn below are taken back out of them; a laugh's lean no longer drops the knees)
+    if (OFF.lean) { lean = 0; turn = 0; side = 0; }
     const keepLegs = (stand < 0.3 || o.stand || (OV && stand > 0.9)) && !walk && !(T && !T.hidden) && b.lThigh && b.rThigh; // (standing too: the feet stay planted)
     if (keepLegs) _qk[0].copy(b.pelvis.quaternion).multiply(b.spine.quaternion);
     rig.setRot(b.pelvis, _q[5].setFromEuler(_e.set(lerp(-0.1, 0, stand) * seatK + lean * 0.15, turn * 0.25, side * 0.3, 'YXZ')));
@@ -1813,13 +1999,17 @@ export class Person {
     if (keepLegs) { const D = _qk[1].copy(b.pelvis.quaternion).multiply(b.spine.quaternion).invert().multiply(_qk[0]); b.lThigh.quaternion.premultiply(D); b.rThigh.quaternion.premultiply(D); this._legsMoved = true; }
     rig.euler(b.spine1, lean * 0.32 + 0.04 * (1 - stand) * seatK, turn * 0.25 + yaw * 0.2 * ys, side * 0.35); // (the look's share on Spine1: the legs hang from Spine)
     rig.euler(b.spine2, lean * 0.3 + 0.03 * (1 - stand) * seatK - breath * 0.5, turn * 0.25 + yaw * 0.3 * ys, 0);
-    const pitch = gPitch * look + headPitch + nod - lean * 0.55;
+    let pitch = gPitch * look + headPitch + nod - lean * 0.55;
+    if (OFF.look) { pitch = -lean * 0.55; yaw = 0; headRoll = 0; }
     rig.euler(b.neck, pitch * 0.4, yaw * (0.4 - 0.2 * ys), headRoll * 0.4);
     rig.euler(b.head, pitch * 0.6, yaw * (0.6 - 0.3 * ys), headRoll * 0.6);
     // shoulders: a shrug bounce with the laugh, up with the arms
-    const shrug = lb * (st === 'shake' ? 0.26 : 0.13 + 0.08 * clamp01((lb - 0.5) / 0.4)) * ha + 0.14 * (this._laughBig || 0) + 0.08 * ha * (isLaugh ? lb : 0) + (this._chuck || 0) * (0.06 + 0.08 * ha) + clapW * 0.03 + Math.sin(Math.PI * coat) * 0.12 + (tk ? tk.laugh : 0) * W.talk * 0.08 * ha;
-    rig.euler(b.lClav, 0, -0.12 * clapW, shrug - 0.1 + 0.14 * upW);
-    rig.euler(b.rClav, 0, 0.12 * clapW, -shrug + 0.1 - 0.14 * upW);
+    let shrug = lb * (st === 'shake' ? 0.26 : 0.13 + 0.08 * clamp01((lb - 0.5) / 0.4)) * ha + 0.14 * (this._laughBig || 0) + 0.08 * ha * (isLaugh ? lb : 0) + (this._chuck || 0) * (0.06 + 0.08 * ha) + clapW * 0.03 + Math.sin(Math.PI * coat) * 0.12 + (tk ? tk.laugh : 0) * W.talk * 0.08 * ha;
+    // (at a two-top the forearms are on its top: the shoulders shake with the laugh, a third as far, not up and back off them)
+    const shrugK = o.table && o.neighbour && stand < 0.3 && this._planted ? 0.5 : 1;
+    if (OFF.shrug) shrug = 0;
+    rig.euler(b.lClav, 0, -0.12 * clapW, shrug * shrugK - 0.1 + 0.14 * upW);
+    rig.euler(b.rClav, 0, 0.12 * clapW, -shrug * shrugK + 0.1 - 0.14 * upW);
     // jaw bone (also opens the mouth of the morph-less middle rows)
     // speech: phrases with pauses, syllables at the person's own 3.9–5.1 Hz; listeners keep their mouths shut
     const speaking = tk && tk.speaking ? W.talk : 0;
@@ -1831,22 +2021,33 @@ export class Person {
     const jaw = (st === 'giggle' ? 0.15 + 0.1 * ha : 0.3 + 0.2 * ha) * lb * (1 - vocal) + talk + vocal * 0.5;
     if (b.jaw && !face?.ok) rig.euler(b.jaw, jaw * 0.32, 0, 0);
     rig.upd(rig.model); SEC && SEC.mark('body');
+    // standing, the knees soft, never locked, before the arms are posed (a softened knee brings the thigh forward into
+    // a hanging hand; the arms' pass below then sees the legs as they will be) (the limbs rules: a captured or solved leg straighter than 6° is re-solved
+    // to its own ankle 7 mm higher, about 12° of bend; the foot's lift doesn't show)
+    if (stand > 0.9 && walk < 0.05 && rig.b.lThigh) for (const [s, th, ca, ft, bend] of [[1, b.lThigh, b.lCalf, b.lFoot, rig.bend.lLeg], [-1, b.rThigh, b.rCalf, b.rFoot, rig.bend.rLeg]]) {
+      const H = worldPos(th, NV()), K = worldPos(ca, NV()), A = worldPos(ft, NV());
+      const u = NV().copy(K).sub(H).normalize(), f = NV().copy(A).sub(K).normalize();
+      if (u.dot(f) < Math.cos(6 * Math.PI / 180)) continue;
+      rig.solve(th, ca, ft, A.addScaledVector(NV().set(0, 1, 0).transformDirection(rig.seat.matrixWorld), 0.007), NV().set(s * 0.2, 0, 1).transformDirection(rig.seat.matrixWorld), bend, rig.len.leg);
+    }
     // the spine within its limits before the arms are posed on it (anatomy.js)
     // (this frame's: whether the hands will rest, as the posture check will judge it below)
-    const restingNow = clip && !o.stand && stand < 0.3 && clamp01(1 - (this._fidW || 0) * 1.6) * (1 - walk) > 0.85 && W.talk < 0.1 && clapW < 0.02 && upW < 0.02 && lb < 0.05 && !(L && L.gestures.length) && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
+    const restingNow = clip && !o.stand && stand < 0.3 && clamp01(1 - (o.table && o.neighbour ? 0 : this._fidW || 0) * 1.6) * (1 - walk) > 0.85 && W.talk < 0.1 && clapW < 0.02 && upW < 0.02 && lb < 0.05 && !(L && L.gestures.length) && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
     // (a look round turns the chest too, not the neck alone; not for hands at rest, whose shoulders stay square over them)
-    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && walk < 0.05 && !(T && !T.hidden) && !restingNow) shareYaw(this);
-    if (rig.fit && rig.fit.ok && !ANATOMY_OFF) clampSpine(this, restingNow || !!this._resting);
+    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps && walk < 0.05 && !(T && !T.hidden) && !restingNow) shareYaw(this);
+    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps) clampSpine(this, restingNow || !!this._resting);
     // the face within -15..+20 degrees while they listen or laugh (a capture's own tilt plus the look and a glance can
     // otherwise drop it 30-45 degrees, a crown to the camera); dead air may let a bored head drop further, the phone
     // and a drink are looked at, and the doubled-over laugh goes down with the body
-    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !(W.phone > 0.2 || W.drink > 0.2 || walk > 0.05 || coat > 0 || (T && !T.hidden))) {
+    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps && !(W.phone > 0.2 || W.drink > 0.2 || walk > 0.05 || coat > 0 || (T && !T.hidden))) {
       const social = room.mode === 'preview' || room.mode === 'after';
       const lo = (lb > 0.4 && (st === 'over' || st === 'nose') ? -25 : mur > 0.5 || idle === 'chin' ? -28 : social ? -20 : lb > 0.3 ? -20 : -9) * DEG; // (listening: the face up at the stage, a little down at most)
-      clampHead(this, lo, (lb > 0.5 && st === 'back' ? 30 : 20) * DEG); // (a big laugh may throw the head back)
+      clampHead(this, lo, (lb > 0.5 && st === 'back' ? 16 : 12) * DEG); // (a big laugh tips the head back a little, never a stare at the ceiling)
+      clampRoll(this, 16 * DEG); // (and never laid over on a shoulder: a tilt of 16° at most, eased back)
     }
     // the head clear of the neighbours' heads and shoulders (a laugh thrown back into someone who leans in yields)
-    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && this.near && this.near.length) clearHeads(this);
+    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps && this.near && this.near.length) clearHeads(this);
+    if (clip && !o.stand && stand < 0.3 && !(T && !T.hidden) && !OFF.legs && !ANATOMY_OFF) this.shinsApart(); // (the clamps above can swing the legs, which hang from Spine)
     SEC && SEC.mark('spineClamps'); // the torso is final for this frame: its sections once, for the rest poses, the fix and the neighbours' checks
     if (rig.fit && rig.fit.ok) { refreshFit(rig.fit); rig.fit.fresh = true; }
     // the people near enough for hands to meet, from where the seats are now (people walk past)
@@ -1861,11 +2062,15 @@ export class Person {
     const p = this.p;
     const V = (x, y, z) => NV().set(x, y, z);
     const armW = { l: 0, r: 0 }; // how much a gesture has taken each arm (clip mode blends the IK in by it)
+    // (a hand leaving a table's top for a gesture, a clap, the chest, goes up off it first: an arc 9 cm high over the
+    // straight line, so it clears the glasses' and the jar's tops at once instead of passing behind them on the way)
+    let plantFrom = false;
     const over = (w, tl, tr, pl, pr) => {
       if (w <= 0) return;
       w = clamp01(w);
       if (tl) armW.l = Math.max(armW.l, w); if (tr) armW.r = Math.max(armW.r, w);
       if (tl) p.tL.lerp(tl, w); if (tr) p.tR.lerp(tr, w); if (tl) p.pL.lerp(pl, w); if (tr) p.pR.lerp(pr, w);
+      if (plantFrom) { const a = 0.09 * Math.sin(Math.PI * w); if (tl && tl.y > 0.86) p.tL.y += a; if (tr && tr.y > 0.86) p.tR.y += a; }
     };
     // one hand: g.hand > 0 is the left (+X in the seat frame); targets are built with that side's offsets
     const one = (g, tgt, pole) => (g.hand > 0 ? [tgt, null, pole, null] : [null, tgt, null, V(-pole.x, pole.y, pole.z)]);
@@ -1903,7 +2108,9 @@ export class Person {
     if (restOn) {
       // (someone walking past within reach: the hands come in to the lap, the talking hands too)
       // (and the talker's hands too: the speaker's beat is its own gesture below, and the capture keeps the head's)
-      restW = clamp01(1 - (this._fidW || 0) * 1.6) * (1 - walk);
+      // (at a two-top a fidget never takes the hands: they stay planted on the table's top, the fidget moving the body
+      // and the head about them; its own arms passed through the top's edge, a hand the cameras saw come and go)
+      restW = OFF.rest ? 0 : clamp01(1 - (o.table && o.neighbour ? 0 : this._fidW || 0) * 1.6) * (1 - walk);
       this._passing = !!(this.near && this.near.some((q) => q.src && q.src._loco && !q.src._loco.hidden));
       if (restW > 0.01) {
         const RS = this.restPoseAt(now);
@@ -1911,13 +2118,14 @@ export class Person {
         const A = this.restTargets(RS.kind);
         over(restW * (RS.prev !== RS.kind ? RS.k : 1), A.tL, A.tR, A.pL, A.pR);
         restKind = RS.k > 0.5 ? RS.kind : RS.prev;
+        plantFrom = o.table && o.neighbour && restW > 0.85 && /^(tableBoth|forearmsTable)$/.test(restKind);
         if (restKind === 'chairBack') this._intentBack = A.back;
         if (restKind === 'glass') glassSide = A.roll > 0 ? 0 : 1;
       }
     }
     SEC && SEC.mark('rest'); this.phoneAt = null;
     if (W.phone > 0.001) {
-      const c = V(0.0, lerp(sh + 0.34, 1.1, stand) + lean * 0.05, 0.27 + lean * 0.12);
+      const c = V(0.0, lerp(sh + 0.34 + (o.table ? 0.06 : 0), 1.1, stand) + lean * 0.05, 0.27 + lean * 0.12); // (at a table, held clear of its top)
       over(W.phone, V(c.x + 0.048, c.y, c.z), V(c.x - 0.048, c.y + 0.01, c.z), V(0.9, -0.5, -0.4), V(-0.9, -0.5, -0.4)); // (both hands on it, the fingertips apart)
       if (W.phone > 0.5) this.phoneAt = c;
     }
@@ -2024,6 +2232,21 @@ export class Person {
     const KQ = (this._kq ||= [...Array(6)].map(() => new THREE.Quaternion()));
     const keepL = clip ? (this._kl ||= [KQ[0], KQ[1], KQ[2]]) : null, keepR = clip ? (this._kr ||= [KQ[3], KQ[4], KQ[5]]) : null;
     if (clip) for (let i = 0; i < 3; i++) { keepL[i].copy(armL[i].quaternion); keepR[i].copy(armR[i].quaternion); }
+    // (at a two-top, whatever has the hands, a talk, a chin, a phone: never into the glasses or the candle jar, the
+    // wrist and the fingertips 5 cm clear of them, slid off sideways over the top; anatomy.js limbs)
+    if (o.table && o.neighbour && this.src && this.src.twoTop) for (const t of [p.tL, p.tR]) {
+      const w = toW(NV().copy(t)), tt = this.src.twoTop, TO = this._tipO, f = TO ? dirW(NV().copy(TO[t === p.tL ? 0 : 1])).multiplyScalar(TO[t === p.tL ? 0 : 1].length()) : dirW(NV().set(t === p.tL ? -0.24 : 0.24, 0, 0.97)).multiplyScalar(0.09); // (the fingertips where they were last frame, from the wrist)
+      if (w.y > (tt.y || 0) + 0.75 + 0.19 || Math.hypot(w.x - tt.x, w.z - tt.z) > TABLE_R + 0.15) continue;
+      let moved = false;
+      for (let k = 0; k < 3; k++) for (const [ox, oz, r, h] of TABLE_THINGS) {
+        if (w.y > (tt.y || 0) + 0.75 + h + 0.05) continue;
+        for (const fk of [0, 1]) {
+          const ex = w.x + f.x * fk - tt.x - ox, ez = w.z + f.z * fk - tt.z - oz, e = Math.hypot(ex, ez), need = r + 0.05 + 0.01;
+          if (e < need && e > 1e-4) { w.x += (ex / e) * (need - e); w.z += (ez / e) * (need - e); moved = true; }
+        }
+      }
+      if (moved) t.copy(toL(w));
+    }
     const ikL = !clip || armW.l > 0.002, ikR = !clip || armW.r > 0.002;
     if (ikL) rig.solve(b.lUpper, b.lFore, b.lHand, toW(NV().copy(p.tL)), dirW(NV().copy(p.pL)), rig.bend.lArm, rig.len.arm);
     if (ikR) rig.solve(b.rUpper, b.rFore, b.rHand, toW(NV().copy(p.tR)), dirW(NV().copy(p.pR)), rig.bend.rArm, rig.len.arm);
@@ -2040,6 +2263,11 @@ export class Person {
       if (sd > 0 && ikL) rig.aim(b.lHand, b.lTip, flat, 0.85 * restW * (1 - clapW));
       if (sd < 0 && ikR) rig.aim(b.rHand, b.rTip, flat, 0.85 * restW * (1 - clapW));
     }
+    if (restOn && restW > 0.3 && (restKind === 'tableBoth' || restKind === 'forearmsTable')) { // (both flat on the top)
+      const aw = (o.table && o.neighbour ? 1 : 0.85) * restW * (1 - clapW); // (planted at a two-top: the palm's own way, flat, not the forearm's)
+      if (ikL) rig.aim(b.lHand, b.lTip, NV().set(-0.25, -0.04, 1).normalize().transformDirection(rig.seat.matrixWorld), aw);
+      if (ikR) rig.aim(b.rHand, b.rTip, NV().set(0.25, -0.04, 1).normalize().transformDirection(rig.seat.matrixWorld), aw);
+    }
     if (restOn && restW > 0.3 && (restKind === 'thighs' || restKind === 'knees' || restKind === 'thighKnee')) {
       const along = (th, ca, knee) => NV().copy(worldPos(ca, NV())).sub(worldPos(th, NV())).normalize().addScaledVector(NV().set(0, -1, 0).transformDirection(rig.seat.matrixWorld), knee ? 0.3 : 0.2).normalize(); // (the fingers drape over the leg's curve; transformDirection normalises: scale after)
       const kL = restKind === 'knees' || (restKind === 'thighKnee' && (this._restSide || 1) > 0), kR = restKind === 'knees' || (restKind === 'thighKnee' && (this._restSide || 1) < 0);
@@ -2048,6 +2276,8 @@ export class Person {
     }
     // what the posture check may expect of the hands: resting on something, or folded
     this._resting = restOn && restW > 0.85 && W.talk < 0.1 && clapW < 0.02 && upW < 0.02 && lb < 0.05 && !(L && L.gestures.length) && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
+    // (hands planted on a table's top: the body moves about them, a laugh or a turn; nothing draws them off it)
+    this._planted = restOn && restW > 0.85 && /^(tableBoth|forearmsTable)$/.test(restKind) && clapW < 0.02 && upW < 0.02 && !(L && L.gestures.length) && W.talk < 0.1 && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
     this._armsFolded = false;
     this._restKind = restKind; this._cheerW = Math.max(clapW, upW); this._standW = stand; this._inTraffic = !!(T && !T.hidden); // (sitting down, standing up, walking: not at rest)
     if (STEPPED) this._doing = `${restKind || '-'} idle:${idle} st:${st} clap:${clapW.toFixed(1)} g:${L ? L.gestures.map((g) => g.g).join('+') : ''} T:${T ? Object.keys(T).find((k) => ['walk', 'turn', 'sit', 'rise', 'coat'].includes(k)) || 'stand' : ''}`;
@@ -2068,7 +2298,7 @@ export class Person {
     if (clip && stand > 0.6 && walk < 0.05 && clapW < 0.05 && upW < 0.05 && !(coat > 0 && coat < 1) && armW.l < 0.1 && armW.r < 0.1 && (!o.stand || o.standHands === 'down' || o.standHands === 'rail')) this.armsIn(0.7 * smooth((stand - 0.6) / 0.4));
     // anatomy (anatomy.js), last of all: joint limits, then the arms out of every body and the furniture, then the two
     // hands apart (palms meet in a clap, never pass) and the neighbours, then the limits again (a re-solve moves a wrist)
-    const fitted = rig.fit && rig.fit.ok && !this._noAnatomy && !ANATOMY_OFF;
+    const fitted = rig.fit && rig.fit.ok && !this._noAnatomy && !ANATOMY_OFF && !OFF.fix;
     const seatedNow = stand < 0.3 && !o.stand;
     // (window.__anaDbg = 'Male_Adult_12': that person's arm collisions after each stage, in their _stages)
     const DBG = typeof window !== 'undefined' && window.__anaDbg === this.name ? (this._stages = []) : null;
@@ -2087,7 +2317,7 @@ export class Person {
     if (still) for (let i = 0; i < 8; i++) if (!AB[i] || Math.abs(AB[i].quaternion.dot(AQ.inp[i])) < 0.99995) { still = false; break; }
     if (still) for (let i = 0; i < 3; i++) if (Math.abs(BW.now[i].dot(BW.q[i])) < 0.99995) { still = false; break; }
     this._armMoved = !still;
-    let reuse = still && !REUSE_OFF && restOn && restW > 0.85 && W.talk < 0.1 && !(L && L.gestures.length) && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && clip && fitted && !DBG && AQ.n < 5 && !OV && !(T && !T.hidden) && clapW < 0.05 && upW < 0.05 && !this.fresh && !this._armOff && restKind !== 'tableOne'; // (not while an arm is out of its rest rules, see below; nor a hand on the table, which a turn of the body swings through the thigh)
+    let reuse = still && !REUSE_OFF && restOn && restW > 0.85 && W.talk < 0.1 && !(L && L.gestures.length) && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && clip && fitted && !DBG && AQ.n < 5 && !OV && !(T && !T.hidden) && clapW < 0.05 && upW < 0.05 && !this.fresh && !this._armOff && !/^(tableOne|tableBoth|forearmsTable)$/.test(restKind); // (not while an arm is out of its rest rules, see below; nor a hand on the table, which a turn of the body swings through the thigh)
     // (a neighbour on the move, or one whose moving hands come within reach of mine: the full pass)
     if (reuse && this.near) for (const q of this.near) {
       if (q.src && q.src._loco && !q.src._loco.hidden) { reuse = false; break; }
@@ -2107,7 +2337,7 @@ export class Person {
       if (fitted) { joints(this, true); m1 = fixArms(this, seatedNow, clapW > 0.05); }
       if (DBG) DBG.push('fix1 ' + armCollisions(this) + ' L.y ' + toL(worldPos(b.lHand, NV())).y.toFixed(3) + ' elbows ' + limbMetrics(this).arms.map((a) => a.inside.toFixed(2) + '/' + a.out.toFixed(2) + '/' + a.fwd.toFixed(2)).join(' '));
       this._kho = false;
-      if (clip) this.keepHandsOut(stand < 0.3, clapW > 0.05); // the two hands apart, the neighbours' hands
+      if (clip && !OFF.fix) this.keepHandsOut(stand < 0.3, clapW > 0.05); // the two hands apart, the neighbours' hands
       if (DBG) DBG.push('keep ' + armCollisions(this) + ' L.y ' + toL(worldPos(b.lHand, NV())).y.toFixed(3) + ' elbows ' + limbMetrics(this).arms.map((a) => a.inside.toFixed(2) + '/' + a.out.toFixed(2) + '/' + a.fwd.toFixed(2)).join(' '));
       if (fitted) {
         // (again if anything moved: the guard's own re-solve may have put an arm back in, and the first pass may not
@@ -2120,7 +2350,7 @@ export class Person {
         const handsAtRest = restOn && restW > 0.5 && clapW < 0.02 && upW < 0.02 && !(L && L.gestures.length) && W.talk < 0.1 && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
         if (handsAtRest && m2 > 0 && armCollisions(this) > 0) {
           this._fellBack = true;
-          const A = this.restTargets('thighs');
+          const A = this.restTargets(o.table && o.neighbour ? 'tableBoth' : 'thighs'); // (at a table: on it)
           rig.solve(b.lUpper, b.lFore, b.lHand, rig.seat.localToWorld(NV().copy(A.tL)), NV().copy(A.pL).transformDirection(rig.seat.matrixWorld), rig.bend.lArm, rig.len.arm);
           rig.solve(b.rUpper, b.rFore, b.rHand, rig.seat.localToWorld(NV().copy(A.tR)), NV().copy(A.pR).transformDirection(rig.seat.matrixWorld), rig.bend.rArm, rig.len.arm);
           rig.roll(b.lHand, b.lFore, this.rollRest, rig.armRestQ.l); rig.roll(b.rHand, b.rFore, -this.rollRest, rig.armRestQ.r);
@@ -2129,15 +2359,18 @@ export class Person {
         }
         // (a resting arm locked straight to its leg: the shoulders moved on after the targets were placed, a slouch or
         // a lean back. Placed again from where the shoulders are now, so the elbows rest bent: the limbs rules)
-        if (handsAtRest && !this._fellBack && (this.straightArm(0) || this.straightArm(1) || this.armAngle(0) > 2.44 || this.armAngle(1) > 2.44 || (/^(thighs|knees)$/.test(restKind) && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.44))) {
+        if (handsAtRest && !this._fellBack && (this.straightArm(0) || this.straightArm(1) || this.armAngle(0) > 2.44 || this.armAngle(1) > 2.44 || (/^(thighs|knees)$/.test(restKind) && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.78))) {
           this._fellBack = true;
           this._leanAdj = Math.min(0.3, (this._leanAdj || 0) + 0.07);
-          const A = this.restTargets(restKind || 'thighs');
-          rig.solve(b.lUpper, b.lFore, b.lHand, rig.seat.localToWorld(NV().copy(A.tL)), NV().copy(A.pL).transformDirection(rig.seat.matrixWorld), rig.bend.lArm, rig.len.arm);
-          rig.solve(b.rUpper, b.rFore, b.rHand, rig.seat.localToWorld(NV().copy(A.tR)), NV().copy(A.pR).transformDirection(rig.seat.matrixWorld), rig.bend.rArm, rig.len.arm);
-          rig.roll(b.lHand, b.lFore, this.rollRest, rig.armRestQ.l); rig.roll(b.rHand, b.rFore, -this.rollRest, rig.armRestQ.r);
-          rig.upd(b.lUpper); rig.upd(b.rUpper);
-          fixArms(this, seatedNow, false);
+          // (hands planted on a table's top stay where they are: the lean brings the shoulders back over them)
+          if (!this._planted) {
+            const A = this.restTargets(restKind || 'thighs');
+            rig.solve(b.lUpper, b.lFore, b.lHand, rig.seat.localToWorld(NV().copy(A.tL)), NV().copy(A.pL).transformDirection(rig.seat.matrixWorld), rig.bend.lArm, rig.len.arm);
+            rig.solve(b.rUpper, b.rFore, b.rHand, rig.seat.localToWorld(NV().copy(A.tR)), NV().copy(A.pR).transformDirection(rig.seat.matrixWorld), rig.bend.rArm, rig.len.arm);
+            rig.roll(b.lHand, b.lFore, this.rollRest, rig.armRestQ.l); rig.roll(b.rHand, b.rFore, -this.rollRest, rig.armRestQ.r);
+            rig.upd(b.lUpper); rig.upd(b.rUpper);
+            fixArms(this, seatedNow, false);
+          }
         }
         if (m1 || m2 || this._kho || this._fellBack) joints(this, true); // (nothing moved since the first: still within them)
         // (a push out of a body can swing an upper arm back out to the bind pose's line: off it again, and clear)
@@ -2148,11 +2381,11 @@ export class Person {
         this._armOff = handsAtRest && (this.armAngle(0) > 2.44 || this.armAngle(1) > 2.44);
         // (resting on both legs, the two elbows alike: the more bent arm's hand slid on along its thigh, a few cm at a
         // time, until they are within 25°; kept only if nothing collides more)
-        if (handsAtRest && /^(thighs|knees)$/.test(restKind) && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.42) {
+        if (handsAtRest && /^(thighs|knees)$/.test(restKind) && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.75) { // (within about 43°: two arms at rest needn't match)
           const side = this.armAngle(0) < this.armAngle(1) ? 0 : 1, up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
           const keep = [up.quaternion.clone(), fo.quaternion.clone(), ha.quaternion.clone()], before = armCollisions(this);
           const th = side ? b.rThigh : b.lThigh, ca = side ? b.rCalf : b.lCalf, along = NV().copy(worldPos(ca, NV())).sub(worldPos(th, NV())).normalize();
-          for (let k = 0; k < 4 && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.42; k++) {
+          for (let k = 0; k < 4 && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.75; k++) {
             const Wt = worldPos(ha, NV()).addScaledVector(along, 0.035);
             rig.solve(up, fo, ha, Wt, NV().copy(worldPos(fo, NV())).sub(worldPos(up, NV())).normalize(), side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
           }
@@ -2167,11 +2400,37 @@ export class Person {
         H.z = BARRIER_Z + 0.09;
         rig.solve(up, fo, ha, H, rig.fit && rig.fit.ok ? NV().copy(bestElbow(this, s > 0 ? 0 : 1, H, false)) : NV().set(s * 0.4, -0.8, -0.3).transformDirection(rig.seat.matrixWorld).normalize(), bend, rig.len.arm);
       }
+      // (a clap, once more after the wrists' own limits: they turn the hands, and the fingertips with them, towards each other)
+      if (clip && clapW > 0.05 && !OFF.fix) { this._kho = false; this.keepHandsOut(stand < 0.3, true); if (this._kho && fitted) fixArms(this, seatedNow, true); } // (and the elbows out of the body again, if it moved them)
       for (let i = 0; i < 6; i++) AQ.out[i].copy(AB[i].quaternion);
       AQ.n = 0;
     }
     if (DBG) DBG.push('end ' + armCollisions(this) + ' L.y ' + toL(worldPos(b.lHand, NV())).y.toFixed(3) + ' elbows ' + limbMetrics(this).arms.map((a) => a.inside.toFixed(2) + '/' + a.out.toFixed(2) + '/' + a.fwd.toFixed(2)).join(' '));
 
+    // (last of all, the fingertips themselves clear of the glasses and the jar: a wrist whose palm or tip is within 5 cm
+    // of one is moved off it sideways over the top, the elbow where it was; a talk or a gesture's capture turns the
+    // hand its own way, and the passes above may have put it back)
+    if (clip && o.table && o.neighbour && this.src && this.src.twoTop && stand < 0.3 && !(T && !T.hidden) && clapW < 0.05) {
+      const tt = this.src.twoTop, ty = (tt.y || 0) + 0.75;
+      for (const [up, fo, ha, tip, bend] of [[b.lUpper, b.lFore, b.lHand, b.lTip, rig.bend.lArm], [b.rUpper, b.rFore, b.rHand, b.rTip, rig.bend.rArm]]) {
+        if (!tip) continue;
+        const H = worldPos(ha, NV()), Tp = worldPos(tip, NV());
+        if (H.y > ty + 0.2 || Math.hypot(H.x - tt.x, H.z - tt.z) > TABLE_R + 0.15) continue;
+        const sh = NV().set(0, 0, 0);
+        for (const q of [NV().copy(H).lerp(Tp, 0.5), Tp]) for (const [ox, oz, r, h] of TABLE_THINGS) {
+          if (q.y > ty + h + 0.05) continue;
+          const ex = q.x + sh.x - tt.x - ox, ez = q.z + sh.z - tt.z - oz, e = Math.hypot(ex, ez), need = r + 0.05 + 0.008;
+          if (e < need && e > 1e-4) { sh.x += (ex / e) * (need - e); sh.z += (ez / e) * (need - e); }
+        }
+        if (sh.lengthSq() < 1e-8) continue;
+        const pole = NV().copy(worldPos(fo, NV())).sub(worldPos(up, NV()));
+        H.add(sh); H.y = Math.max(H.y, ty + 0.055); // (and on the top, not into it)
+        rig.solve(up, fo, ha, H, pole, bend, rig.len.arm);
+        rig.upd(up);
+      }
+    }
+    // (where the fingertips are from the wrists, kept for the next frame's glass check above)
+    if (o.table && o.neighbour && b.lTip && b.rTip) { const TO = (this._tipO ||= [new THREE.Vector3(), new THREE.Vector3()]); TO[0].copy(worldPos(b.lTip, NV())).sub(worldPos(b.lHand, NV())).transformDirection(rig.inv).multiplyScalar(worldPos(b.lTip, NV()).distanceTo(worldPos(b.lHand, NV()))); TO[1].copy(worldPos(b.rTip, NV())).sub(worldPos(b.rHand, NV())).transformDirection(rig.inv).multiplyScalar(worldPos(b.rTip, NV()).distanceTo(worldPos(b.rHand, NV()))); }
     SEC && SEC.mark('armFix'); // ---- legs: feet planted on the floor (seated, standing or stepping) ----
     const ankle = rig.restY.foot;
     if (!clip) for (const [s, th, ca, ft, bend] of [[1, b.lThigh, b.lCalf, b.lFoot, rig.bend.lLeg], [-1, b.rThigh, b.rCalf, b.rFoot, rig.bend.rLeg]]) {
@@ -2185,14 +2444,6 @@ export class Person {
       const standT = _v[3].set(s * 0.11, ankle + walk * Math.max(0, step) * 0.07, 0.02 + (o.stand ? (s > 0 ? 0.06 : -0.02) : 0) + walk * step * 0.2);
       const target = toW(NV().copy(seatedT).lerp(standT, stand));
       rig.solve(th, ca, ft, target, dirW(NV().set(s * 0.25, lerp(0.4, 0, stand), 1)), bend, rig.len.leg);
-    }
-    // standing, the knees soft, never locked (the limbs rules: a captured or solved leg straighter than 6° is re-solved
-    // to its own ankle 7 mm higher, about 12° of bend; the foot's lift doesn't show)
-    if (stand > 0.9 && walk < 0.05 && rig.b.lThigh) for (const [s, th, ca, ft, bend] of [[1, b.lThigh, b.lCalf, b.lFoot, rig.bend.lLeg], [-1, b.rThigh, b.rCalf, b.rFoot, rig.bend.rLeg]]) {
-      const H = worldPos(th, NV()), K = worldPos(ca, NV()), A = worldPos(ft, NV());
-      const u = NV().copy(K).sub(H).normalize(), f = NV().copy(A).sub(K).normalize();
-      if (u.dot(f) < Math.cos(6 * Math.PI / 180)) continue;
-      rig.solve(th, ca, ft, A.addScaledVector(dirW(NV().set(0, 1, 0)), 0.007), dirW(NV().set(s * 0.2, 0, 1)), bend, rig.len.leg);
     }
 
     // ---- eyes: saccades between looks (the eye bones ride on the head, so they counter-roll against it for free) ----

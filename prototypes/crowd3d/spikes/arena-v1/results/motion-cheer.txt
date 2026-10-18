@@ -1,0 +1,5 @@
+alloc {"people":1499,"perLevel":[43,208,684,564],"vertsBeforeCap":53768,"verts":53768,"tris":71670}
+motion {"window":[2.4,3.4],"people":935,"headPx":{"p10":0.6,"p50":1.5,"p90":3.4},"handPx":{"p10":20.8,"p50":38.9,"p90":76.2},"neighbourPairs":21068,"shareBelow06":0.836,"rP50":0,"rP90":0.8}
+motion {"window":[3,4],"people":935,"headPx":{"p10":0.6,"p50":1.3,"p90":3.4},"handPx":{"p10":1.9,"p50":12.3,"p90":40.5},"neighbourPairs":21068,"shareBelow06":0.87,"rP50":0,"rP90":0.7}
+motion {"window":[8,9],"people":935,"headPx":{"p10":0.1,"p50":0.4,"p90":1.3},"handPx":{"p10":0.2,"p50":0.6,"p90":2.5},"neighbourPairs":21068,"shareBelow06":0.879,"rP50":0,"rP90":0.7}
+motion {"window":[2,12],"people":935,"headPx":{"p10":1.7,"p50":3.2,"p90":6.9},"handPx":{"p10":22.3,"p50":40.3,"p90":80.1},"neighbourPairs":21068,"shareBelow06":0.966,"rP50":0,"rP90":0.4}

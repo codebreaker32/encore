@@ -1,5 +1,76 @@
 # Handoff: end of 2026-10-12 (about 16:10 UTC / 21:40 IST)
 
+## Sat 17 Oct: the user's decisions after seeing Arena v3 on the TV
+1. **"The arena looks nothing real."** The user is leaning towards **removing the arena** and putting the time into the smaller venues (open mic, club, theatre), which "could come out pretty good". **Not removed yet**; confirm before deleting the venue (the app, the packs, the MC prompts, the docs).
+2. **"Enhance and make the smaller venues' people extremely real."** This is the next priority.
+- **Arena v3 (standing) is saved on branch `arena-v3`** (fetched from the box bundle; clips and the box log in `~/encore-box-save-1017/`). It's not merged into the working tree.
+  - **On the TV (APK w):** &arena=2 cycle ran 21 fps (p50 47, p90 89) against the old arena's 14 fps (69 / 133); the a2cap 62k variant ran 23 fps.
+  - **The box session's own G1 verdict** was "better in life", but the user's eye says not real.
+- **The box Claude session is stopped;** its conversation is saved on the box (`claude --continue` in ~/strumble).
+  - Claude Code is installed there, and the idle-stop counts a `claude` process as busy.
+  - `~/.local/bin/emu-box.sh` drives the emulator box: IAM `emu-box-control` on `encore-box-role`, plus the SSH key `~/.ssh/emu_ed25519`.
+  - The build box has the Elastic IP 13.200.70.11, allowed to SSH to the emulator box's security group.
+  - Release the EIP if the project ends (it costs about $3.6 a month).
+- **APKs:** the TV has APK w (arena2 in crowdtest only; the app's default is still &arena=1). APK v is the people fixes without arena2.
+- **Boxes:** all stopped.
+
+## Wrap-up, Fri 16 Oct (about 18:20 UTC / 23:50 IST)
+- **User feedback (16 Oct):**
+  - "people look handicapped, movements abnormal, curves are sharp";
+  - "I didn't like arena at all: way too unreal, stale, a static figure of badly animated people".
+- **APK v** (`~/.cache/encore-apk/encore-release-2026-10-16-v.apk`, built 18:18 UTC) has both fixes below. It's **not on the TV yet**; install it first next time and get the user's verdict on the people. (The TV still has APK t.)
+- **Sharp curves** (crowd agent; `docs/mockups/shapes-v1-<venue>.png`):
+  - full-detail bodies swap onto the people framed in close and mid shots at each cut (`&ab=nohibody` turns it off);
+  - FXAA and dynres are the TV defaults (`&ab=nofxaa`, `&ab=nodynres`);
+  - Male_Adult_17's sleeve weights are fixed at the source;
+  - the "jacket shards" were the test camera's near plane;
+  - close-ups now carry +9–18k tris, so watch close-up fps on the TV (round 9 in tv-sweep.md).
+- **Abnormal motion** (motion agent; `docs/mockups/motion-v2-<venue>-compare2.png`):
+  - Our correction layers made people stiff and twisted. Removed: the seat turns, scoot, table lean minimum, the stacked laugh layer and head-back to 30°.
+  - Approved rule changes: handocc on a hand-area verdict, no "knees 10 cm under the top", crossed ankles allowed, looser resting shoulders and elbows.
+  - Laughs now start phase-matched.
+  - All gates at 0.
+- **Arena redesign workflow** (`wf_1ebd83fc-f7e`): understand, 4 designs, 3 judges, a prototype on the box (`prototypes/crowd3d/spikes/arena-v1/`, `docs/mockups/arena-spike-v1.png`), 3 critics, final plan. Its result goes to the user for approval before any building.
+- **Boxes:** all stopped.
+- **Commits:** none since `d1892ff`; 44 files changed.
+
+## Wrap-up, Wed 14 Oct (about 18:00 UTC / 23:30 IST)
+- **APKs:**
+  - **On the TV: APK t** (`~/.cache/encore-apk/encore-release-2026-10-14-t.apk`).
+  - **Built, not yet on the TV: APK u** (`…-u.apk`). It adds `ready` only after the front people are drawn, for the user's "Playhouse front people not rendered for a few seconds". Install u first tomorrow and check the Playhouse start and venue changes.
+- **APK t on the TV:** the room shows 12.2 s after launch (page first frame 7.8 s, front people 11.1 s; was 14.4 s).
+- **Round 8 and round 7 on the TV (APK t):** results in `~/.cache/encore-tv/round87-results.txt` and `round7b-results.txt`.
+
+  | Switch | fps | p50 | p90 |
+  | --- | --- | --- | --- |
+  | Club base | 23 | 43.8 | 62.8 |
+  | Club dynres | 25 | 39.3 | 47.5 |
+  | Club combo | 25 | 38.8 | 50.7 |
+  | Theatre base | 19 | 45.9 | 85.1 |
+  | Theatre dynres | 21 | 42.7 | 66.4 |
+  | Theatre combo | 20 | 46.8 | 72.5 |
+  | Arena base | 12 | 74 | 146 |
+  | Arena nosprites | 23 | 40 | 65 |
+  | Arena noinst | 21 | 52 | 80 |
+  | Arena res360 | 17 | 59 | 121 |
+  | Arena nofront | 15 | | |
+
+  - The other arena terms (nopost, nofog, noimpostor, nostands, noglows, noroom, haze) gained 0–1 fps.
+  - **Decisions:**
+    - make `dynres` the tv default (the crowd agent's job);
+    - the arena's cost is the floor sprites (about 60k tris) plus the instanced rows.
+  - **Not yet run on the TV:** the arena candidate fixes a7-nosort, quadsprites, fan9, imphalf, floor30, rows4, rows3, mediump, fold, combo and combo-cycle. The run stopped when the user took the TV back. Run them first next TV window.
+- **Club plan B merged:** hands on the table tops, 80 cm tables. handocc is 0 flickers everywhere; anatomy, handsweep and bindcheck are 0.
+  - **Follow-ups for the motion agent:** walkers are now exempt from the table checks (a walk-out clips the post by about 2 cm), so make them path around it instead. The table-rim tolerance went from 2% to 5% of section depth.
+- **Theatre house lifted** (`docs/mockups/theatre-house-v1.png`; `&look=stagedark` gives the old look). The user hasn't confirmed it on the TV yet.
+- **The motion agent's JS cut:** unmeasured, because the box was busy. The 10 Hz calm face is in its box copy only (`~/m/stage2`).
+- **AWS:**
+  - the 16-vCPU Mumbai request is `CASE_OPENED`;
+  - the user has a reply drafted to AWS Account Management (Kartiki Chaudhari) covering it, AgentCore quotas at 0, Claude access on Bedrock, and credits;
+  - all boxes are stopped.
+- **TV reminders:** 18:00, 21:00 and 22:30 IST (session-only crons; they expire after 7 days or with the session).
+- **Committed:** `d1892ff` and earlier. Today's work isn't committed yet.
+
 ## Evening wrap-up (about 19:00 UTC / 00:30 IST, Wed 14 Oct)
 - **The TV has APK r** (`~/.cache/encore-apk/encore-release-2026-10-13-r.apk`): q plus app-side `[crowd] page load start` and `[crowd] page …` load-breakdown logging. Encore is closed on the TV.
 - **Black screens** (report: `docs/android-emu/black-2026-10-13/report.md`):

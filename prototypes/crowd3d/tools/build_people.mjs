@@ -133,6 +133,7 @@ async function limbFit(rawIn, rawOut, kind) {
   const pL = at(ji(/L Thigh$/)), kL = at(ji(/L Calf$/));
   const UP = [0, 1, 2].reduce((a, i) => (Math.abs(pL[i] - kL[i]) > Math.abs(pL[a] - kL[a]) ? i : a), 0);
   const armpit = at(ji(/L UpperArm$/))[UP] - 0.12, head = ji(/Head$/), neck = ji(/Neck$/);
+  const shL = at(ji(/L UpperArm$/)), shR = at(ji(/R UpperArm$/));
   let n = 0;
   for (const prim of r.listMeshes()[0].listPrimitives()) {
     if (suffixOf(prim.getMaterial()) !== 'body') continue;
@@ -145,8 +146,15 @@ async function limbFit(rawIn, rawOut, kind) {
         let arm = 0, other = 0;
         for (let q = 0; q < 4; q++) if (w4[q] > 0) { if (ARM.test(names[j4[q]] || '')) arm += w4[q]; else other += w4[q]; }
         if (!arm || !other) continue;
-        if (arm >= 0.5) keep = (q) => ARM.test(names[j4[q]] || '');
-        else if (p[UP] < armpit) keep = (q) => !ARM.test(names[j4[q]] || '');
+        // (2026-10-16, the "jacket shards" on the TV: making every arm-owned vertex all arm cut the shoulder and the
+        // back of the jacket off the spine, and a forward reach lifted that panel as a hard-edged hump. Now the sleeve
+        // drops its body weights only away from the shoulder (more than 14 cm from the upper arm's root), and the side
+        // below the armpit drops only its forearm and hand weights; the shoulder keeps its blend of clavicle, upper
+        // arm and spine.)
+        const FORE = /(Forearm|Hand|Finger)/;
+        const dShoulder = Math.min(Math.hypot(p[0] - shL[0], p[1] - shL[1], p[2] - shL[2]), Math.hypot(p[0] - shR[0], p[1] - shR[1], p[2] - shR[2]));
+        if (arm >= 0.5 && dShoulder > 0.14) keep = (q) => ARM.test(names[j4[q]] || '');
+        else if (arm < 0.5 && p[UP] < armpit) keep = (q) => !FORE.test(names[j4[q]] || '');
         else continue;
         const w = w4.map((x, q) => (keep(q) ? x : 0)), sum = w.reduce((a, b) => a + b, 0);
         W.setElement(v, w.map((x) => x / sum));
@@ -315,6 +323,9 @@ for (const name of names) {
   const tvFile = path.join(outDir, `${name}.tv.glb`);
   // ONLY=tv rebuilds just the .tv.glb front models (leaves every other file, the atlas and people.json alone)
   if (process.env.ONLY === 'tv') { await buildFront(raw, tex, channels, TV_KEEP, tvFile, { name, tv: true }); console.log('tv', name, Math.round(fs.statSync(tvFile).size / 1024), 'KB'); continue; }
+  // ONLY=front rebuilds the full and the .tv.glb front models (then run tools/anim/tv_morphs.mjs, tools/hair_tv.mjs and
+  // tools/tv_body.mjs on them); the crowd levels, the atlas and people.json are left alone
+  if (process.env.ONLY === 'front') { await buildFront(raw, tex, channels, KEEP, front, { name, tv: false }); await buildFront(raw, tex, channels, TV_KEEP, tvFile, { name, tv: true }); console.log('front', name, Math.round(fs.statSync(front).size / 1024), Math.round(fs.statSync(tvFile).size / 1024), 'KB'); continue; }
   const kept = await buildFront(raw, tex, channels, KEEP, front, { name, tv: false });
   await buildFront(raw, tex, channels, TV_KEEP, tvFile, { name, tv: true });
 
@@ -382,7 +393,7 @@ for (const name of names) {
 }
 
 // Shared middle-row atlas (always rebuilt from every avatar in avatars.json, in manifest order).
-if (process.env.ONLY === 'tv') process.exit(0);
+if (process.env.ONLY === 'tv' || process.env.ONLY === 'front') process.exit(0);
 execFileSync(
   'python3',
   ['-P', path.join(here, 'textures.py'), 'atlas', outDir, ...order.map((n) => path.join(cache, n, 'Textures'))],

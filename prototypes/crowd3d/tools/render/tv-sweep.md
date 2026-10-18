@@ -412,3 +412,86 @@ aliveprobe on the arena wide: base 0.49, fan9 0.50 (the floor is 0.40).
 | a7-fold | `venue=arena state=listen` | `ab=fold` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dfold%26hud%3D0%26log%3D1%26label%3Da7-fold"` |
 | a7-combo | `venue=arena state=listen` | `ab=fan9,rows4,nosky,noglows,imphalf` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dlisten%26ab%3Dfan9%2Crows4%2Cnosky%2Cnoglows%2Cimphalf%26hud%3D0%26log%3D1%26label%3Da7-combo"` |
 | a7-combo-cycle | `venue=arena state=cycle` | `ab=fan9,rows4,nosky,noglows,imphalf` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Darena%26state%3Dcycle%26ab%3Dfan9%2Crows4%2Cnosky%2Cnoglows%2Cimphalf%26hud%3D0%26log%3D1%26label%3Da7-combo-cycle"` |
+
+## Round 8: club and theatre frame rate (2026-10-14)
+
+On APK r the club ran at about 19 fps (p10 16) and the theatre at 17 (p10 15). The target is a steady 22 or more.
+
+Round 6 put the club wide at 25 fps (p50 38.6 ms, CPU 17 ms) and club cycle at 20–21 fps (p50 43 ms, CPU 22–26 ms). So
+the frame is mostly GPU, and the cuts add the close-up crowd copy: 79k → 112k triangles.
+
+The candidates below don't change the look, or change it only slightly:
+- **res405**: draw at 720×405, a fifth fewer pixels than 800×450. Also `&res=405`; dynres now steps 450 → 405 → 360.
+- **dynres** (from round 2): on a cut, step the size down while p90 is over 34 ms, and back up under 22 ms.
+- **fold**: the final pass folded into the tone map, so there is no full-screen pass.
+- **nolodclose**: the close-ups keep the wide's crowd levels, with no close-up copy. That is a third fewer triangles on
+  a club cut; the near rows in a mid shot are on sil.
+- **fartypes3**: the bands from row 2 back, which are silhouettes in the stage look, use three avatar types. Three
+  fewer draws (club 43 → 40, theatre 38 → 35).
+- **hazelite** (theatre): half the haze points behind the rows, each larger and brighter, so the haze reads the same.
+- **combo**: the likely wins together.
+- **stagedark**: the theatre's house before today's lift (the lift changes only light levels, so frame time should be
+  the same).
+
+The theatre's house is lifted in this build, with a warm, low house light and a gentle depth falloff. The wide's mean
+luma goes from 0.068 to 0.081 with near-black from 57% to 51%, the bill from 0.072 to 0.105, and the mid rows read as
+people (`docs/mockups/theatre-house-v1.png`). `&look=stagedark` keeps the old theatre.
+
+| Label | Scene | Switches | Command |
+| --- | --- | --- | --- |
+| r8-club-base | `venue=club state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Dr8-club-base"` |
+| r8-club-res405 | `venue=club state=cycle` | `ab=res405` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dres405%26hud%3D0%26log%3D1%26label%3Dr8-club-res405"` |
+| r8-club-dynres | `venue=club state=cycle` | `ab=dynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Ddynres%26hud%3D0%26log%3D1%26label%3Dr8-club-dynres"` |
+| r8-club-fold | `venue=club state=cycle` | `ab=fold` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dfold%26hud%3D0%26log%3D1%26label%3Dr8-club-fold"` |
+| r8-club-nolodclose | `venue=club state=cycle` | `ab=nolodclose` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnolodclose%26hud%3D0%26log%3D1%26label%3Dr8-club-nolodclose"` |
+| r8-club-fartypes3 | `venue=club state=cycle` | `ab=fartypes3` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dfartypes3%26hud%3D0%26log%3D1%26label%3Dr8-club-fartypes3"` |
+| r8-club-combo | `venue=club state=cycle` | `ab=res405,fold,nolodclose,fartypes3` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dres405%2Cfold%2Cnolodclose%2Cfartypes3%26hud%3D0%26log%3D1%26label%3Dr8-club-combo"` |
+| r8-theatre-base | `venue=theatre state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Dr8-theatre-base"` |
+| r8-theatre-res405 | `venue=theatre state=cycle` | `ab=res405` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dres405%26hud%3D0%26log%3D1%26label%3Dr8-theatre-res405"` |
+| r8-theatre-dynres | `venue=theatre state=cycle` | `ab=dynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Ddynres%26hud%3D0%26log%3D1%26label%3Dr8-theatre-dynres"` |
+| r8-theatre-fold | `venue=theatre state=cycle` | `ab=fold` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dfold%26hud%3D0%26log%3D1%26label%3Dr8-theatre-fold"` |
+| r8-theatre-hazelite | `venue=theatre state=cycle` | `ab=hazelite` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dhazelite%26hud%3D0%26log%3D1%26label%3Dr8-theatre-hazelite"` |
+| r8-theatre-fartypes3 | `venue=theatre state=cycle` | `ab=fartypes3` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dfartypes3%26hud%3D0%26log%3D1%26label%3Dr8-theatre-fartypes3"` |
+| r8-theatre-combo | `venue=theatre state=cycle` | `ab=res405,fold,hazelite,fartypes3` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dres405%2Cfold%2Chazelite%2Cfartypes3%26hud%3D0%26log%3D1%26label%3Dr8-theatre-combo"` |
+| r8-theatre-stagedark | `venue=theatre state=cycle` | `look=stagedark` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26look%3Dstagedark%26hud%3D0%26log%3D1%26label%3Dr8-theatre-stagedark"` |
+
+## Round 9: the shapes (2026-10-16)
+
+The user on the TV: "curves are sharp". The tv bodies were 32% of the source (about 1.5k triangles), and the close-ups
+showed shoulders and jackets as flat panels. This build changes three things:
+- **Full bodies on the cut.** Each `.tv.glb` now carries `<name>_bodyHi`, the full model's body at 3.5–5.3k
+  triangles (`tools/tv_body.mjs`). It is swapped in at the cut for the people a close-up or a mid shot frames, and
+  swapped back on the wide. `&ab=nohibody` turns it off.
+- **The drawn body is unchanged.** `tools/tv_body.mjs` can simplify it again with meshoptimizer's attribute-aware
+  simplifier (`NEW_LOW=1`: normals and UVs weighted, seams and group cuts locked, about 2.0k triangles). That is held
+  back: the motion code fits its hand and table sections to the drawn body's vertices, and the new body gave 79 anatomy
+  findings in the club against 0.
+- **FXAA, the tv default.** One full-screen pass that also does the old final pass (vignette, low band, grain);
+  `&ab=nofxaa` turns it off. On the box it adds about 1–1.7 ms to a 5–8 ms software frame, which says little about the
+  Mali-G31.
+
+dynres is the tv default too (`&ab=nodynres`).
+
+Triangles (box, capture; calls are unchanged, plus one for FXAA):
+
+| Venue | Wide | Worst close-up before → after |
+| --- | --- | --- |
+| club | 79.7k (unchanged) | 113.0k → 128.1k |
+| open mic | 83.8k | 83.8k → 101.5k |
+| theatre | 97.3k | 97.3k → 115.1k |
+| arena | 148.3k | 148.3k → 165.6k |
+
+`r9-*-old` is the previous build's rendering: no FXAA, no full bodies, fixed 800×450.
+
+| Label | Scene | Switches | Command |
+| --- | --- | --- | --- |
+| r9-club-base | `venue=club state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Dr9-club-base"` |
+| r9-club-nofxaa | `venue=club state=cycle` | `ab=nofxaa` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnofxaa%26hud%3D0%26log%3D1%26label%3Dr9-club-nofxaa"` |
+| r9-club-nohibody | `venue=club state=cycle` | `ab=nohibody` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnohibody%26hud%3D0%26log%3D1%26label%3Dr9-club-nohibody"` |
+| r9-club-nodynres | `venue=club state=cycle` | `ab=nodynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnodynres%26hud%3D0%26log%3D1%26label%3Dr9-club-nodynres"` |
+| r9-club-old | `venue=club state=cycle` | `ab=nofxaa,nohibody,nodynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dclub%26state%3Dcycle%26ab%3Dnofxaa%2Cnohibody%2Cnodynres%26hud%3D0%26log%3D1%26label%3Dr9-club-old"` |
+| r9-theatre-base | `venue=theatre state=cycle` | `(none)` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26hud%3D0%26log%3D1%26label%3Dr9-theatre-base"` |
+| r9-theatre-nofxaa | `venue=theatre state=cycle` | `ab=nofxaa` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnofxaa%26hud%3D0%26log%3D1%26label%3Dr9-theatre-nofxaa"` |
+| r9-theatre-nohibody | `venue=theatre state=cycle` | `ab=nohibody` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnohibody%26hud%3D0%26log%3D1%26label%3Dr9-theatre-nohibody"` |
+| r9-theatre-nodynres | `venue=theatre state=cycle` | `ab=nodynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnodynres%26hud%3D0%26log%3D1%26label%3Dr9-theatre-nodynres"` |
+| r9-theatre-old | `venue=theatre state=cycle` | `ab=nofxaa,nohibody,nodynres` | `adb shell am start -a android.intent.action.VIEW -d "com.strumble.tv://crowdtest?url=file%3A%2F%2F%2Fandroid_asset%2Fcrowd%2Findex.html%3Fpreset%3Dtv%26venue%3Dtheatre%26state%3Dcycle%26ab%3Dnofxaa%2Cnohibody%2Cnodynres%26hud%3D0%26log%3D1%26label%3Dr9-theatre-old"` |

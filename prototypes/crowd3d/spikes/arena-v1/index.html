@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arena spike v1</title>
+<!-- Arena v2 plan, riskiest assumption: ~2,000 instanced people skinned in the vertex shader from a float ring texture
+     rewritten 30 times a second. Standalone: three.js r160 from ../../vendor, avatars and clips read-only. -->
+<style>
+  html, body { margin: 0; background: #05060c; overflow: hidden; }
+  #c { display: block; width: 800px; height: 450px; }
+  #hud { position: absolute; left: 6px; top: 4px; font: 12px/1.3 ui-monospace, "DejaVu Sans Mono", monospace; color: #cfc6b4; background: rgba(0, 0, 0, .5); padding: 2px 6px; white-space: pre; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "../../vendor/three/build/three.module.min.js",
+  "three/addons/": "../../vendor/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="c" width="800" height="450"></canvas>
+<div id="hud"></div>
+<script type="module" src="main.js"></script>
+</body>
+</html>

@@ -367,3 +367,40 @@ Severity: **Blocker** (no workaround) · **Major** (costly workaround) · **Mino
 - **Then:** `request-service-quota-increase` refuses any value at or below the AWS default ("You must provide a quota value greater than the default quota value of 1000.0"; 10.0 for endpoints). The defaults are 1000 / 10 / 1000, but this account's applied values are 0, an account-level restriction that Service Quotas can't lift. Only an AWS Support case can, and the Support API needs a paid plan, so it's a console case.
 - **Workaround:** a Support case asking to restore the defaults; the MC keeps running on EC2 meanwhile, with the same code, behind `MC_BACKEND=local`.
 - **Suggestion:** give new accounts a default of at least 1–2 runtimes (or say "your account's quota is 0; request an increase at <link>" in the error), and mention the quota in the AgentCore quick start.
+
+## 2026-10-13: Two stale Bedrock quota cases block an unrelated EC2 vCPU request, and they can't be closed from the CLI
+- **Tool:** Service Quotas (AWS CLI v2), AWS Support.
+- **Task:** request 16 standard vCPUs in ap-south-1, so the Android TV emulator can run at 1080p for the demo video.
+- **Expected:** a vCPU request is independent of open requests for another service.
+- **Actual:**
+  - `request-service-quota-increase` failed: "This account has reached the maximum number of open service quota increase (SQI) requests." The open ones were two Bedrock Claude Haiku cross-region requests from 2026-10-12, both `CASE_OPENED` and no longer needed.
+  - The limit is account-wide and counts any service's open cases.
+  - Closing them from the CLI fails: `aws support describe-cases` returns `SubscriptionRequiredException` (the Support API needs a paid plan), and Service Quotas has no cancel.
+  - Once the user resolved the cases in the console, the vCPU request went in at once, and moved to `CASE_OPENED` for manual review.
+- **Severity:** Major for a hackathon timeline. A day was lost behind requests for a service we had stopped using.
+- **Workaround:** resolve the old cases in the Support Center console, then request again.
+- **Suggestion:**
+  - say which open requests count against the limit, and link to them, in the error;
+  - allow cancelling a pending SQI from Service Quotas;
+  - or raise the open-request limit per service rather than per account.
+
+## 2026-10-13: `aws login` sessions end in an opaque cache error, not an expiry message
+- **Tool:** AWS CLI v2 `aws login` (console credentials).
+- **Task:** long agent-driven sessions that call the CLI every few minutes (EC2 start/stop, describe, Service Quotas).
+- **Actual:**
+  - Usually the session ends with a clear "Your session has expired. Please reauthenticate using 'aws login'", which is fine.
+  - Once it failed instead with only `aws: [ERROR]: '4b85d1cc…'` (a bare hash, apparently a cache key) on every command, including `sts get-caller-identity`.
+  - Nothing said the cause was the login. A fresh `aws login` fixed it.
+- **Severity:** Minor, but confusing, and automation can't tell it apart from a real error.
+- **Workaround:** run `aws login` again whenever the CLI prints a bare hex string.
+- **Suggestion:** catch the cache lookup failure and print the same "session expired, run aws login" message.
+
+## 2026-10-13: Root console credentials from `aws login` can't assume a cross-account role
+- **Tool:** AWS CLI v2 `aws login`, STS AssumeRole.
+- **Task:** use a role in a teammate's account (scoped to EC2 in one region) from our account, so a 16-vCPU emulator box could run there.
+- **Actual:**
+  - The role worked as designed, but our CLI login was the account's root user, so `AssumeRole` failed with "Roles may not be assumed by root accounts".
+  - `aws login`'s docs don't mention that signing in as root rules out role chaining.
+- **Severity:** Minor (it's documented STS behaviour), but it surprises people who use `aws login` with the root user on a personal or hackathon account.
+- **Workaround:** use an IAM principal, such as the build box's instance role, to assume the role.
+- **Suggestion:** have `aws login` warn when the signed-in principal is root, and point to creating an IAM identity.

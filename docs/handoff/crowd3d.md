@@ -606,3 +606,320 @@ Next steps:
 5. Re-run tablegeo, handocc ×4, anatomy, handsweep and bindcheck, then the by-eye check, merge, pack --tv and pack-check.
 
 Box: the page server on 8093 is stopped (PID 1936). The 8092 server and the relay aren't mine and are still running.
+
+## 2026-10-14: frame-rate switches (round 8) and the theatre's house (packed)
+
+- **Round 8 switches** (crowd.js; rows in `tools/render/tv-sweep.md`, "Round 8"):
+  - `res405`, or `&res=405`, draws at 720×405; dynres now steps 450 → 405 → 360.
+  - `fartypes3`: the bands from row 2 back use three avatar types.
+  - `hazelite`: half the theatre's haze points behind the rows, larger and brighter.
+  - `nolodclose`: no close-up crowd copy.
+  - Plus the existing `dynres` and `fold`.
+- **The theatre's house** (look.js), lifted in the stage look:
+  - The theatre's settings are now depthSlope 0.12, depthFloor 0.7, hemi ×14 with a warm house light (sky 0x7a6a5e),
+    fill ×1.2, and fog wide [6, 40].
+  - The hemisphere needs a large multiplier: its colour is dim against the key's 200 at a few metres.
+  - Results: the wide's mean luma 0.068 → 0.081 (near-black 57% → 51%), the bill 0.072 → 0.105, and every setup up
+    with the brightness gate passing. Sheet: `docs/mockups/theatre-house-v1.png`.
+  - `&look=stagedark` brings back the old theatre: a venue's `dark` overrides in look.js.
+
+## Motion agent: club plan B, 2026-10-14 (NOT merged; blocked on the box)
+
+**Where the work is:** only on the build box, in `~/m/stage2` (people.js, anatomy.js, venue.js and the tools/render probes: plant.mjs, tr.mjs, gl.mjs, tgt.mjs, tablegeo.mjs and handocc.mjs with multi-key dumps). A restart wiped the local scratchpad. The box became unreachable (13.232.190.82 times out) and `encore-box.sh` needs a fresh `aws login`. The shared tree has none of this round's changes.
+
+**Plan B (hands planted on the table top):**
+- Targets are fitted once per rest and kept: a hand stays fixed on the top while the body moves.
+  - Each hand starts ahead of its own shoulder and slides onto the top, 8 cm inside the rim.
+  - It stays on its sitter's own half of the top, at least 7 cm from the centre line.
+  - The wrist stays a hand's length clear of the glasses and the jar.
+  - The two hands are 15–19 cm apart.
+  - Reach is held at or under 74% of the arm, measured from a smoothed shoulder.
+  - Each hand stays within ±25 cm of the seat's centre line.
+- Fidgets never take the hands at a two-top.
+- Arm-pass reuse is off for table rests.
+- guardElbows and the straight-arm fallback leave planted wrists where they are.
+- armsOffBind turns the elbow and keeps the wrist.
+- Lean at a table is +0.22 and smoothed. Turn, shrug and the laugh capture are damped there.
+- A hand leaving the top for a gesture arcs 9 cm up.
+- After the arm passes, palms and tips are cleared of the glasses and the jar.
+- Forearms may lie across the rim's outer 6 cm, in both fixArms and the validator.
+
+**Knees:**
+- Each seat now keeps its table as `twoTop`; people.js and anatomy.js use the real table centre.
+- Sitters set further back than the rest of their row sit forward up to 3.5 cm.
+- The body turns on the seat towards the table, up to 23°, eased out in traffic.
+- The knee gap is measured across the body's own hips, in both the leg pass and the validator.
+- The knee-gap pass runs again, outer knee only, after the neighbour pass.
+
+**venue.js, stage2 copy only:**
+- The comment on the TABLE_R/TABLE_D constants is rewritten.
+- `cabaretTables` keeps `a.twoTop = b.twoTop = t`.
+- The table position, glasses and blobs are as in club4.
+
+**Last numbers on stage2, before the final edit (the outer hand going further in instead of crossing the body):**
+- handocc: club 0 flickers, 10 occlusions; theatre, open mic and arena 0 / 0 (those three not re-run after the late edits).
+- tablegeo, sitters seated through listen at 9 times: knees under the top by 0.09–0.16. Female_Adult_02 is still at 0.09.
+- Rim into the body: all at or under 0.
+- Anatomy club: 4 findings, all in 'after':
+  - elbow tucked behind (Female_Adult_03, Male_Adult_04);
+  - table post (Female_Adult_13 while walking);
+  - one glass.
+- The last edit was mid-check when the session dropped.
+
+**Not done:** handsweep and bindcheck on this version, the by-eye check, merge, pack.
+
+**Next steps:**
+1. With the box back, read `/tmp/ho-club.txt`, `/tmp/an-club.txt` and `/tmp/tg.txt` from the interrupted check.
+2. Copy `~/m/stage2/{people,anatomy,venue}.js` and the probes back to the laptop.
+3. Finish the 4 anatomy findings and Female_Adult_02's knee.
+4. Run handocc ×4, anatomy, handsweep and bindcheck, then the by-eye check, merge, pack and pack-check.
+
+## Motion agent: club plan B MERGED (2026-10-14 ~13:25 UTC; not committed)
+
+Merged into the shared tree:
+- people.js, anatomy.js and venue.js;
+- tools/render: handocc.mjs (KEY dumps), tablegeo.mjs (`[state] [t,t,…]`, seated sitters only), plant.mjs (planted-palm motion) and gl.mjs (hands against the glasses).
+
+**Verified on the box, stage2 = shared tree + these files:**
+
+| Check | Result |
+|---|---|
+| handocc club | 0 flickers, 10 occlusions |
+| handocc theatre, open mic, arena | 0 / 0 |
+| tablegeo, every seated club front sitter, 9 times | knees under the top by 0.11 or more; rim into the body ≤ 0 |
+| anatomy, all venues × all states (tv) | TOTAL 0 |
+| handsweep | 0 invalid of 20 runs |
+| bindcheck | no one in the bind pose |
+| pack `--tv` (/tmp/packtv) | builds, 18.0 MB |
+| packcheck from file://, 4 venues | ready, no errors (6 people posed with debug) |
+
+**By eye:** the club bill, the wide and the candle close-ups (edgecheck shots on the box in /tmp/edge). Hands rest on the tops. The 80 cm table doesn't read as oversized.
+
+**venue.js lines:**
+- L53–56: the TABLE_R/TABLE_D comment and constants.
+- L63–67 (`cabaretTables`): `t = {x: mid, z: r.z - TABLE_D, …}`, then `a.twoTop = b.twoTop = t`.
+- L443: the table top is `CylinderGeometry(TABLE_R, TABLE_R, 0.03, 22)`.
+- L452–453: glasses at `t.x ∓ 0.32`.
+- L466–467: centre contact shadow scaled 1.0; glass shadows at `∓ 0.32`.
+
+**people.js highlights:**
+- Plan B planting, as recorded in the club5 notes above.
+- The table sitter's talk capture is head-only at a two-top.
+- A knee that strays from under the top turns both thighs back towards the table's middle (up to 17°).
+- The knee gap is measured across the hips and aims for 12.5 cm.
+- Sitters set back from their row sit forward on the seat (up to 3.5 cm) and turn on it towards the table (up to 23°), eased out in traffic.
+- Fingertips are cleared of the glasses and jar last.
+
+**anatomy.js:**
+- `tableAt` / `overTop` use the table disc; forearms may lie across the rim's outer 6 cm.
+- `guardElbows` leaves planted wrists alone.
+- The knee gap is measured across the hips.
+- The rim-into-body tolerance is 5%.
+- The table furniture checks are skipped for walkers (`_inTraffic`).
+
+**Backups on the laptop:** ~/encore-motion-wip-club5.tgz (box stage2) and ~/encore-motion-wip-club6.tgz (the merged work).
+
+**After the merge:**
+- **Fix, merged:** the table-lean smoothing had reused `this._lsT`, which is the laugh score's clock, so the club table sitters' laughRank stopped easing. It now has its own `_leanT` / `_leanS`.
+  - Re-checked after the fix: club handocc 0, club anatomy 0, knees 11 cm or more under the top.
+  - Re-packed `--tv` (18.0 MB) and pack-checked all 4 venues: ready, no errors.
+- **JS cut, started in the box copy only (`~/m/stage2/people.js`, not merged):** the face is held at 10 Hz while a person is calm (never in stepped views).
+  - Not measurable today. The box is running other jobs (load average 14), and Person.update at 8× reads 16–18 ms for both s19 and the merged build, so the numbers are noise.
+  - On a quiet box, the merged build measured no slower than s19 (14.6–15.9 vs 16.3–18.3 ms).
+- **Next:** on a quiet box, run jsperf at 8× for the face hold, arm reuse for laughers and the spine-chain update, then the validators, then merge.
+- **Host `ready` waits for the front people** (APK t: "front people are not rendered for a few secs").
+  - In host mode `ready` goes out only once the streamed front people have been drawn. The first frame now posts
+    `{ type: 'first', load }` for timing.
+  - After a venue reload, the held frame of the old room also stays until then, and a page loaded mid-set takes the
+    same path.
+  - If the front fails or takes over 20 s, `ready` goes out anyway. `body.dataset.ready` (the box harnesses) still
+    marks the first frame.
+  - Box at 8× (`ttff.mjs` now reports both times): theatre first frame 5.1 s and ready 6.9 s; club 3.4 s and 5.6 s.
+    A venue change: first 4.4–5.3 s, ready 5.8–7.3 s.
+
+## 2026-10-16: the shapes ("curves are sharp"), packed
+
+- **Full bodies in close-ups.** Each `.tv.glb` carries `<name>_bodyHi`, the full model's body (3.5–5.3k triangles
+  against the drawn body's 1.3–1.6k), written by `tools/tv_body.mjs`.
+  - `prepFront` takes it out at load. `setBodyDetail` (from `applyShotLight`, so only on a cut) swaps it onto the people
+    a close-lit shot frames, and onto the heckler in theirs; it swaps back on the wide.
+  - `&ab=nohibody` turns it off; `window.__bodyDetail(on)` is for harnesses.
+  - The drawn body stays as `build_people` made it. `NEW_LOW=1` regenerates it with meshoptimizer's attribute-aware
+    simplifier, but that moved the anatomy fits (79 findings in the club against 0).
+- **Male_Adult_17** (the blue and white hoodie, which the TV reports called Male_Adult_04) has softer sleeve weights in
+  `build_people.mjs` `limbFit`.
+  - Before, every arm-owned vertex went all arm, cutting the shoulder off the spine. Now the shoulder keeps its blend:
+    only the sleeve more than 14 cm from the upper arm's root drops its body weights, and only the side below the armpit
+    drops its forearm and hand weights.
+  - It was rebuilt with `ONLY=front`, then `tv_morphs`, `hair_tv` and `tv_body`.
+  - The jagged shards in laughs-v1 came from that harness's close camera, whose near plane at 1.2 m cut the person
+    between it and its subject open. `shapesheet.mjs` uses 5 cm.
+  - The white panel on his back in the close-ups is the hoodie's texture.
+- **Shading.** The front people were already lit per pixel (MeshLambertMaterial is per-fragment in r160); only the
+  instanced crowd uses vlit.
+- **FXAA, the tv default** (`&ab=nofxaa` turns it off). The scene renders into a target marked `isXRRenderTarget`, so it
+  is tone-mapped as on the canvas, then one pass does FXAA and the final pass's vignette, band and grain.
+- **dynres** is the tv default (`&ab=nodynres`).
+- **Gates.** Brightness gate pass, edge bands 0, anatomy 0 in all venues, packcheck OK.
+- **Size.** The pack is 20.1 MB (was 18.0); per-venue textures are unchanged (29.5 / 29.8 MB ≤ 30).
+- **Sheets.** `docs/mockups/shapes-v1-<venue>.png` (before | after; rows are three setups and one person close).
+  Round 9 is in `tools/render/tv-sweep.md`.
+- **Build box.** The Rocketbox source for Male_Adult_17 and FBX2glTF are on BOX=build now (`~/.cache/encore-rocketbox`,
+  `~/.cache/encore-tools`), with a Pillow venv at `~/pyenv`.
+
+## Motion agent: motion v2, the captures first (2026-10-16 ~17:45 UTC; merged, not committed)
+
+User feedback from the TV: "people are looking like handicapped; movements are abnormal". I tested whether the stack of correction layers over the Rocketbox captures was the cause, then took most of them back out.
+
+**New switches (people.js):**
+- `&raw=1`: the captures as authored, with every correction layer off.
+- `&off=look,lean,shrug,rest,gest,legs,clamps,fix`: one layer at a time off.
+
+**New tools (tools/render):**
+- `motionstrip.mjs`: a 4 s strip, 10 fps, of the front pair in a mid shot. It covers 1.5 s of listening and a big laugh, with the same seed every run.
+- `layers.mjs`: how far each bone group turns away from the raw capture, in degrees, plus the anatomy findings, per configuration.
+- `who.mjs`: each front person's laugh style and gestures, the chest's lean, bend and twist, and the head's pitch, yaw and tilt.
+- `handocc.mjs`: a second, hand-area verdict. It casts 5 rays (the palm and four points 3 cm round it), with hysteresis at 40% and 60% seen.
+
+**Sheets (docs/mockups):**
+- `motion-v2-<venue>-raw.png`, `-current.png` and `-after.png`: 5 × 8 frames each.
+- `motion-v2-<venue>-compare.png`: 5 moments, with raw, current and after as rows.
+
+**What each layer does.** Mean turn away from the raw capture across the front people and 6 moments, in degrees, for head / chest / pelvis / arms / legs:
+
+| Venue | Current | After |
+|---|---|---|
+| Club | 21 / 28 / 17 / 50 / 17 (anatomy 6) | 14 / 9 / 1 / 45 / 7 (0) |
+| Open mic | 20 / 21 / 3 / 33 / 7 (3) | 13 / 14 / 2 / 30 / 6 (0) |
+| Theatre | 15 / 20 / 3 / 28 / 9 (2) | 10 / 13 / 2 / 32 / 9 (0) |
+| Arena | 23 / 10 / 1 / 45 / 5 (0) | 14 / 5 / 0 / 43 / 5 (0) |
+
+**Layers that made people look stiff or wrong** (each was turned off in turn on the current build):
+- **Turning on the seat at a two-top** (up to 23°), the scoot forward and the knee turn: pelvis 17°, legs 17°. These were removed. They existed only for the "knees 10 cm under the top" rule.
+- **Procedural lean, turn and side bend:** 13–15° of chest on their own.
+  - At the table, the +0.22 lean and its 0.12 minimum made the hunch over the top. Now +0.06, with no minimum.
+  - The posture styles' leans are halved, and the attention lean is cut from 0.18 to 0.08.
+  - The laugh styles were stacked on top of the laugh captures. Now:
+    - head back 0.21–0.35 → 0.1–0.16;
+    - rocking 0.14 → 0.06;
+    - "ha" bounce halved;
+    - turn style 0.25 → 0.06;
+    - neighbour gesture 0.3 → 0.08;
+    - knee slap 0.3 → 0.12.
+  - Whatever the laugh block still adds is halved while a capture plays.
+- **Head:**
+  - The gaze pitched the face fully up at the stage; now half of it, within ±4.6°.
+  - The laugh's head-back limit is 16° (was 30°), and 12° otherwise (was 20°).
+  - The new `clampRoll` eases a head tilted past 16° back by three quarters of the excess. The laugh captures alone tilt some heads 25–35°.
+- **Damping at the tables:** the laugh capture went from 0.45 to 0.8 of its strength, and the shrug from 0.35 to 0.5.
+- **Laugh bouts** now ease in and out over 0.2 s (was 0.08 s), so the body no longer snaps between "ha"s.
+
+**Layers that are needed** (anatomy findings with the layer off, current build):
+- The arm fix: 24–37 hands or forearms into thighs and torsos.
+- The seated leg passes: 18 "ankles crossed" and 6–12 legs through neighbours.
+- The rest poses:
+  - At the club, without them, 13 table collisions.
+  - Elsewhere the capture's own arms pass, but the fix then lifts hands to hover beside the knee, as the sheets showed. So they are kept.
+- The clamps: a few shoulders off level and spine twists.
+
+**Fixes found on the way:**
+- At a two-top an elbow rule no longer draws the wrist in. bestElbow's 95% draw-in made a resting hand hop 2 cm off the top.
+- A standing person's knees are softened before the arms are posed. The softened thigh came forward into a hanging hand after the arm pass (arena, after).
+
+**Gates on the merged build:**
+- anatomy: TOTAL 0, all venues and states.
+- handsweep: 0 invalid.
+- bindcheck: no one in the bind pose.
+- handocc: theatre, open mic and arena 0 / 0.
+  - Club single-ray: 2 flickers, 8 occlusions. Both flickers are Male_Adult_17's left palm grazing a glass's silhouette edge 4 m away. The palm drifts 0.4 mm and the ray flips.
+  - Club hand-area: 0 flickers, 5 occlusions.
+- Pack `--tv`: 20.1 MB. packcheck: 4 venues ready, no errors, 6 people posed.
+
+**Rules I propose changing** (I haven't changed them):
+1. **handocc:** judge on the hand-area verdict, not the single ray. A ray at a silhouette edge flips on sub-millimetre motion, a flicker no one can see.
+2. **tablegeo's "knees 10 cm under the top":** drop it. With the hands on the top it serves nothing, and it forced the seat turns and knee twists. The anatomy table checks (post, top, rim, glasses) still guard against intersections. After the change some outer knees sit out from under the edge, by up to 5 cm.
+3. **"ankles crossed" (limbs):** flag only shin or foot interpenetration. Crossed ankles are a natural seated pose, and the women's seated capture has them. Today the leg pass uncrosses every one.
+4. **clampSpine while resting:**
+   - Allow 12–15° of shoulder turn against the hips (now 7°) and of shoulder tilt (now 6°). Resting people never shift or turn their shoulders, which reads rigid.
+   - Relax the "elbows alike within 25°" evening, which keeps resting arms symmetric.
+
+**Not done:**
+- Phase-matched clip transitions. Laughs start at a seeded point of the capture; the crossfades are rest poses 1.0 s, fidgets 0.5 / 0.6 s, busy hands 0.3 s, laugh bouts 0.2 s.
+- The JS cut is paused.
+
+## Motion agent: motion v2.1, the approved rule changes (2026-10-16 ~18:30 UTC; merged, not committed)
+
+The four rule changes the coordinator approved are in:
+1. **handocc judges on the hand-area verdict.** `flickers` and `occlusions` now come from five rays (the palm and four points 3 cm round it), seen at 60% or more and hidden at 40% or fewer. The single ray is kept as `flickersRay` and `occlusionsRay`.
+2. **"Knees 10 cm under the top" is dropped.** tablegeo is a report only now. The dead knee-to-table pass and the seat turn and scoot code are removed from people.js. The anatomy table checks (post, top, rim, glasses) stay.
+3. **Crossed ankles are allowed.**
+   - The limbs rule is now "shins through each other": the two shins' centre lines nearer than 7 cm. It used to flag any ankle gap under 10 cm.
+   - The new `Person.shinsApart()` turns only shins that interpenetrate apart (under 7.5 cm), each away from the other where they are nearest, by what that point needs. It runs after the leg passes and again after the spine clamps, since the thighs hang from Spine and a clamp swings them.
+   - The capture's own crossed ankles now play.
+4. **Resting shoulders:**
+   - clampSpine allows 13° of turn and of tilt against the hips (was 7° and 6°).
+   - "Shoulders not level" fires past 15° (was 10°).
+   - "Elbows not symmetric" fires past 45° or 15 cm (was 30° or 10 cm).
+   - The people's elbow evening and the straight-arm fallback act past about 43° (was 24°).
+
+**Also this round:**
+- **Phase-matched laugh starts.** `quietStart()` picks, once per clip, the moments of each laugh capture nearest its own mean pose (the quietest quarter, sampled every 0.1 s). A take's seeded start now chooses only among those, so a laugh grows out of the pose the body is already in.
+- **Seated rest poses.** The theatre and open mic sheets still showed both hands out on the knees with the arms near straight.
+  - Rest weights: thighs 3 (was 2.2), knees 0.6 (was 1.6), thighKnee 1.2 (was 2), clasped 0.8.
+  - A resting hand may come in to 0.72 of the arm's length (was 0.78), an elbow of about 92°.
+- **Claps.** keepHandsOut runs again after the wrists' joint limits, which had turned the fingertips through each other (theatre, clap). If it moves an arm, fixArms runs once more for the elbows.
+
+**Gates on the merged build:**
+
+| Check | Result |
+|---|---|
+| anatomy, all venues and states | TOTAL 0 |
+| handsweep | 0 invalid |
+| bindcheck | no one in the bind pose |
+| handocc club (area / single ray) | 0 / 0 flickers, 7 / 9 occlusions |
+| handocc theatre, open mic, arena | 0 |
+| Pack `--tv` | 20.1 MB |
+| packcheck, 4 venues | ready, no errors, 6 people posed |
+
+**Sheets:**
+- `docs/mockups/motion-v2-<venue>-after2.png`.
+- `docs/mockups/motion-v2-<venue>-compare2.png`: the same five moments, with raw, current, after and after2 as rows.
+
+## Motion agent: life-v1, stopped at hand-over (2026-10-18 ~13:15 UTC; NOT merged)
+- **Box copy:** `~/m/stage2` on 13.200.70.11 is motion v2.1 as merged, plus probes. Today's edits were never synced to it. The shared tree is motion v2.1.
+- **Laptop WIP:** `~/encore-life-v1-wip.tgz` holds people.js (`mo/stage/people.js`). It has not been gate-checked. It contains:
+  - a third seeded stream (r3) that leaves the existing draws untouched;
+  - blinks 2–10 s apart, 10% doubles, some skipped while rapt;
+  - saccades to the performer, to a neighbour (`nb` flag, on the friend's side) and to the room;
+  - upper lids following a downward gaze;
+  - `faceTick()`, which drives the blink morphs on a calm person's held 5/3 Hz frames, so the face is never frozen.
+- **Next, not started:**
+  - breathing in clip mode: Spine2 pitch and the clavicles, at `breathHz`, about 0.012 / 0.022 rad;
+  - slow side, turn and head-roll drift from `lifeSeed`;
+  - a look between partners 1.6–3.4 s into a laugh (`this.side`, `this.partner`), plus rare whispers during listening;
+  - touch_face, touch_hair and scratch_head added to the FIDGETS listen list at low weight, with a slightly higher listening rate;
+  - gates, then the life-v1 strips and mp4.
+
+## 2026-10-18: realism pass, stopped early (handed to the box session)
+
+- **Audit** (club, TV resolution, `tools/render/realsheet.mjs <page> <venue> <out> <beforeQ> <afterQ>`: three setups, a
+  person close and a face close):
+  - skin is flat orange plastic with no sheen;
+  - the eyes have no catchlight;
+  - the clothes have no normal detail; the `.tv.glb` files carry no normal maps;
+  - there is no AO under the chin or collar, and the hands on the table have no contact shadow.
+- **New hooks in crowd.js:** `window.__renderWith(cam)` renders one frame through FXAA from a harness camera, which
+  realsheet uses.
+- **Prepared, not wired:** 256² normal maps from the Rocketbox sources (head and body, all 12 avatars) are in
+  `tools/render/nmap256/`, from the 2048 TGAs; Rocketbox has no specular maps. The club's textures are 29.5 MB:
+  - the crowd atlas 5.3 MB, the walls 3.3 MB (1024×640: drop to 512×320 for tv), the floor 1.3 MB;
+  - per front person 1.33 MB head plus 0.75 MB body plus 0.75 MB hair.
+  So shrinking the walls and floor makes room for the normal maps within 30 MB.
+- **Next:**
+  1. embed the normal maps into the `.tv.glb` files and set them on the Lambert materials (`&ab=nonormals`);
+  2. add a skin spec/sheen term to `skinLit`;
+  3. add eye catchlights as a Points draw at the LEye/REye bones toward the key, close and mid shots only, hidden
+     while blinking;
+  4. add DOF in close-ups in the FXAA pass, from a DepthTexture and the setup's focus distance;
+  5. bake per-vertex AO into the `.tv.glb` files.
+  Each as an `&ab=` switch; the sheet is `docs/mockups/real-v1-<venue>.png`.

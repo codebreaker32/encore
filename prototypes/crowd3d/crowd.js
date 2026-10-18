@@ -34,7 +34,8 @@
 //   &false=1       false-colour exposure bands (display value: <0.03 blue, 0.16–0.20 green, 0.45–0.55 grey,
 //                  0.65–0.75 yellow, >0.92 red); &mirror=0 no mirrored instances
 //   &mic=1         show the performer's mic stand in the foreground (off by default)
-//   &look=classic  the look before the stage's-eye one (look.js: dark house, spill on rows 0-1, silhouettes, mid shots)
+//   &look=classic  the look before the stage's-eye one (look.js: dark house, spill on rows 0-1, silhouettes, mid shots);
+//                  &look=stagedark the stage look with the theatre's house as dark as before 2026-10-14
 //   &sound=sprite  one recorded clip per cue (default: a fresh layered mix per reaction, sound.js)
 //   &capture=1     no render loop: window.__renderAt(t) draws one frame at t (for frame-exact videos)
 //   &view=avatar&name=<Avatar>[&lod=lod|sil|far][&zoom]   one seated person, front and side views
@@ -91,6 +92,11 @@ if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows3')
 if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows4')) P.rows = 4; // (round 7: between the two)
 // &ab=types4: at most four avatar types per instanced band (fewer draws: a page-JS diagnostic for the TV)
 if (new Set((Q.get('ab') || '').split(',')).has('types4')) P.inst = P.inst.map((b) => ({ ...b, types: Math.min(b.types, 4) }));
+// &ab=fartypes3: the bands from row 2 back (silhouettes in the stage look) at three avatar types (fewer draws and
+// programs; the near rows keep their variety)
+if (new Set((Q.get('ab') || '').split(',')).has('fartypes3')) P.inst = P.inst.map((b) => (b.from >= 2 ? { ...b, types: Math.min(b.types, 3) } : b));
+// &ab=res405: draw at 720×405 (also &res=405)
+if (new Set((Q.get('ab') || '').split(',')).has('res405')) P.res = 405;
 P.mic = Q.get('mic') === '1'; // the performer's mic stand in the foreground: off (it read as a ball in front of the tables)
 const num = (k, d) => (Q.has(k) && !isNaN(parseFloat(Q.get(k))) ? parseFloat(Q.get(k)) : d);
 // A/B switches: each turns one GPU cost off, for the device tests (see the header)
@@ -130,8 +136,8 @@ const smooth01 = (x) => { x = clamp01(x); return x * x * (3 - 2 * x); };
 // space is Linear; fog and clear colours are therefore given as display values (`display()`). &ab=aces restores ACES
 // with the sRGB curve. &false=1 replaces the result with exposure bands.
 /** The drawing height for &res= (1080, 720, 540, 450 or 360; 16:9). */
-function drawHeight(r) { return r >= 1080 ? 1080 : r >= 720 ? 720 : r >= 540 ? 540 : r >= 450 ? 450 : 360; }
-const DYNRES = ab('dynres');
+function drawHeight(r) { return r >= 1080 ? 1080 : r >= 720 ? 720 : r >= 540 ? 540 : r >= 450 ? 450 : r >= 405 ? 405 : 360; } // (405: 720×405, a fifth fewer pixels than 450)
+const DYNRES = ab('dynres') || (P.fast && !ab('nodynres')); // (tv default since 2026-10-16: &ab=nodynres keeps 800×450 fixed)
 const FOLD = ab('fold') && !DYNRES; // the final pass folded into the tone map (its vignette is compiled for one size)
 const EXPOSURE = num('exposure', 1.15);
 const HEJL = !ab('aces');
@@ -244,6 +250,22 @@ function featureVoice(S) {
   const v = new THREE.Vector3(best.person.src.x, eyesAt(best.person.src), best.person.src.z).project(camOf(S));
   return sound.feature({ gender, type, level: best.score, pan: v.x * 0.35 });
 }
+/**
+ * The front people's bodies for this shot: the full body for whoever a close-up or a mid shot frames (and the heckler
+ * in theirs), the drawn TV body for everyone else and in every wide. Called on each cut, so it never switches while a
+ * shot is up.
+ */
+function setBodyDetail() {
+  const lit = litNow();
+  for (const p of people) {
+    if (p.kind !== 'front') continue;
+    if (p.bodyLow === undefined) { p.bodyLow = null; p.rig.model.traverse((o) => { if (o.isSkinnedMesh && HI_BODY.has(o.geometry)) { p.bodyMesh = o; p.bodyLow = o.geometry; p.bodyHi = HI_BODY.get(o.geometry); } }); }
+    if (!p.bodyLow) continue;
+    const hi = (lit === 'close' && p.focus) || (lit === 'heckler' && p.heckler);
+    const g = hi ? p.bodyHi : p.bodyLow;
+    if (p.bodyMesh.geometry !== g) p.bodyMesh.geometry = g;
+  }
+}
 /** The shot's light: 'wide' (the wide, or a setup lit as the room is) or the reaction shot's light. */
 // (a setup of the house, with no front people of its own, is lit as the wide is, whatever its `lit`: the reaction
 // light dims everyone it isn't about, which on a house shot is everyone; the black-screen hunt, 2026-10-13. It keeps
@@ -270,12 +292,13 @@ function applyShotLight() {
   if (V.closeKeyWiden) { key.angle = !spill ? K.angle : Math.min(1.25, K.angle * ((curSetup && curSetup.keyWiden) || V.closeKeyWiden)); key.penumbra = !spill ? K.penumbra ?? 0.75 : 0.8; } // (a setup may open the spill wider still, for people at the row ends)
   if (V.closeDimRoom && roomMat) roomMat.color.setScalar(wideLit ? 1 : 0.4);
   if (V.closeDimEmissive && emissiveMat) emissiveMat.color.setScalar(wideLit ? 1 : V.closeDimEmissive);
+  setBodyDetail();
 }
 /**
  * &ab=dynres: on a cut, never mid-shot, step the drawing size down (540 → 450 → 360) while p90 over the last 120
  * frames is above 34 ms, and back up when it is under 22 ms. The canvas keeps its CSS size, so the frame only softens.
  */
-const RES_STEPS = [360, 450, 540, 720, 1080].filter((h) => h <= drawHeight(RES));
+const RES_STEPS = [360, 405, 450, 540, 720, 1080].filter((h) => h <= drawHeight(RES));
 function dynamicRes() {
   if (frames < 90 || nIntervals < 60) return;
   const { p90 } = frameTimes(), i = RES_STEPS.indexOf(RH);
@@ -466,6 +489,13 @@ function holdOff() {
   if (img && img.style.display !== 'none') { img.style.display = 'none'; img.removeAttribute('src'); }
   try { sessionStorage.removeItem('encore-hold'); } catch (e) { /* none */ }
 }
+let frontShown = false, readySent = false; // (host: ready goes out once the front people are on screen)
+function reportReady() {
+  if (readySent || !HOST) return;
+  readySent = true;
+  const v = viewport(), r = canvas.getBoundingClientRect();
+  report({ type: 'ready', load: loadLine(), view: `${v.w}×${v.h} css · dpr ${devicePixelRatio} · inner ${innerWidth}×${innerHeight} · canvas ${Math.round(r.width)}×${Math.round(r.height)} css, ${RW}×${RH} drawn` });
+}
 let stageFit = '';
 function fitStage() {
   const tv = document.querySelector('.tv');
@@ -606,8 +636,17 @@ function skinLit(m) {
   return m;
 }
 
+// the TV models' full bodies (tools/tv_body.mjs: `<name>_bodyHi`, the source body, 3.5-4.8k triangles against the
+// drawn body's 1.4-2k): taken out of the model at load, then swapped onto the body of the people a close-up or a mid
+// shot frames, at the cut (setBodyDetail), so a shot never changes them while it is up
+const HI_BODY = new WeakMap(); // the drawn body's geometry → the full body's geometry
 function prepFront(gltf) {
   pruneEmptyMorphs(gltf.scene);
+  {
+    let low = null, hi = null;
+    gltf.scene.traverse((o) => { if (o.isSkinnedMesh && /_bodyHi$/.test(o.name)) hi = o; else if (o.isSkinnedMesh && /_body$/.test(o.name)) low = o; });
+    if (hi) { hi.parent.remove(hi); if (low && !ab('nohibody')) HI_BODY.set(low.geometry, hi.geometry); else hi.geometry.dispose(); hi.material.dispose(); }
+  }
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
     const m = o.material;
@@ -863,7 +902,7 @@ async function buildRoom() {
   tmark('setups');
   const venue = V.build(scene, rows, P, (s) => visibleFromShots(s, 1.2), depthFor);
   tmark('venue geometry');
-  const lookGlows = LOOK && LOOK.extras(rows, { eyesAt, seen: (s) => visibleFromShots(s) });
+  const lookGlows = LOOK && LOOK.extras(rows, { eyesAt, seen: (s) => visibleFromShots(s), hazeLite: ab('hazelite') }); // (&ab=hazelite: half the haze points behind the rows, each a little larger)
   if (lookGlows) { Object.assign(lookGlows.material.uniforms, { scale: venue.points.material.uniforms.scale, time: venue.points.material.uniforms.time }); scene.add(lookGlows); }
   scene.traverse((o) => { if (o.name === 'room') roomMat = o.material; if (o.name === 'room-emissive') emissiveMat = o.material; });
   stats.sprites = venue.spriteCount || 0;
@@ -1114,7 +1153,8 @@ async function buildRoom() {
     const inClose = (st) => closeCams.some((c) => { _p.set(st.x, eyesAt(st), st.z).project(c); return _p.z < 1 && Math.abs(_p.x) < 1.15 && Math.abs(_p.y) < 1.3; });
     const lodPlan = plan.filter((q) => lodBands.some((b) => q.s.row >= b.from && q.s.row <= b.to && q.level === b.level && !q.stand) && inClose(q.s)).map((q) => ({ ...q, level: 'lod' }));
     // (the close-ups' copy is built after the first frame, with the front people: the wide never shows it)
-    if (lodPlan.length) addLod = async () => {
+    // (&ab=nolodclose: no close-up copy, the close-ups keep the wide's levels: a third fewer triangles on a cut)
+    if (lodPlan.length && !ab('nolodclose')) addLod = async () => {
       const cl = await instanced(lodPlan, ab('noalpha') || fastAlpha ? solid : cut, variety, () => null, (level) => (fastAlpha && !ab('noalpha') && near(level) ? cut : null));
       cl.closeOnly = true;
       crowds.push(cl);
@@ -1680,8 +1720,65 @@ function finalPass() {
   m.name = 'final';
   return m;
 }
-const post = VIEW === 'avatar' || ab('nopost') || (FOLD && HEJL) ? null : finalPass();
+const post = VIEW === 'avatar' || ab('nopost') || (FOLD && HEJL) || ab('fxaa') || (P.fast && !ab('nofxaa')) ? null : finalPass(); // (FXAA, below, does the final pass's work on tv)
 if (post) scene.add(post);
+/**
+ * &ab=fxaa: the frame drawn into a render target (tone-mapped there exactly as on the canvas: three treats an XR target
+ * like the screen), then one full-screen pass to the canvas that does FXAA (the 9-tap console variant, with an early
+ * out on flat areas) and the final pass's vignette, low band and grain in the same shader, so it costs one pass, not
+ * two. The target follows the drawing size (dynres).
+ */
+const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab('nopost'))) ? (() => { // (tv default since 2026-10-16; &ab=nofxaa)
+  const rt = new THREE.WebGLRenderTarget(RW, RH, { depthBuffer: true, stencilBuffer: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: false });
+  rt.isXRRenderTarget = true; // (tone mapping and the output colour space as for the canvas)
+  rt.texture.colorSpace = THREE.LinearSRGBColorSpace;
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { tDiffuse: { value: rt.texture }, uPx: { value: new THREE.Vector2(1 / RW, 1 / RH) }, uTime: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = position.xy * 0.5 + 0.5; gl_Position = vec4( position.xy, 0.0, 1.0 ); }',
+    fragmentShader: /* glsl */ `uniform sampler2D tDiffuse; uniform vec2 uPx; uniform float uTime; varying vec2 vUv;
+      float hash( vec2 p ) { return fract( sin( dot( p, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ); }
+      void main() {
+        const vec3 W = vec3( 0.299, 0.587, 0.114 );
+        vec3 cM = texture2D( tDiffuse, vUv ).rgb;
+        vec3 cNW = texture2D( tDiffuse, vUv + vec2( -1.0, -1.0 ) * uPx ).rgb, cNE = texture2D( tDiffuse, vUv + vec2( 1.0, -1.0 ) * uPx ).rgb;
+        vec3 cSW = texture2D( tDiffuse, vUv + vec2( -1.0, 1.0 ) * uPx ).rgb, cSE = texture2D( tDiffuse, vUv + vec2( 1.0, 1.0 ) * uPx ).rgb;
+        float lM = dot( cM, W ), lNW = dot( cNW, W ), lNE = dot( cNE, W ), lSW = dot( cSW, W ), lSE = dot( cSE, W );
+        float lMin = min( lM, min( min( lNW, lNE ), min( lSW, lSE ) ) ), lMax = max( lM, max( max( lNW, lNE ), max( lSW, lSE ) ) );
+        vec3 c = cM;
+        if ( lMax - lMin > max( 0.03, lMax * 0.125 ) ) { // (flat areas keep the centre tap: most of a dark room)
+          vec2 dir = vec2( -( ( lNW + lNE ) - ( lSW + lSE ) ), ( lNW + lSW ) - ( lNE + lSE ) );
+          float red = max( ( lNW + lNE + lSW + lSE ) * 0.03125, 1.0 / 128.0 );
+          dir = clamp( dir / ( min( abs( dir.x ), abs( dir.y ) ) + red ), -8.0, 8.0 ) * uPx;
+          vec3 a = 0.5 * ( texture2D( tDiffuse, vUv - dir * 0.1667 ).rgb + texture2D( tDiffuse, vUv + dir * 0.1667 ).rgb );
+          vec3 b = a * 0.5 + 0.25 * ( texture2D( tDiffuse, vUv - dir * 0.5 ).rgb + texture2D( tDiffuse, vUv + dir * 0.5 ).rgb );
+          float lB = dot( b, W );
+          c = ( lB < lMin || lB > lMax ) ? a : b;
+        }
+        // the final pass, folded in: vignette, the low band under the lower third, grain (as finalPass's multiply)
+        float vig = 1.0 - 0.66 * clamp( ( length( ( vUv - vec2( 0.5, 0.54 ) ) / vec2( 0.78, 0.72 ) ) - 0.58 ) / 0.42, 0.0, 1.0 );
+        float low = 1.0 - 0.6 * clamp( ( 0.28 - vUv.y ) / 0.28, 0.0, 1.0 );
+        float gr = length( ( vUv - vec2( 0.5, 0.52 ) ) * vec2( 1.6, 1.0 ) );
+        float g = ${ab('nograin') ? '0.0' : '( hash( gl_FragCoord.xy + fract( uTime ) * 91.0 ) - 0.5 ) * mix( 0.016, 0.05, smoothstep( 0.35, 0.95, gr ) )'};
+        gl_FragColor = vec4( c * ( vig * low + 2.0 * g ), 1.0 );
+      }`,
+    depthTest: false, depthWrite: false, toneMapped: false,
+  });
+  const quad = new THREE.Mesh(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3)), mat);
+  quad.frustumCulled = false;
+  const fxScene = new THREE.Scene(), fxCam = new THREE.Camera();
+  fxScene.add(quad);
+  return {
+    render(now) {
+      if (rt.width !== RW || rt.height !== RH) { rt.setSize(RW, RH); mat.uniforms.uPx.value.set(1 / RW, 1 / RH); }
+      mat.uniforms.uTime.value = now;
+      renderer.info.autoReset = false; renderer.info.reset(); // (the stats count the scene's draws and the pass's)
+      renderer.setRenderTarget(rt);
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      renderer.render(fxScene, fxCam);
+    },
+  };
+})() : null;
 
 // ---------- single-avatar check: one seated person, front and side views ----------
 async function avatarView() {
@@ -1874,13 +1971,26 @@ async function main() {
     fileBytes.clear(); // (every file is parsed)
     tmark('front people');
     document.body.dataset.front = '1';
+    // (shown: after the next frame has drawn them, the held frame goes and the shell hears ready)
+    requestAnimationFrame(() => requestAnimationFrame(() => { frontShown = true; if (frames >= 3) { holdOff(); reportReady(); } }));
     const line = loadLine();
     console.log(line);
     if (HOST) report({ type: 'load', line });
   };
-  if (streamFront) setTimeout(() => frontIn().catch((e) => console.error(e)), 0); else fileBytes.clear();
+  // (a front that fails or takes over 20 s must not keep the shell's plate up: ready goes out anyway)
+  const readyAnyway = () => { frontShown = true; if (frames >= 3) { holdOff(); reportReady(); } };
+  if (streamFront) { setTimeout(() => frontIn().catch((e) => { console.error(e); readyAnyway(); }), 0); setTimeout(readyAnyway, 20000); } else fileBytes.clear();
   phonesOff.forEach((m) => (m.visible = false));
   if (Q.has('debug') || CAPTURE) Object.assign(window, { __scene: scene, __camera: camera, __THREE: THREE, __people: people, __room: room });
+  // (box harnesses: every front person's full body on or off, whatever the shot)
+  // (box harnesses: one frame through the whole pipeline, post passes included, from a camera of theirs)
+  if (Q.has('debug') || CAPTURE) window.__renderWith = (cam) => {
+    camera.position.copy(cam.position); camera.quaternion.copy(cam.quaternion); camera.fov = cam.fov; camera.near = cam.near;
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld(); lightView(); vlitFrame();
+    if (FXAA) FXAA.render(room.now); else renderer.render(scene, camera);
+    camera.near = 0.05; camera.updateProjectionMatrix();
+  };
+  if (Q.has('debug') || CAPTURE) window.__bodyDetail = (on) => { setBodyDetail(); for (const p of people) if (p.bodyMesh) p.bodyMesh.geometry = on ? p.bodyHi : p.bodyLow; };
   // a check the box harness runs in every mode: is anyone visible still in the bind pose (arms out)?
   const bindDir = new THREE.Vector3(0.72, -0.69, 0).normalize(), tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), inv = new THREE.Matrix4();
   window.__bindCheck = () => people.filter((p) => !p.hidden && p.rig.model.visible).map((p) => {
@@ -1943,7 +2053,7 @@ async function main() {
     if (candle) candle.intensity = 0.9 * (0.85 + 0.15 * Math.sin(now * 11) * Math.sin(now * 7.3));
     soundTick(now);
     if (frames % 15 === 0) captionFor();
-    renderer.render(scene, camera);
+    if (FXAA) FXAA.render(now); else renderer.render(scene, camera);
     if (pendingVenue) { // (a venue change: keep this frame for the reload, then go)
       try { sessionStorage.setItem('encore-hold', JSON.stringify({ t: Date.now(), uri: canvas.toDataURL('image/jpeg', 0.82) })); } catch (e) { /* no hold: black until ready */ }
       const to = pendingVenue; pendingVenue = null;
@@ -1967,8 +2077,10 @@ async function main() {
       window.__load = () => ({ marks: LOADT.marks, files: LOADT.files, urls: [...LOADT.urls], line: loadLine() });
     }
     if (HOST && frames === 3) {
-      const v = viewport(), r = canvas.getBoundingClientRect();
-      report({ type: 'ready', load: loadLine(), view: `${v.w}×${v.h} css · dpr ${devicePixelRatio} · inner ${innerWidth}×${innerHeight} · canvas ${Math.round(r.width)}×${Math.round(r.height)} css, ${RW}×${RH} drawn` });
+      // (the first frame, for timing; `ready`, which lifts the TV shell's plate, waits until the front people are in
+      // and shown, so the screen goes from the plate to the full room, never to empty front rows)
+      report({ type: 'first', load: loadLine() });
+      if (!streamFront || frontShown) reportReady();
     }
     if ((HOST || LOG) && frames > 3 && pn - lastReport > 2000) {
       lastReport = pn;
@@ -1983,7 +2095,7 @@ async function main() {
       document.body.dataset.ready = '1';
       setTimeout(() => sound.go(), 800); // (the sound decodes only now the room is on screen)
       window.__firstFrameMs = Math.round(performance.now());
-      holdOff(); // (the last frame of the previous venue, held over the reload, gives way to this one)
+      if (!streamFront || frontShown) holdOff(); // (the last frame of the previous venue, held over the reload, gives way to this room, once it is whole)
       const i = renderer.info.render;
       const breakdown = { front: 0, inst: {}, other: 0 };
       scene.traverse((o) => {

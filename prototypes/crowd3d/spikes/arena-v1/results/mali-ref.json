@@ -1,0 +1,996 @@
+{
+ "front-1.frag": {
+  "variants": {
+   "main": {
+    "regs": 29,
+    "total": {
+     "A": 4.12,
+     "LS": 0,
+     "V": 0.38,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 4.12,
+     "LS": 0,
+     "V": 0.38,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 4.12,
+     "LS": 0,
+     "V": 0.38,
+     "T": 0,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-1.vert": {
+  "variants": {
+   "position": {
+    "regs": 32,
+    "total": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 8,
+    "total": {
+     "A": 0,
+     "LS": 3,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 0,
+     "LS": 3,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 0,
+     "LS": 3,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ },
+ "front-10.frag": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 14.6,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-10.vert": {
+  "variants": {
+   "position": {
+    "regs": 64,
+    "total": {
+     "A": 56,
+     "LS": 8.5,
+     "T": 12.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 25.4,
+     "LS": 14,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 54,
+     "LS": 25,
+     "T": 12.5,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 62,
+    "total": {
+     "A": 72.5,
+     "LS": 16.8,
+     "T": 12.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 41.25,
+     "LS": 27,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 70.5,
+     "LS": 27,
+     "T": 12.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-11.frag": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 0.25,
+     "LS": 0,
+     "V": 0.62,
+     "T": 0.5,
+     "Bound": "V"
+    },
+    "longest": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-11.vert": {
+  "variants": {
+   "position": {
+    "regs": 64,
+    "total": {
+     "A": 27.1,
+     "LS": 4.5,
+     "T": 8,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 22.1,
+     "LS": 9,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 26.6,
+     "LS": 9,
+     "T": 8,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 62,
+    "total": {
+     "A": 45,
+     "LS": 14.5,
+     "T": 8,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 40,
+     "LS": 19,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 44.5,
+     "LS": 19,
+     "T": 8,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-12.frag": {
+  "variants": {
+   "main": {
+    "regs": 31,
+    "total": {
+     "A": 16.5,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 14,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 16.5,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-12.vert": {
+  "variants": {
+   "position": {
+    "regs": 64,
+    "total": {
+     "A": 27.1,
+     "LS": 4.5,
+     "T": 8,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 22.1,
+     "LS": 9,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 26.6,
+     "LS": 9,
+     "T": 8,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 62,
+    "total": {
+     "A": 45,
+     "LS": 14.5,
+     "T": 8,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 40,
+     "LS": 19,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 44.5,
+     "LS": 19,
+     "T": 8,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-13.frag": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 0.25,
+     "LS": 0,
+     "V": 0.62,
+     "T": 0.5,
+     "Bound": "V"
+    },
+    "longest": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-13.vert": {
+  "variants": {
+   "position": {
+    "regs": 64,
+    "total": {
+     "A": 35,
+     "LS": 7.5,
+     "T": 9,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 23.9,
+     "LS": 16,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 33.6,
+     "LS": 21,
+     "T": 9,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 62,
+    "total": {
+     "A": 51,
+     "LS": 17.2,
+     "T": 9,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 39.5,
+     "LS": 30,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 49.5,
+     "LS": 30,
+     "T": 9,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-14.frag": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 0.25,
+     "LS": 0,
+     "V": 0.62,
+     "T": 0.5,
+     "Bound": "V"
+    },
+    "longest": {
+     "A": 17.1,
+     "LS": 0,
+     "V": 1.12,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-14.vert": {
+  "variants": {
+   "position": {
+    "regs": 64,
+    "total": {
+     "A": 41.6,
+     "LS": 8.5,
+     "T": 10,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 24.5,
+     "LS": 14,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 40.1,
+     "LS": 25,
+     "T": 10,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 62,
+    "total": {
+     "A": 57,
+     "LS": 17.5,
+     "T": 10,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 39.75,
+     "LS": 29,
+     "T": 8,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 55,
+     "LS": 30,
+     "T": 10,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-6.frag": {
+  "variants": {
+   "main": {
+    "regs": 30,
+    "total": {
+     "A": 11.5,
+     "LS": 0,
+     "V": 1.25,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 9,
+     "LS": 0,
+     "V": 1.25,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 11.5,
+     "LS": 0,
+     "V": 1.25,
+     "T": 0,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-6.vert": {
+  "variants": {
+   "position": {
+    "regs": 32,
+    "total": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 25,
+    "total": {
+     "A": 2.88,
+     "LS": 11,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 2.88,
+     "LS": 11,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 2.88,
+     "LS": 11,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ },
+ "front-7.frag": {
+  "variants": {
+   "main": {
+    "regs": 29,
+    "total": {
+     "A": 4.38,
+     "LS": 0,
+     "V": 0.5,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 4.38,
+     "LS": 0,
+     "V": 0.5,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 4.38,
+     "LS": 0,
+     "V": 0.5,
+     "T": 0,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "front-7.vert": {
+  "variants": {
+   "position": {
+    "regs": 32,
+    "total": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 3.62,
+     "LS": 1,
+     "T": 0,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 12,
+    "total": {
+     "A": 0.38,
+     "LS": 6,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 0.38,
+     "LS": 6,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 0.38,
+     "LS": 6,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ },
+ "impostors-4.frag": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 14.1,
+     "LS": 0,
+     "V": 0.88,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 14.1,
+     "LS": 0,
+     "V": 0.88,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 14.1,
+     "LS": 0,
+     "V": 0.88,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "impostors-4.vert": {
+  "variants": {
+   "position": {
+    "regs": 32,
+    "total": {
+     "A": 4.62,
+     "LS": 3,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 4.62,
+     "LS": 3,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 4.62,
+     "LS": 3,
+     "T": 0,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 29,
+    "total": {
+     "A": 2.62,
+     "LS": 15,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 2.62,
+     "LS": 15,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 2.62,
+     "LS": 15,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ },
+ "other-8.frag": {
+  "variants": {
+   "main": {
+    "regs": 18,
+    "total": {
+     "A": 1.38,
+     "LS": 0,
+     "V": 0.62,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 1.38,
+     "LS": 0,
+     "V": 0.62,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 1.38,
+     "LS": 0,
+     "V": 0.62,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "other-8.vert": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 6.4,
+     "LS": 8,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 4.25,
+     "LS": 8,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 6.4,
+     "LS": 8,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ },
+ "phones-3.frag": {
+  "variants": {
+   "main": {
+    "regs": 19,
+    "total": {
+     "A": 2,
+     "LS": 0,
+     "V": 0.38,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 0.75,
+     "LS": 0,
+     "V": 0.38,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 2,
+     "LS": 0,
+     "V": 0.38,
+     "T": 0,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "phones-3.vert": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 5.25,
+     "LS": 6,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 5.25,
+     "LS": 6,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 5.25,
+     "LS": 6,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ },
+ "post-0.frag": {
+  "variants": {
+   "main": {
+    "regs": 28,
+    "total": {
+     "A": 4.62,
+     "LS": 0,
+     "V": 0.25,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 4.62,
+     "LS": 0,
+     "V": 0.25,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 4.62,
+     "LS": 0,
+     "V": 0.25,
+     "T": 0,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "post-0.vert": {
+  "variants": {
+   "position": {
+    "regs": 32,
+    "total": {
+     "A": 0.12,
+     "LS": 1,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 0.12,
+     "LS": 1,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 0.12,
+     "LS": 1,
+     "T": 0,
+     "Bound": "LS"
+    }
+   },
+   "varying": {
+    "regs": 9,
+    "total": {
+     "A": 0.12,
+     "LS": 3,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 0.12,
+     "LS": 3,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 0.12,
+     "LS": 3,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ },
+ "rows-9.frag": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 14,
+     "LS": 0,
+     "V": 3.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 14,
+     "LS": 0,
+     "V": 3.12,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 14,
+     "LS": 0,
+     "V": 3.12,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "rows-9.vert": {
+  "variants": {
+   "position": {
+    "regs": 64,
+    "total": {
+     "A": 32.1,
+     "LS": 12,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 32.1,
+     "LS": 12,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 32.1,
+     "LS": 12,
+     "T": 0,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 62,
+    "total": {
+     "A": 40.9,
+     "LS": 34,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 40.9,
+     "LS": 34,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 40.9,
+     "LS": 34,
+     "T": 0,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "sprites-2.frag": {
+  "variants": {
+   "main": {
+    "regs": 32,
+    "total": {
+     "A": 27,
+     "LS": 0,
+     "V": 1.88,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 20,
+     "LS": 0,
+     "V": 1.75,
+     "T": 0.5,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 23.75,
+     "LS": 0,
+     "V": 1.88,
+     "T": 0.5,
+     "Bound": "A"
+    }
+   }
+  }
+ },
+ "sprites-2.vert": {
+  "variants": {
+   "position": {
+    "regs": 32,
+    "total": {
+     "A": 18,
+     "LS": 4,
+     "T": 0,
+     "Bound": "A"
+    },
+    "shortest": {
+     "A": 17.25,
+     "LS": 4,
+     "T": 0,
+     "Bound": "A"
+    },
+    "longest": {
+     "A": 17.75,
+     "LS": 4,
+     "T": 0,
+     "Bound": "A"
+    }
+   },
+   "varying": {
+    "regs": 30,
+    "total": {
+     "A": 20.25,
+     "LS": 28,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "shortest": {
+     "A": 19.5,
+     "LS": 28,
+     "T": 0,
+     "Bound": "LS"
+    },
+    "longest": {
+     "A": 20,
+     "LS": 28,
+     "T": 0,
+     "Bound": "LS"
+    }
+   }
+  }
+ }
+}

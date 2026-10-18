@@ -1,0 +1,142 @@
+{
+ "size": [
+  800,
+  450
+ ],
+ "layers": {
+  "front": {
+   "draws": 21,
+   "tris": 32452,
+   "programs": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    6,
+    7,
+    1
+   ],
+   "verts": 21425,
+   "sceneTris": 31452,
+   "fragments": 103198,
+   "coverage": 0.285
+  },
+  "rows": {
+   "draws": 18,
+   "tris": 55849,
+   "programs": [
+    9
+   ],
+   "verts": 61347,
+   "sceneTris": 55849,
+   "fragments": 115715,
+   "coverage": 0.171
+  },
+  "sprites": {
+   "draws": 1,
+   "tris": 59880,
+   "programs": [
+    2
+   ],
+   "verts": 63872,
+   "sceneTris": 59880,
+   "fragments": 171516,
+   "coverage": 0.475
+  },
+  "impostors": {
+   "draws": 1,
+   "tris": 120,
+   "programs": [
+    4
+   ],
+   "verts": 240,
+   "sceneTris": 120,
+   "fragments": 25485,
+   "coverage": 0.071
+  },
+  "phones": {
+   "draws": 1,
+   "tris": 0,
+   "programs": [
+    3
+   ],
+   "verts": null,
+   "sceneTris": null,
+   "fragments": 706,
+   "coverage": 0.002
+  },
+  "other": {
+   "draws": 1,
+   "tris": 0,
+   "programs": [
+    8
+   ],
+   "verts": 1742,
+   "sceneTris": 1001,
+   "fragments": 5,
+   "coverage": 0
+  },
+  "post": {
+   "draws": 1,
+   "tris": 1,
+   "programs": [
+    0
+   ],
+   "verts": null,
+   "sceneTris": null,
+   "fragments": null,
+   "coverage": null
+  }
+ },
+ "stats": {
+  "breakdown": {
+   "front": 31452,
+   "inst": {
+    "stand-rail-far:Female_Adult_17": 1552,
+    "stand-rail-far:Female_Adult_13": 1260,
+    "stand-rail-far:Male_Adult_17": 1065,
+    "stand-rail-far:Male_Adult_04": 1260,
+    "stand-rail-far:Female_Adult_03": 1422,
+    "stand-rail-far:Male_Adult_12": 1008,
+    "stand-down-far:Male_Adult_12": 3360,
+    "stand-down-far:Female_Adult_03": 4266,
+    "stand-down-far:Male_Adult_04": 4200,
+    "stand-down-far:Female_Adult_17": 3492,
+    "stand-down-far:Female_Adult_13": 3780,
+    "stand-down-far:Male_Adult_17": 3550,
+    "stand-down-xfar:Female_Adult_02": 6754,
+    "stand-down-xfar:Male_Adult_10": 3255,
+    "stand-down-xfar:Male_Adult_06": 4312,
+    "stand-down-xfar:Female_Adult_12": 6405,
+    "stand-down-xfar:Male_Adult_12": 2220,
+    "stand-down-xfar:Male_Adult_17": 2688
+   },
+   "other": 61001
+  },
+  "venue": "arena",
+  "mode": "live",
+  "preset": "tv",
+  "res": "800x450",
+  "calls": 44,
+  "triangles": 148302,
+  "front": 6,
+  "mid": 0,
+  "back": 186,
+  "sprites": 3992,
+  "shot": "wide",
+  "cpuMs": 7.517500000052155,
+  "texMB": 25.711837768554684,
+  "dlMB": 7.805704116821289,
+  "programs": 15,
+  "aa": false,
+  "cast": [
+   "Female_Adult_02",
+   "Male_Adult_06",
+   "Female_Adult_04",
+   "Male_Adult_07",
+   "Female_Adult_12",
+   "Male_Adult_10"
+  ]
+ }
+}

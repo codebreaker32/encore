@@ -50,15 +50,21 @@ export function layoutSeats(rowCount) {
   return rows;
 }
 
+// (an 80 cm bistro top, from 62, 0.40 in front of the pair, from 0.47: room on it for both sitters' hands, planted on
+// their own halves clear of the glasses and the candle, and both sitters' knees under it; people.js and anatomy.js
+// read them. Motion agent: tools/render/handocc.mjs, tablegeo.mjs)
+export const TABLE_R = 0.4, TABLE_D = 0.4;
 /** The cabaret rows' two-tops: consecutive pairs of seats sharing a table in front of them. */
 export function cabaretTables(rows) {
   const tables = [];
   for (const r of rows.filter((x) => x.cabaret)) for (let i = 0; i + 1 < r.seats.length; i += 2) {
     const a = r.seats[i], b = r.seats[i + 1];
     if (Math.abs(a.x - b.x) > PITCH * 1.5) { i--; continue; }
-    // (0.47 in front of the pair, from 0.56: the top now covers the knees and laps, which a laugh's rocking took in and
-    // out of view through the gap between the chairs and the table edge; handocc.mjs)
-    tables.push({ x: (a.x + b.x) / 2, z: r.z - 0.47, y: r.y || 0, seats: [a, b] });
+    // (TABLE_D in front of the pair, between them; each seat keeps its table as twoTop, which the people's hands, legs
+    // and the anatomy checks use)
+    const t = { x: (a.x + b.x) / 2, z: r.z - TABLE_D, y: r.y || 0, seats: [a, b] };
+    a.twoTop = b.twoTop = t;
+    tables.push(t);
   }
   return tables;
 }
@@ -434,7 +440,7 @@ export function buildVenue(scene, rows, P, visible = () => true, depthFor = () =
   addSeats(scene, C0, all, (st) => (st.cabaret ? 'chair' : 'chairRow'), depthFor);
   const mtx = new THREE.Matrix4(), q = new THREE.Quaternion();
   const tables = cabaretTables(rows);
-  const tableG = mergeGeometries([new THREE.CylinderGeometry(0.31, 0.31, 0.03, 18).translate(0, 0.735, 0), new THREE.CylinderGeometry(0.025, 0.025, 0.72, 5).translate(0, 0.36, 0), new THREE.CylinderGeometry(0.2, 0.22, 0.02, 10).translate(0, 0.01, 0)]);
+  const tableG = mergeGeometries([new THREE.CylinderGeometry(TABLE_R, TABLE_R, 0.03, 22).translate(0, 0.735, 0), new THREE.CylinderGeometry(0.025, 0.025, 0.72, 5).translate(0, 0.36, 0), new THREE.CylinderGeometry(0.2, 0.22, 0.02, 10).translate(0, 0.01, 0)]);
   const glassG = new THREE.CylinderGeometry(0.036, 0.03, 0.14, 8).translate(0, 0.82, 0);
   const jarG = new THREE.CylinderGeometry(0.035, 0.03, 0.07, 8).translate(0, 0.785, 0);
   for (const t of tables) {
@@ -443,8 +449,8 @@ export function buildVenue(scene, rows, P, visible = () => true, depthFor = () =
     C0.add('lambert', tableG, 0x3a2216, { matrix: mtx.clone().makeTranslation(t.x, t.y, t.z), ao: 0.6 });
     // (the glasses on each sitter's outer side of the rim, off the line from the stage-side cameras to the hands, which
     // flickered behind them; the candle stays in the middle)
-    C0.add('lambert', glassG, k > 0.4 ? 0x6a3a0c : 0x3a120a, { matrix: mtx.clone().makeTranslation(t.x - 0.25, t.y, t.z + 0.11), ao: 0 });
-    C0.add('lambert', glassG, k > 0.7 ? 0x5a5448 : 0x4a2a0c, { matrix: mtx.clone().compose(new THREE.Vector3(t.x + 0.25, t.y - 0.035, t.z + 0.1), q.identity(), new THREE.Vector3(1.15, 0.6, 1.15)), ao: 0 });
+    C0.add('lambert', glassG, k > 0.4 ? 0x6a3a0c : 0x3a120a, { matrix: mtx.clone().makeTranslation(t.x - 0.32, t.y, t.z + 0.11), ao: 0 });
+    C0.add('lambert', glassG, k > 0.7 ? 0x5a5448 : 0x4a2a0c, { matrix: mtx.clone().compose(new THREE.Vector3(t.x + 0.32, t.y - 0.035, t.z + 0.1), q.identity(), new THREE.Vector3(1.15, 0.6, 1.15)), ao: 0 });
     C0.add('basic', jarG, 0xc8402a, { matrix: mtx.clone().makeTranslation(t.x + 0.01, t.y, t.z - 0.06), ao: 0 });
     glow.push({ x: t.x + 0.01, y: t.y + 0.83, z: t.z - 0.06, c: [1.0, 0.55, 0.22], s: 0.3, f: R() + 0.1 });
     glow.push({ x: t.x + 0.01, y: t.y + 0.84, z: t.z - 0.06, c: [1.0, 0.85, 0.5], s: 0.06, f: R() + 0.1 });
@@ -457,8 +463,8 @@ export function buildVenue(scene, rows, P, visible = () => true, depthFor = () =
     let k = 0;
     const put = (x, y, z, r) => tb.setMatrixAt(k++, mtx.clone().compose(new THREE.Vector3(x, y, z), q.identity(), new THREE.Vector3(r, 1, r)));
     for (const t of shown) {
-      put(t.x, t.y + 0.007, t.z, 0.8);
-      put(t.x - 0.25, t.y + 0.752, t.z + 0.11, 0.15); put(t.x + 0.25, t.y + 0.752, t.z + 0.1, 0.17); put(t.x + 0.01, t.y + 0.752, t.z - 0.06, 0.12);
+      put(t.x, t.y + 0.007, t.z, 1.0);
+      put(t.x - 0.32, t.y + 0.752, t.z + 0.11, 0.15); put(t.x + 0.32, t.y + 0.752, t.z + 0.1, 0.17); put(t.x + 0.01, t.y + 0.752, t.z - 0.06, 0.12);
     }
     tb.count = k;
     tb.renderOrder = 1;

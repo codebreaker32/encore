@@ -23,8 +23,15 @@ const VENUES = {
     key: { pos: [0.3, 4.6, -0.3], target: [0.2, 0.6, 2.8], intensity: 200, angle: 0.36, penumbra: 0.4 }, // (row 1 at 12° off its axis, row 2 at 21°: outside)
     // (the back rows read as cardboard: a rim from the spill again now the far level's flecks are gone, and haze
     // between the rows, thicker towards the back, so each row stands against a lighter one)
-    fog: { color: 0x10121a, wide: [4, 30] }, haze: [0.08, 0.09, 0.13], hazeRows: [0.035, 0.04, 0.06], phones: 6, rim: 0.85,
+    fog: { color: 0x10121a, wide: [6, 40] }, haze: [0.08, 0.09, 0.13], hazeRows: [0.035, 0.04, 0.06], phones: 6, rim: 0.85,
     exits: [[-7.55, 2.6, 1.6], [7.55, 2.6, 1.6]],
+    // (the house lifted, 2026-10-14: the TV's theatre wide was 70-80% near-black and the mid rows read as cut-outs. A
+    // warm, low house light from above, and the rows behind the spill falling off gently to 0.7 instead of 0.1, so they
+    // read as people in the dark; the spill still lights the front rows and the haze stays behind. The hemisphere
+    // needs a large multiplier, since its colour is dim against the key's 200 at a few metres.
+    // &look=stagedark keeps the old theatre.)
+    depthSlope: 0.12, depthFloor: 0.7, hemi: 14, fill: 1.2, sky: 0x7a6a5e, // (a warm, low house light from above)
+    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, fill: 0.35, sky: null, fog: { color: 0x10121a, wide: [4, 30] } },
   },
   openmic: {
     key: { pos: [0.2, 2.5, -0.6], target: [0, 0.5, 1.8], intensity: 70, angle: 0.42, penumbra: 0.4 }, // (the back arc at 24° off: outside)
@@ -43,9 +50,12 @@ const VENUES = {
 /** Apply a look to the venue spec before the page reads it (crowd.js, right after the preset). Returns null without one. */
 export function applyLook(name, V, venueId, P) {
   if (name === 'classic') return null;
-  const L = { ...COMMON, ...(VENUES[venueId] || {}) };
+  const base = { ...COMMON, ...(VENUES[venueId] || {}) };
+  // &look=stagedark: a venue's darker house where it has one (the theatre before 2026-10-14)
+  const L = name === 'stagedark' && base.dark ? { ...base, ...base.dark } : base;
   const lt = V.light;
   lt.hemi *= L.hemi;
+  if (L.sky) lt.sky = L.sky;
   if (lt.fill) lt.fill = { ...lt.fill, k: (lt.fill.k ?? 1) * L.fill };
   if (lt.rim) lt.rim = { ...lt.rim, k: (lt.rim.k ?? 1) * L.rim };
   if (L.key) lt.key = { ...lt.key, ...L.key };
@@ -71,7 +81,7 @@ export function applyLook(name, V, venueId, P) {
  * The glints and the haze behind the rows, as one more glow draw call: a few phone screens in the rows behind (cool,
  * at chest height, in front of the person), the exit signs, and a wider, warmer haze band behind the last row's heads.
  */
-function extras(L, V, rows, { eyesAt, seen }) {
+function extras(L, V, rows, { eyesAt, seen, hazeLite = false }) {
   const glow = [];
   let k = 0;
   const R = () => ((k = (k * 16807 + 11) % 2147483647) / 2147483647);
@@ -87,7 +97,8 @@ function extras(L, V, rows, { eyesAt, seen }) {
   if (L.hazeRows) floor.forEach((r, i) => {
     if (i < 2 || i % 2) return;
     const hw = (V.room && V.room.halfW) || 5, k = i / Math.max(1, floor.length - 1);
-    for (let x = -hw + 1.2; x <= hw - 1.2; x += 2.4) glow.push({ x, y: r.y + 1.55, z: r.z + 0.5, c: L.hazeRows.map((c) => c * (0.5 + k)), s: 3.2 });
+    const dx = hazeLite ? 4.8 : 2.4, sz = hazeLite ? 4.2 : 3.2, kc = hazeLite ? 1.5 : 1;
+    for (let x = -hw + 1.2; x <= hw - 1.2; x += dx) glow.push({ x, y: r.y + 1.55, z: r.z + 0.5, c: L.hazeRows.map((c) => c * (0.5 + k) * kc), s: sz });
   });
   if (L.haze && floor.length) {
     const last = floor[floor.length - 1], hw = (V.room && V.room.halfW) || 5;

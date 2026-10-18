@@ -143,6 +143,7 @@ export function fitBody(rig) {
     fit.pelvisInSeat = s.clone().invert().multiply(pl);
     // where the face points, in the head bone's own frame (at rest it faces the seat's forward)
     fit.headFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(s).applyQuaternion(h.clone().invert());
+    fit.headSide = new THREE.Vector3(1, 0, 0).applyQuaternion(s).applyQuaternion(h.clone().invert()); // (the ear-to-ear line: clampRoll)
   }
   // how far each torso section reaches forward at rest (the seat's forward, m): a deep belly can't take clasped hands
   {
@@ -206,6 +207,16 @@ const segDist = (p, a, b) => { const d = _v[9].copy(b).sub(a), L = Math.max(d.le
  * and arms, and the furniture (seat, chair back, cabaret table). Returns a list of { what, side, depth } (a fresh array
  * only when `out` is given; otherwise counts only).
  */
+// (a two-top's middle in the person's seat frame (venue.js cabaretTables: TABLE_D ahead of the pair, between them), and
+// whether a seat-frame point is over its top; a lone table seat: the old box ahead of the seat)
+const _tb = new THREE.Vector3();
+export function tableAt(person, out) { const s = person.src, t = s.twoTop; return t ? out.set(t.x, t.y || 0, t.z) : out.set(s.x + person.o.neighbour * 0.31, s.y || 0, s.z - 0.4); }
+// (rim: a forearm lying across the top's edge, within that much of it, rests on it rather than being in it)
+function overTop(person, l, rim = -0.01) {
+  if (!person.o.neighbour || !person.src) return l.z > 0.03 && l.z < 0.8 && Math.abs(l.x) < 0.6;
+  const c = tableAt(person, _tb).applyMatrix4(person.rig.inv);
+  return Math.hypot(l.x - c.x, l.z - c.z) < TABLE_R - rim;
+}
 export function armCollisions(person, out = null, opts = {}) {
   const rig = person.rig, fit = rig.fit;
   if (!fit || !fit.ok) return 0;
@@ -228,7 +239,7 @@ export function armCollisions(person, out = null, opts = {}) {
         const l = _v[3].copy(p).applyMatrix4(inv);
         if (l.y < sh - 0.005 && l.y > sh - 0.12 && Math.abs(l.x) < 0.2 && l.z > -0.2 && l.z < 0.21) push('seat', side, sh - l.y);
         if (l.z < -0.165 && l.z > -0.25 && Math.abs(l.x) < 0.19 && l.y > sh + 0.1 && l.y < sh + 0.42) push('chair back', side, 0.05);
-        if (person.o.table && l.y > 0.705 && l.y < 0.75 && l.z > 0.28 && l.z < 0.86 && Math.abs(l.x) < 0.55) push('table', side, 0.75 - l.y);
+        if (person.o.table && l.y > 0.705 && l.y < 0.75 && overTop(person, l, k < 4 ? 0.06 : -0.01)) push('table', side, 0.75 - l.y); // (the forearm's elbow end may lie across the rim)
       }
     }
   }
@@ -326,7 +337,7 @@ export function guardElbows(person, clapping = false) {
     { const Fo = chestFrame(rig, 1 - side); person._symOut = _ev[4].copy(wpos(side ? b.lFore : b.rFore, _ev[5])).sub(Fo.S).dot(Fo.lat); }
     const F = chestFrame(rig, side), W0 = wpos(ha, _ev[7]).clone();
     let pole = null;
-    for (let k = 0; k <= (person._resting || clapping ? 0 : 7); k++) { // (a resting or clapping hand stays where it is)
+    for (let k = 0; k <= (person._resting || person._planted || clapping ? 0 : 7); k++) { // (a resting, planted or clapping hand stays where it is)
       _gW.copy(W0).addScaledVector(F.lat, 0.06 * k).addScaledVector(F.up, -0.02 * k);
       pole = bestElbow(person, side, _gW, clapping);
       if (bestElbow.rule <= 0) break;
@@ -379,7 +390,9 @@ export function fixArms(person, seated, clapping = false) {
           const l = _v[3].copy(p).applyMatrix4(rig.inv);
           if (l.y < sh && l.y > sh - 0.12 && Math.abs(l.x) < 0.2 && l.z > -0.2 && l.z < 0.21) { const up = _v[6].set(0, sh + 0.03 - l.y, 0).transformDirection(seat.matrixWorld).multiplyScalar(sh + 0.03 - l.y); shift.add(up); worst = Math.max(worst, 0.03); }
           if (l.z < -0.165 && l.z > -0.25 && Math.abs(l.x) < 0.19 && l.y > sh + 0.1 && l.y < sh + 0.42) { const k2 = (-0.12 - l.z) / Math.min(1, 0.3 + 0.175 * k + 0.25); shift.add(_v[6].set(0, 0, 1).transformDirection(seat.matrixWorld).multiplyScalar(k2)); worst = Math.max(worst, k2); }
-          if (person.o.table && l.y > 0.7 && l.y < 0.76 && l.z > 0.28 && l.z < 0.86 && Math.abs(l.x) < 0.55) { shift.add(_v[6].set(0, 1, 0).transformDirection(seat.matrixWorld).multiplyScalar(0.775 - l.y)); worst = Math.max(worst, 0.03); }
+          // (into the table's top from above: back up onto it. A lap hand is never lifted up through it: under the top it
+          // stays hidden by it, and a push up onto its edge was a hand the stage's cameras saw come and go)
+          if (person.o.table && l.y > 0.735 && l.y < 0.76 && overTop(person, l, k < 4 ? 0.06 : -0.01)) { const to = 0.785; shift.add(_v[6].set(0, 1, 0).transformDirection(seat.matrixWorld).multiplyScalar(to - l.y)); worst = Math.max(worst, 0.03); }
         }
         if (person.near) for (const q of person.near) {
           if (!q.rig || q.hidden || !q.rig.fit || !q.rig.fit.ok || !nearTorso(q.rig.fit, p)) continue;
@@ -404,7 +417,10 @@ export function fixArms(person, seated, clapping = false) {
       any = true; moved++;
       const wrist = wpos(hand, _v[7]).add(shift);
       if (eb) {
-        const pole = bestElbow(person, side, wrist, clapping, inOnly);
+        // (the elbow's place on its circle for this wrist; at a two-top the wrist itself stays where it is, on the top
+        // (bestElbow would draw it in a little for an arm at full stretch: a hand hopping off the top); elsewhere an arm
+        // at full stretch gives its wrist a little, so the elbow has a circle to sit on)
+        const pole = bestElbow(person, side, person.o.table && person.o.neighbour ? _v[9].copy(wrist) : wrist, clapping, inOnly);
         rig.solve(upper, fore, hand, wrist, pole, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
         UPD(rig, hand);
         continue;
@@ -606,13 +622,13 @@ export function clampSpine(person, resting) {
     const h0 = wpos(b.lThigh, _v[4]).applyMatrix4(inv), h1 = wpos(b.rThigh, _v[5]).applyMatrix4(inv);
     let y = Math.atan2(-(a.z - d.z), a.x - d.x) - Math.atan2(-(h0.z - h1.z), h0.x - h1.x);
     y = Math.atan2(Math.sin(y), Math.cos(y));
-    const lim = 7 * DEG;
+    const lim = 13 * DEG; // (a resting chest turns and settles a little against the hips: 13°, not square)
     if (Math.abs(y) <= lim) break;
     turnTo(_v[1].set(0, 1, 0), -(y - Math.sign(y) * (lim - 0.01)));
   }
   if (resting) for (let i = 0; i < 3; i++) { // (Spine1 sits higher than Spine: a few steps to level the shoulders)
     const inv = rig.inv, a = wpos(b.lUpper, _v[2]).applyMatrix4(inv), d = wpos(b.rUpper, _v[3]).applyMatrix4(inv);
-    const roll = Math.atan2(a.y - d.y, Math.hypot(a.x - d.x, a.z - d.z)), lim = 6 * DEG; // (6: the check allows 10, and the arms' own pass can tip them a little after)
+    const roll = Math.atan2(a.y - d.y, Math.hypot(a.x - d.x, a.z - d.z)), lim = 13 * DEG; // (13: the check allows 15, and the arms' own pass can tip them a little after)
     if (Math.abs(roll) <= lim) break;
     // (about the axis across the shoulder line, whichever way the chest faces: a turned chest has no 'forward' roll)
     const sl = _v[4].copy(a).sub(d), hz = Math.hypot(sl.x, sl.z) || 1e-6, sn = _v[5].copy(sl).normalize();
@@ -678,6 +694,31 @@ export function clampHead(person, lo, hi) {
   return p;
 }
 
+/**
+ * The head's tilt to the side (the ear-to-ear line against the seat's level) eased back towards `max` radians, three
+ * quarters of the excess, 40% of it in the neck: a laugh's capture and a look over the shoulder can stack into a head
+ * laid on the shoulder. Returns the tilt it found.
+ */
+export function clampRoll(person, max) {
+  const rig = person.rig, fit = rig.fit, b = rig.b;
+  if (!fit || !fit.headSide || !fit.headFwd || !b.head || !b.neck) return 0;
+  const side = () => _v[0].copy(fit.headSide).applyQuaternion(wquat(b.head, _q[0])).applyQuaternion(rig.invQ);
+  const tilt = Math.asin(clamp(side().y, -1, 1));
+  if (Math.abs(tilt) <= max) return tilt;
+  const excess = (Math.abs(tilt) - max) * 0.75 * Math.sign(tilt);
+  const fwdW = _v[1].copy(fit.headFwd).applyQuaternion(wquat(b.head, _q[1])).normalize();
+  for (const [bone, part] of [[b.neck, 0.4], [b.head, 0.6]]) {
+    // (about the face's own forward line, the way that levels the ears: test the sign once)
+    const Q = _q[2].setFromAxisAngle(fwdW, excess * part), W = wquat(bone, _q[3]).premultiply(Q);
+    bone.quaternion.copy(wquat(bone.parent, _q[4]).invert().multiply(W)); UPD(rig, bone);
+  }
+  const after = Math.asin(clamp(side().y, -1, 1));
+  if (Math.abs(after) > Math.abs(tilt)) { // (the other way round)
+    for (const [bone, part] of [[b.neck, 0.4], [b.head, 0.6]]) { const Q = _q[2].setFromAxisAngle(fwdW, -2 * excess * part), W = wquat(bone, _q[3]).premultiply(Q); bone.quaternion.copy(wquat(bone.parent, _q[4]).invert().multiply(W)); UPD(rig, bone); }
+  }
+  return tilt;
+}
+
 // ---------- seated posture ----------
 /**
  * Seated posture, in the seat frame: the pelvis on the seat, feet on the floor, knees in front of the seat edge,
@@ -696,7 +737,7 @@ export function posture(person, out = null, state = {}) {
   if (state.resting) {
     const a = L(b.lUpper, _v[3]), c = L(b.rUpper, _v[4]);
     const roll = Math.atan2(a.y - c.y, Math.hypot(a.x - c.x, a.z - c.z));
-    if (Math.abs(roll) > 10 * DEG) flag('shoulders not level', roll / DEG);
+    if (Math.abs(roll) > 15 * DEG) flag('shoulders not level', roll / DEG);
     // hands resting on something
     if (fit && fit.ok) {
       const palms = [b.lHand, b.rHand].map((h, i) => { const t = i ? b.rTip : b.lTip; const p = L(h, _v[5 + i]); if (t) p.lerp(L(t, _v[7]), 0.5); return p; });
@@ -709,7 +750,7 @@ export function posture(person, out = null, state = {}) {
         { const q = _pp.copy(pw), R = fit.thighs.length ? Math.max(...fit.thighs.map((t) => Math.max(t.yP, t.zP))) : 0.1; for (const [th, ca] of [[b.lThigh, b.lCalf], [b.rThigh, b.rCalf]]) if (th && ca && segDist(q, wpos(th, _v[11]), wpos(ca, _v[12])) < R + 0.09) ok = true; } // (segDist uses _v[8], _v[9])
         if (fit.thighs.length === 1) { const m = _v[10].copy(p).setX(-p.x).applyMatrix4(rig.seat.matrixWorld); if (depthIn(fit.thighs[0], m, -0.09) > 0) ok = true; } // (the leg fitted on one side only: the other is its mirror)
         if (p.y < sh + 0.14 && Math.abs(p.x) < 0.32 && p.z > -0.22 && p.z < 0.32) ok = true; // on the seat beside them
-        if (person.o.table && p.y > 0.72 && p.y < 0.84 && p.z > 0.28 && p.z < 0.86) ok = true; // on the table
+        if (person.o.table && p.y > 0.72 && p.y < 0.84 && overTop(person, p)) ok = true; // on the table's top
         if (person._intentBack === i && p.z < -0.15) ok = true; // over the chair back
         if (state.armsFolded) ok = true;
         if (!ok) flag('hand floating', p.y - sh);
@@ -732,6 +773,7 @@ function gapTo(sec, p) {
 }
 const segSeg = (a0, a1, b0, b1) => { let best = Infinity; for (let i = 0; i <= 6; i++) best = Math.min(best, segDist(_pp.copy(a0).lerp(a1, i / 6), b0, b1)); return best; };
 const BARRIER_Z = 2.67; // the arena's barrier (arena.js AR.barrierZ: the tube at 1.1 m, the panel 12 cm in front of it)
+const TABLE_R = 0.4; // the club's two-tops (venue.js TABLE_R: an 80 cm top, TABLE_D 0.40 in front of the pair)
 /** The numbers for one person's elbows and knees (plain objects: a validator, not the frame loop). */
 export function limbMetrics(person) {
   const rig = person.rig, fit = rig.fit, b = rig.b, inv = rig.inv;
@@ -769,7 +811,10 @@ export function limbMetrics(person) {
     };
   });
   const sx = Math.sign(hl[0].x - hl[1].x) || 1;
-  const kneeGap = (kl[0].x - kl[1].x) * sx, ankleGap = (al[0].x - al[1].x) * sx, hipGap = (hl[0].x - hl[1].x) * sx;
+  // (the knees across the body's own hip line, not the seat's: someone turned on the seat, as at a two-top, keeps
+  // them a hand apart across their own hips)
+  const hx = hl[0].x - hl[1].x, hz = hl[0].z - hl[1].z, hn = Math.hypot(hx, hz) || 1;
+  const kneeGap = ((kl[0].x - kl[1].x) * hx + (kl[0].z - kl[1].z) * hz) / hn, ankleGap = (al[0].x - al[1].x) * sx, hipGap = (hl[0].x - hl[1].x) * sx;
   // clearance: the legs (hip to knee to ankle) against the neighbours' legs, centre line to centre line
   let legNear = Infinity, legNearWho = '';
   if (person.near) for (const q of person.near) {
@@ -786,14 +831,39 @@ export function limbMetrics(person) {
   const legPts = [];
   for (let i = 0; i < 2; i++) { for (let k = 0; k <= 4; k++) legPts.push(K[i].clone().lerp(A[i], k / 4)); legPts.push(Hp[i].clone().lerp(K[i], 0.75)); }
   const src = person.src || {}, venue = person._venue || '';
-  if (person.o.table && src.x !== undefined && person.o.neighbour) {
-    const post = new THREE.Vector3(src.x + person.o.neighbour * 0.31, src.y || 0, src.z - 0.56);
+  // (not for someone getting up and walking off: the walk's own swing passes the table, traffic.js)
+  if (person.o.table && src.x !== undefined && person.o.neighbour && !person._inTraffic) {
+    const post = tableAt(person, new THREE.Vector3()); // (venue.js cabaretTables: each seat's twoTop)
     let d = Infinity;
     for (const p of legPts) if (p.y < (src.y || 0) + 0.72) d = Math.min(d, Math.hypot(p.x - post.x, p.z - post.z) - 0.025);
     furn.push({ what: 'table post', gap: d });
     let top = Infinity;
-    for (let i = 0; i < 2; i++) { const k = K[i]; if (Math.hypot(k.x - post.x, k.z - post.z) < 0.31 + 0.05) top = Math.min(top, (src.y || 0) + 0.72 - (k.y + 0.06)); }
+    for (let i = 0; i < 2; i++) { const k = K[i]; if (Math.hypot(k.x - post.x, k.z - post.z) < TABLE_R + 0.05) top = Math.min(top, (src.y || 0) + 0.72 - (k.y + 0.06)); }
     furn.push({ what: 'table top', gap: top });
+    // the hands against the table's things (crowd agent's layout, venue.js: a glass on each sitter's outer side of the
+    // rim, 14 and 8 cm tall, the candle jar 7 cm in the middle): palms and fingertips 5 cm clear of them; and, at rest, either on the top (3 cm over it) or
+    // well under it (5 cm), never at its edge, where every small move hides and shows the hand from the stage
+    const top0 = (src.y || 0) + 0.75, things = [[-0.32, 0.11, 0.14, 0.036], [0.32, 0.10, 0.084, 0.041], [0.01, -0.06, 0.07, 0.045]];
+    let clear = Infinity, band = Infinity;
+    for (const [hb, tb] of [[b.lHand, b.lTip], [b.rHand, b.rTip]]) {
+      const Hh = W(hb), Tt = tb ? W(tb) : Hh.clone(), Pm = Hh.clone().lerp(Tt, 0.5);
+      for (const q of [Pm, Tt]) {
+        for (const [dx, dz, h, r] of things) if (q.y < top0 + h + 0.05) clear = Math.min(clear, Math.hypot(q.x - (post.x + dx), q.z - (post.z + dz)) - r - 0.05);
+        if (Math.hypot(q.x - post.x, q.z - post.z) < TABLE_R + 0.12) band = Math.min(band, q.y > top0 + 0.03 ? Infinity : q.y < top0 - 0.05 ? Infinity : -Math.min(top0 + 0.03 - q.y, q.y - (top0 - 0.05)));
+      }
+    }
+    furn.push({ what: 'glasses or the jar', gap: clear });
+    // and the top's rim clear of their own body (the wider top comes nearer the belly)
+    if (fit && fit.ok) {
+      let into = -1;
+      const toC = _v[11].set(post.x, 0, post.z).sub(_v[12].setFromMatrixPosition(rig.seat.matrixWorld).setY(0)).normalize().negate();
+      for (let a = -0.6; a <= 0.6 + 1e-6; a += 0.15) {
+        const dx = toC.x * Math.cos(a) - toC.z * Math.sin(a), dz = toC.x * Math.sin(a) + toC.z * Math.cos(a);
+        for (const y of [0.735, 0.75]) { const rim = new THREE.Vector3(post.x + dx * TABLE_R, (src.y || 0) + y, post.z + dz * TABLE_R); for (const sec of fit.torso) into = Math.max(into, depthIn(sec, rim)); }
+      }
+      furn.push({ what: 'table rim (own body)', gap: into > 0.05 ? -(into - 0.05) : 0.01 }); // (5% of a section's depth, a few millimetres: a shirt pressed against the rim)
+    }
+    if (person._resting) furn.push({ what: 'table edge (a resting hand)', gap: band });
   }
   if (venue === 'theatre' && (src.row | 0) >= 1 && !src.balcony) {
     // the seat in front: 0.92 m ahead and 0.3 m down; its back's rear face 0.255 m behind its centre (rooms.js, venue.js)
@@ -826,7 +896,11 @@ export function limbMetrics(person) {
     furn.push({ what: 'chair of ' + q.name, gap: d });
   }
   const com = L(W(b.pelvis)).multiplyScalar(0.55).add(L(W(b.spine2)).multiplyScalar(0.3)).add(L(W(b.head)).multiplyScalar(0.15));
-  return { arms, legs, kneeGap, ankleGap, hipGap, legNear, legNearWho, furn, com };
+  // (the two shins' closest approach, centre line to centre line: crossed ankles touch at about 8 cm; nearer than 7 cm
+  // they pass through each other)
+  let shinGap = Infinity;
+  for (let k = 0; k <= 8; k++) { const p = _v[10].copy(kl[0]).lerp(al[0], k / 8); shinGap = Math.min(shinGap, segDist(p, kl[1], al[1])); }
+  return { arms, legs, kneeGap, ankleGap, hipGap, shinGap, legNear, legNearWho, furn, com };
 }
 
 // ---------- heads and shoulders between neighbours ----------
@@ -903,8 +977,8 @@ export function limbs(person, out = null, st = {}) {
   });
   if (symmetric) {
     const [l, r] = M.arms;
-    if (Math.abs(l.angle - r.angle) > 30) flag('elbows not symmetric (angle)', null, l.angle - r.angle);
-    if (Math.abs(l.out - r.out) > 0.1) flag('elbows not symmetric (out)', null, l.out - r.out);
+    if (Math.abs(l.angle - r.angle) > 45) flag('elbows not symmetric (angle)', null, l.angle - r.angle); // (two resting arms needn't match)
+    if (Math.abs(l.out - r.out) > 0.15) flag('elbows not symmetric (out)', null, l.out - r.out);
   }
   if (st.seated) {
     M.legs.forEach((g, i) => {
@@ -919,7 +993,8 @@ export function limbs(person, out = null, st = {}) {
     });
     if (M.kneeGap < 0.11) flag(M.kneeGap < 0 ? 'legs crossed' : 'knees through each other', null, M.kneeGap);
     if (M.kneeGap > 0.55) flag('knees splayed', null, M.kneeGap);
-    if (M.ankleGap < 0.1) flag(M.ankleGap < 0 ? 'ankles crossed' : 'ankles together', null, M.ankleGap);
+    // (crossed ankles are a natural way to sit: only shins that pass through each other)
+    if (M.shinGap < 0.07) flag('shins through each other', null, M.shinGap);
   } else if (st.standing) {
     M.legs.forEach((g, i) => {
       if (g.flex < 2) flag('knee locked', i, g.flex);

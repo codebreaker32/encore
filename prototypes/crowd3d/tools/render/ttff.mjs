@@ -19,6 +19,9 @@ try {
   const first = (Date.now() - t0) / 1000;
   await page.waitForFunction(() => document.body.dataset.front === '1' || !window.__load, null, { timeout: 600000, polling: 200 }); // (an older pack has no streamed front)
   const frontS = (Date.now() - t0) / 1000;
+  // the host's own messages: 'first' (the first frame) and 'ready' (the room whole, front people shown: the shell's plate lifts)
+  await page.waitForFunction(() => window.__reports.some((r) => r.type === 'ready'), null, { timeout: 600000, polling: 100 });
+  const readyMsgS = (Date.now() - t0) / 1000;
   const loadLine = await page.evaluate(() => (window.__load ? window.__load().line : null)); // (with the front people's mark)
   const post = (m) => page.evaluate((x) => window.postMessage(JSON.stringify(x), '*'), m);
   await post({ type: 'mode', mode: 'preview' });
@@ -33,8 +36,10 @@ try {
   for (let i = 0; i < 20 && !holdSeen; i++) { holdSeen = await page.evaluate(() => { const h = document.getElementById('hold'); return !!(h && h.style.display === 'block' && h.src); }).catch(() => false); if (!holdSeen) await page.waitForTimeout(250); }
   await page.waitForFunction(() => document.body && document.body.dataset.ready === '1', null, { timeout: 600000, polling: 200 });
   const second = (Date.now() - t1) / 1000;
+  await page.waitForFunction(() => window.__reports.some((r) => r.type === 'ready'), null, { timeout: 600000, polling: 100 });
+  const secondReady = (Date.now() - t1) / 1000;
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 }).catch(() => {});
   await page.waitForTimeout(8000);
   const audio = await page.evaluate(() => (window.__audioMB ? window.__audioMB() : null)).catch(() => null);
-  console.log(JSON.stringify({ throttle: +rate, firstFrameS: first, frontInS: frontS, load: loadLine, venueChange: { reloadAfterS: reloadAt, readyAfterS: second, heldFrameShown: holdSeen }, audio, errors: errors.slice(0, 3) }));
+  console.log(JSON.stringify({ throttle: +rate, firstFrameS: first, frontInS: frontS, readyMsgS, load: loadLine, venueChange: { reloadAfterS: reloadAt, firstFrameAfterS: second, readyMsgAfterS: secondReady, heldFrameShown: holdSeen }, audio, errors: errors.slice(0, 3) }));
 } finally { await browser.close(); }
