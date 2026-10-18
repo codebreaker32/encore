@@ -61,7 +61,7 @@ import { ARENA } from './arena.js';
 import { makeTraffic } from './traffic.js';
 import { CrowdSound, cueFor } from './sound.js';
 import { applyLook } from './look.js';
-import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue, HandShadows, realHair } from './real.js';
+import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue, HandShadows, realHair, velvetLit } from './real.js';
 import { buildSetups, pickSetup, PACE } from './director.js';
 
 const Q = new URLSearchParams(location.search);
@@ -936,6 +936,8 @@ async function buildRoom() {
   P.arenaAB = { fan9: ab('fan9'), nosprites: ab('nosprites'), nostands: ab('nostands'), noglows: ab('noglows'), nosky: ab('nosky'), nophones: ab('nophones'), imphalf: ab('imphalf'), floor30: ab('floor30'), sort: (ab('spritesort') || (tvArena && !ab('quadsprites'))) && !ab('nosort'), few: ab('fewtiers') || (tvArena && !ab('alltiers')), shape: ab('spriteshape') || (tvArena && !ab('quadsprites')), imp: !ab('noimpostor'), pills: ab('pillsprites'), pillImp: ab('pillimpostors') }; // (imp: the far stands as impostor blocks wherever fewtiers leaves them out)
   tmark('setups');
   const venue = V.build(scene, rows, P, (s) => visibleFromShots(s, 1.2), depthFor);
+  // (real-v1: velvet on the theatre's red seats, &ab=novelvet)
+  if (REAL && VENUE_ID === 'theatre' && !ab('novelvet')) scene.traverse((o) => { if (o.isMesh && o.material && o.material.isMeshLambertMaterial && o.material.vertexColors && !o.material.userData.velvet) { velvetLit(o.material); o.material.userData.velvet = true; } });
   tmark('venue geometry');
   const lookGlows = LOOK && LOOK.extras(rows, { eyesAt, seen: (s) => visibleFromShots(s), hazeLite: ab('hazelite') }); // (&ab=hazelite: half the haze points behind the rows, each a little larger)
   if (lookGlows) { Object.assign(lookGlows.material.uniforms, { scale: venue.points.material.uniforms.scale, time: venue.points.material.uniforms.time }); scene.add(lookGlows); }

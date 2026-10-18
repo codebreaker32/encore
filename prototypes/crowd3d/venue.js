@@ -166,7 +166,13 @@ export const SEAT_GEOS = {
 };
 SEAT_GEOS.chairRow = SEAT_GEOS.chair; // the club's raked rows: the same chair, black
 // velvet in the dark for the theatre (0x4a1014), no red seats in the club (docs/crowd-visual-plan.md R2e, R11)
-const SEAT_COLOURS = { chair: () => 0x3a2418, chairRow: () => 0x1a1210, theatre: () => 0x4a1014, theatreLite: () => 0x4a1014, pub: (s) => [0x3a2418, 0x4a2c1a, 0x2a1a12, 0x5a3a22, 0x30241c][Math.abs(Math.round(s.x * 7 + s.z * 3)) % 5] };
+// (real-v1: theatre velvet that has aged unevenly, each seat a little lighter, darker or more faded than the next, so
+// the rows aren't identical red blocks; vertex colours, no cost)
+function velvet(s) {
+  const h = Math.abs(Math.sin(s.x * 12.9898 + s.z * 78.233 + (s.row || 0) * 3.1) * 43758.5453) % 1;
+  return new THREE.Color(0x4a1014).multiplyScalar(0.82 + 0.3 * h).lerp(new THREE.Color(0x3a1a1c), 0.25 * ((h * 7.3) % 1)).getHex();
+}
+const SEAT_COLOURS = { chair: () => 0x3a2418, chairRow: () => 0x1a1210, theatre: (s) => velvet(s), theatreLite: (s) => velvet(s), pub: (s) => [0x3a2418, 0x4a2c1a, 0x2a1a12, 0x5a3a22, 0x30241c][Math.abs(Math.round(s.x * 7 + s.z * 3)) % 5] };
 /**
  * Furniture for every visible seat (merged into the room's vertex-coloured mesh) and a contact blob under each.
  * depthFor(seat) darkens the furniture with the rows, the same falloff as the people in it.

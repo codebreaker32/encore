@@ -348,3 +348,22 @@ export function realHair(m) {
   m.customProgramCacheKey = () => key0() + '|hair';
   return m;
 }
+
+/**
+ * Velvet on the room's red upholstery (the theatre's seats; `&ab=novelvet` via the caller): fibres standing up off the
+ * cloth catch light at grazing angles, so a seat's edges and curves glow softly instead of reading as flat red blocks.
+ * Only where the albedo is a saturated red; a few ALU on the room's pixels.
+ */
+export function velvetLit(m) {
+  const prev = m.onBeforeCompile;
+  m.onBeforeCompile = (sh, r) => {
+    if (prev) prev.call(m, sh, r);
+    sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+	{ vec3 vc = diffuseColor.rgb; float red = saturate( ( vc.r - 2.0 * max( vc.g, vc.b ) ) * 12.0 );
+	  float nv = saturate( dot( geometryNormal, geometryViewDir ) );
+	  reflectedLight.indirectDiffuse += red * pow( 1.0 - nv, 2.5 ) * ( reflectedLight.directDiffuse + reflectedLight.indirectDiffuse ) * 1.6; }`);
+  };
+  const key0 = m.customProgramCacheKey.bind(m);
+  m.customProgramCacheKey = () => key0() + '|velvet';
+  return m;
+}
