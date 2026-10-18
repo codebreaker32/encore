@@ -1843,8 +1843,13 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
             ${ab('dofdbg') ? 'gl_FragColor = vec4( wsum / 4.0, coc / 20.0, 0.0, 1.0 ); return;' : ''}
           }
         }` : ''}
-        ${GRADE ? `// a gentle grade: the stage's orange pulled a little towards neutral, as a camera balanced for tungsten would
-        { float l = dot( c, W ); c = mix( vec3( l ), c, 0.86 ) * vec3( 0.97, 1.0, 1.05 ); }` : ''}
+        ${GRADE && DOF ? `// the lens's glow (bloom, with the grade; it reads the DOF's mips): what is bright spreads a little into the dark round it,
+        // two coarse mip reads (the candles, sconces and lit faces get a halo, as glass and haze give a real lens)
+        { vec3 g1 = textureLod( tDiffuse, vUv, 2.5 ).rgb, g2 = textureLod( tDiffuse, vUv, 4.5 ).rgb;
+          c += max( g1 - 0.62, 0.0 ) * 0.3 + max( g2 - 0.45, 0.0 ) * 0.2; }` : ''}
+        ${GRADE ? `// a gentle grade: the stage's orange pulled a little towards neutral, as a camera balanced for tungsten would, and
+        // a film-like toe (the blacks lifted a touch and kept warm, never a digital zero)
+        { float l = dot( c, W ); c = mix( vec3( l ), c, 0.86 ) * vec3( 0.97, 1.0, 1.05 ); c = c * 0.975 + vec3( 0.012, 0.009, 0.008 ); }` : ''}
         gl_FragColor = vec4( c * ( vig * low + 2.0 * g ), 1.0 );
       }`,
     depthTest: false, depthWrite: false, toneMapped: false,
