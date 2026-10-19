@@ -249,3 +249,8 @@ Within the judges' noise of round 14 (one judge a point lower everywhere). The f
 
 ### 2026-10-19 09:19 UTC: gates on 7c44c06 (life step 9, the theatre house)
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edge bands 0 at both viewports in all four venues.
+
+### 2026-10-19 09:41 UTC: deliverables rendered (tree 42c44b9)
+- `docs/mockups/real-v1-<venue>.png`: before (the 18 Oct baseline) | after, five rows (three setups at the laugh's peak, a person close, a face close).
+- `docs/mockups/life-v1-<venue>.mp4` (on disk only: the repo ignores docs/**/*.mp4): 6 s, listening from t 10 then a big laugh at t 12, mid shot (top) and face close (bottom), before | after, 25 fps. Frames from it: `life-v1-<venue>-frames.png` (t 11 listening, t 13 laughing). The motion agent's strips: `life-v1-<venue>.png`.
+- The emulator clip `docs/android-emu/real-v1-2026-10-19/club-set-60s.mp4` is on disk only too.
