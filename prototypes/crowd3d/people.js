@@ -5,7 +5,7 @@
 // frame from the room's state, the person's temperament and the clock, so nothing loops in step and every pose is a
 // function of (seed, time): any frame can be reproduced.
 import * as THREE from 'three';
-import { fitBody, refreshFit, fixArms, joints, armCollisions, posture, clampSpine, clampHead, clampRoll, shareYaw, limbs, limbMetrics, guardElbows, bestElbow, clearHeads, depthIn } from './anatomy.js';
+import { fitBody, refreshFit, fixArms, joints, armCollisions, posture, clampSpine, clampHead, clampRoll, shareYaw, limbs, limbMetrics, guardElbows, bestElbow, elbowBad, clearHeads, depthIn } from './anatomy.js';
 import { ANIM, loadClips, newPose, sample, sampleCycle, mix, addLayer, addLayerMirror, maskOf, applyPose, family, meanPose } from './anim.js';
 
 /**
@@ -65,6 +65,7 @@ const FINGERS = ['Finger1', 'Finger11', 'Finger12', 'Finger2', 'Finger21', 'Fing
 const _v = [...Array(8)].map(() => new THREE.Vector3());
 const _qk = [new THREE.Quaternion(), new THREE.Quaternion()];
 const _q = [...Array(6)].map(() => new THREE.Quaternion());
+const _hq = [0, 1, 2].map(() => new THREE.Quaternion()), _hv = [...Array(8)].map(() => new THREE.Vector3()); // (arm-v2's elbow hold: its own, rig.solve uses _v and _q)
 const _m = new THREE.Matrix4();
 const _e = new THREE.Euler();
 const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new THREE.Vector3(0, 0, 1);
@@ -646,11 +647,28 @@ function assignRest(list) {
     const nb = (k) => (p.rowL && p.rowL._rsCur === k) || (p.rowR && p.rowR._rsCur === k);
     let opts = lib.filter(([k]) => k !== p._rsCur && !nb(k) && held(k) < cap);
     if (!opts.length) opts = lib.filter(([k]) => k !== p._rsCur && !nb(k));
+    if (!REST_OLD && !opts.length) opts = lib.filter(([k]) => !nb(k)); // (rest-v2: rather the same kind again, in a new variant, than a neighbour's)
     if (!opts.length) opts = lib.filter(([k]) => k !== p._rsCur);
     if (!opts.length) opts = lib; // (a library of one: it stays)
     const k = pick(opts, p._rsR());
-    p._rs.push({ t, k }); p._rsCur = k;
+    p._rs.push({ t, k, v: REST_OLD ? null : restVariant(p, k, p._rs.length) }); p._rsCur = k;
   }
+}
+/**
+ * rest-v2: one rest's own variant, seeded by the seat and the rest's place in its schedule (its own generator: the old
+ * schedule's draws are untouched). Offsets in the seat frame, metres: each hand along its leg (z) and in or out (x),
+ * the clasped hands' place and which lies on top, the side a one-handed pose uses, and a weight shift (side, lean).
+ */
+function restVariant(p, k, n) {
+  const R = rng((Math.imul(p.seed | 0, 17) + Math.imul(n + 1, 7919) + 4241) | 0), u = () => R() - 0.5;
+  const ahead = u() * 0.06; // (one hand ahead of the other: the commonest difference between two people's laps)
+  // (small, and on a table's top only: on the legs, further along left a hand off its knee (the posture rule's floating
+  // hand) and nearer the hip put an elbow into the flank; there the person's own restVar stays the only offset)
+  return {
+    id: n, zL: ahead + u() * 0.02, zR: -ahead + u() * 0.02, xL: u() * 0.016, xR: u() * 0.016,
+    cx: u() * 0.02, cz: u() * 0.03, top: R() < 0.5 ? 1 : -1, side: R() < 0.5 ? 1 : -1,
+    shift: u() * 0.07, lean: u() * 0.04,
+  };
 }
 /** A party's conversation: who speaks when, seeded, never repeating: turns of 0.8–9 s, pauses, laughs and nods. */
 function convo(party) {
@@ -694,6 +712,21 @@ const LIFE_OFF = (() => {
 // &laugh=old brings back life-v1's layers and the unsmoothed blends (the A/B)
 const LAUGH_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('laugh') === 'old';
 const SMOOTH = !LAUGH_OLD;
+// rest-v2 (19 Oct; the judges: "the front people share the same resting pose, side by side"): each rest the schedule
+// hands out comes with its own variant (which hand lies on top when clasped and where the clasp sits, which hand goes to
+// the knee, a small weight shift, and on a table's top each hand's place), and a neighbour's pose counts as taken
+// before a change of one's own does; a seat may keep its kind with a new variant. &restold=1: the old schedule and
+// placements (the A/B)
+const REST_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('restold') === '1';
+// arm-v2 (19 Oct; jumpprobe: resting arms flipping between two answers frame by frame): the two fall-backs of a
+// resting pose (FB1: the pose collides, straight to the thighs; FB2: an arm locked straight or the two elbows unlike,
+// placed again from where the shoulders are) were decided afresh each frame, and their answers differ from the passes'
+// by 15-35 degrees at the elbow: a person on the edge of one flipped between the two. Now, once one fires, it holds for
+// as long as that rest does (and half a second after the hands leave it), and the lean it asks for eases in. And the
+// passes' other discrete choices (bestElbow's point on the circle, guardElbows' kept or undone hand, a wrist limit) are
+// followed, for resting arms, at most 180 degrees a second for the elbow and the hand and 0.6 m a second for the wrist,
+// from where the arm was shown last frame (holdElbows). &armold=1: decided each frame, no hold, the lean stepped (the A/B)
+const ARM_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('armold') === '1';
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
 // (a check view's one gesture for every response: &gesture=clap)
 // (&reuse=0: every arm gets the full anatomy pass every frame, for A/B checks)
@@ -732,7 +765,7 @@ const CLAP_W = LIFE_OFF.hands ? 0.042 : 0.047; // (the wrists a little further a
 const REST_SEAT_OLD = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
 // (life-v1: fewer hands out on the knees, more clasped in the lap; one hand over the other's wrist was tried: its crossing
 // arm tucked the elbow behind the body)
-const REST_SEAT = LIFE_OFF.rest ? REST_SEAT_OLD : [['thighs', 2.4], ['knees', 0.35], ['thighKnee', 1.2], ['clasped', 1.4]];
+const REST_SEAT = LIFE_OFF.rest ? REST_SEAT_OLD : REST_OLD ? [['thighs', 2.4], ['knees', 0.35], ['thighKnee', 1.2], ['clasped', 1.4]] : [['thighs', 1.7], ['knees', 0.45], ['thighKnee', 1.5], ['clasped', 1.5]]; // (rest-v2: less of the plain thighs, the row's most repeated look)
 // A cabaret table stands in front of its pair, off to one side of each of them: only the close-up pair knows which side
 // (o.neighbour), so only they use the table, with the hand on its side (both forearms on it would leave one in the air)
 // (the glass: nobody holds one yet, so it's out until there is a glass to hold)
@@ -1121,9 +1154,10 @@ export class Person {
     const S = this._rs;
     let lo = 0, hi = S.length - 1;
     while (lo < hi) { const m = (lo + hi + 1) >> 1; if (S[m].t <= now) lo = m; else hi = m - 1; }
-    const o = (this._rso ||= { kind: '', prev: '', k: 1 });
+    const o = (this._rso ||= { kind: '', prev: '', k: 1, v: null, vPrev: null, same: true });
     o.kind = S[lo].k; o.prev = lo > 0 ? S[lo - 1].k : S[lo].k; o.k = smooth((now - S[lo].t) / 1.0);
-    if (REST_FORCE) { o.kind = o.prev = REST_FORCE; o.k = 1; }
+    o.v = S[lo].v || null; o.vPrev = lo > 0 ? S[lo - 1].v || null : o.v; o.same = o.prev === o.kind && o.v === o.vPrev; // (rest-v2: the same kind in a new variant crossfades too)
+    if (REST_FORCE) { o.kind = o.prev = REST_FORCE; o.k = 1; o.v = o.vPrev = null; o.same = true; }
     return o;
   }
   /**
@@ -1131,8 +1165,10 @@ export class Person {
    * their current pose: on the thighs, clasped in the lap above them, arms folded in front of the belly's own surface,
    * chin on a hand, an arm over the chair back, and at a table: a hand on it, a glass, the forearms on it.
    */
-  restTargets(kind) {
-    const rig = this.rig, fit = rig.fit, b = rig.b, sh = this.o.seatH, sd = this._restSide || 1;
+  restTargets(kind, v) {
+    // (rest-v2: the variant of the rest in hand, or the one fading out, by kind; v === null: none)
+    if (v === undefined) { const o = this._rso; v = REST_OLD || !o ? null : o.kind === kind && (o.k >= 0.5 || o.prev !== kind) ? o.v : o.prev === kind ? o.vPrev : null; }
+    const rig = this.rig, fit = rig.fit, b = rig.b, sh = this.o.seatH, sd = v ? v.side * (this.o.table && this.o.neighbour ? 0 : 1) || this._restSide || 1 : this._restSide || 1;
     const R = (this._rt ||= { tL: new THREE.Vector3(), tR: new THREE.Vector3(), pL: new THREE.Vector3(), pR: new THREE.Vector3(), roll: 0, back: -1 });
     R.roll = 0; R.back = -1;
     const toL = (v) => v.applyMatrix4(rig.inv);
@@ -1192,10 +1228,10 @@ export class Person {
     // (both hands on the legs: each the same fraction of its arm's length from its shoulder, so the two elbows bend
     // alike, 100-130°, whichever way the chest leans or turns; the limbs rules)
     // (the search every 8th call for the same pose: the shoulders move slowly; a stepped view searches every time)
-    const RC = (this._rc2 ||= { kind: '', n: 0, uL: 0, uR: 0 });
-    if (kind === 'thighs' && !STEPPED && RC.kind === kind && RC.n++ % 8) { onThigh(1, RC.uL, R.tL); onThigh(-1, RC.uR, R.tR); }
+    const RC = (this._rc2 ||= { kind: '', n: 0, uL: 0, uR: 0, vid: -1 });
+    if (kind === 'thighs' && !STEPPED && RC.kind === kind && RC.vid === (v ? v.id : -1) && RC.n++ % 8) { onThigh(1, RC.uL, R.tL); onThigh(-1, RC.uR, R.tR); }
     else if (kind === 'thighs') { // (knees stay on the knees)
-      RC.kind = kind; RC.n = 1;
+      RC.kind = kind; RC.n = 1; RC.vid = v ? v.id : -1;
       const Ls = rig.len.arm[0] + rig.len.arm[1], sL = toL(worldPos(b.lUpper, _rv[2])).clone(), sR = toL(worldPos(b.rUpper, _rv[2])).clone();
       const rho = Math.min(0.9, Math.max(0.8, (R.tL.distanceTo(sL) + R.tR.distanceTo(sR)) / 2 / Ls)), lo = belly > 0 ? 0.42 + belly * 2 : 0.5; // (not up at the hip crease: the fitted thigh starts below it)
       // (and when one hand can't come that close, the other matches it instead)
@@ -1219,7 +1255,9 @@ export class Person {
       // (centred on the chest, not between the knees: legs spread unevenly or a turned body put it to one side)
       { const cL = toL(worldPos(b.lUpper, _rv[2])).x, cR = toL(worldPos(b.rUpper, _rv[3])).x; m.x += ((cL + cR) / 2 - m.x) * 0.6; }
       // one hand over the other, both clear of the thighs (the fingers curl down onto them)
-      R.tL.copy(m).add(_rv[1].set(0.035, 0.06, 0.035)); R.tR.copy(m).add(_rv[1].set(-0.035, 0.022, 0.015)); // (resting on the lap, not held above it)
+      if (v) { m.x += v.cx; m.z += v.cz; } // (rest-v2: a little to one side, nearer the knees or the belly)
+      if (v && v.top < 0) { R.tR.copy(m).add(_rv[1].set(-0.035, 0.06, 0.035)); R.tL.copy(m).add(_rv[1].set(0.035, 0.022, 0.015)); } // (rest-v2: the right hand on top)
+      else { R.tL.copy(m).add(_rv[1].set(0.035, 0.06, 0.035)); R.tR.copy(m).add(_rv[1].set(-0.035, 0.022, 0.015)); } // (resting on the lap, not held above it)
       R.pL.set(0.9, -0.45, -0.4); R.pR.set(-0.9, -0.45, -0.4);
     } else if (kind === 'folded') {
       // in front of the belly's own surface (the middle spine section), one forearm over the other
@@ -1251,12 +1289,13 @@ export class Person {
     if (!LIFE_OFF.hands && !LIFE_OFF.restvar && this.restVar && !this.force && kind !== 'clasped' && kind !== 'folded' && kind !== 'chin' && kind !== 'chairBack') {
       const V = this.restVar, k = /^table|^forearms/.test(kind) ? (this.o.table && this.o.neighbour ? 0 : 0.6) : 1; // (a two-top's planted hands are fitted to its top and its glasses: there each hand varies by its roll only)
       R.tL.z += V.zL * k; R.tR.z += V.zR * k; R.tL.x += V.xL * k; R.tR.x -= V.xR * k;
+      if (v && k < 1) { const kv = 0.6, zc = (z, dz) => Math.max(-0.06, Math.min(0.06, z + dz)) - z; R.tL.z += zc(V.zL * k, v.zL * kv); R.tR.z += zc(V.zR * k, v.zR * kv); R.tL.x += v.xL * kv; R.tR.x -= v.xR * kv; } // (rest-v2: on a table's top, this rest's own placement on top of the person's, the fit below keeping it on the top and clear of the glasses)
     }
     // (at a two-top, hands on the table are fitted to the table itself (venue.js cabaretTables): on its top, and 5 cm
     // clear of the two glasses and the candle jar)
     // (and, once fitted, kept: a hand planted on the top stays where it was put for as long as that rest lasts, the
     // body moving about it, a laugh, a turn, a clap and back; refitted once the rest has been off for half a second)
-    const PC = /^(tableBoth|forearmsTable)$/.test(kind) && this.o.table && this.o.neighbour ? ((this._pc ||= {})[kind] ||= { tL: new THREE.Vector3(), tR: new THREE.Vector3(), at: -9 }) : null;
+    const PC = /^(tableBoth|forearmsTable)$/.test(kind) && this.o.table && this.o.neighbour ? ((this._pc ||= {})[v ? kind + v.id : kind] ||= { tL: new THREE.Vector3(), tR: new THREE.Vector3(), at: -9 }) : null;
     const nowT = this._laT ?? 0;
     if (PC && nowT - PC.at < 0.5 && nowT >= PC.at) { R.tL.copy(PC.tL); R.tR.copy(PC.tR); PC.at = nowT; }
     else if (/^(tableBoth|tableOne|forearmsTable)$/.test(kind) && this.o.table && this.o.neighbour && this.src) {
@@ -2008,6 +2047,8 @@ export class Person {
       if (ps === 'slouch') headPitch -= 0.04; // (the head kept up over a rounded back)
       if (ps === 'shoulder') side += (this.side || 1) * 0.05 * PK;
       if (ps === 'turnIn') turn += (this.side || 1) * 0.1 * PK;
+      // (rest-v2: each rest its own small weight shift, eased with the rest's own crossfade)
+      if (!REST_OLD && rig.fit && rig.fit.ok && !ANATOMY_OFF && !(o.table && o.neighbour)) { const RS = this.restPoseAt(now), a = RS.vPrev, c = RS.v, f = RS.same ? 1 : RS.k; if (a || c) { side += lerp(a ? a.shift : 0, c ? c.shift : 0, f) * (1 - stand); lean += lerp(a ? a.lean : 0, c ? c.lean : 0, f) * (1 - stand); } }
     }
     const hk = room.heckle ? room.heckle.level : 0;
     if (idle === 'heckle') { lean += 0.12 * hk; headPitch -= 0.08 * hk; } // (a bigger lean folds the belly onto the forearms)
@@ -2123,7 +2164,8 @@ export class Person {
     // (seated: never slumped over the table or sliding off the chair; a doubled-over laugh may go further forward)
     // (someone whose resting hands couldn't reach their thighs with a bent elbow (a long back leaning back, short arms:
     // straightArm below) sits a little more upright, learnt over the next frames and forgotten over ~30 s)
-    { const dt = now - (this._laT ?? now); this._laT = now; this._leanAdj = Math.max(0, (this._leanAdj || 0) - (dt > 0 && dt < 4 ? dt * 0.008 : 0)); }
+    { const dt = now - (this._laT ?? now); this._laT = now; this._leanAdj = Math.max(0, (this._leanAdj || 0) - (dt > 0 && dt < 4 ? dt * 0.008 : 0));
+      if (!ARM_OLD && this._leanAdjT) { const e = dt > 0 && dt < 0.5 ? 1 - Math.exp(-dt / 0.4) : 1, d = this._leanAdjT - this._leanAdj; this._leanAdj += d * e; this._leanAdjT = d * (1 - e) > 0.002 ? this._leanAdjT - (dt > 0 && dt < 4 ? dt * 0.008 : 0) : 0; } } // (arm-v2: the fall-back's lean eased over ~0.4 s, not a 4-degree step)
     lean += this._leanAdj || 0;
     // (at a two-top, sitting forward to it, the shoulders over the hips: the hands reach its top with the elbows bent,
     // and stay planted on it through a laugh; see REST_TABLE)
@@ -2225,7 +2267,11 @@ export class Person {
     const restingNow = clip && !o.stand && stand < 0.3 && clamp01(1 - (o.table && o.neighbour ? 0 : this._fidW || 0) * 1.6) * (1 - walk) > 0.85 && W.talk < 0.1 && clapW < 0.02 && upW < 0.02 && lb < 0.05 && !(L && L.gestures.length) && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
     // (a look round turns the chest too, not the neck alone; not for hands at rest, whose shoulders stay square over them)
     if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps && walk < 0.05 && !(T && !T.hidden) && !restingNow) shareYaw(this);
-    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps) clampSpine(this, restingNow || !!this._resting);
+    // (arm-v2: the resting limits come in over ~0.3 s, from the 42-degree cap, not in one frame: the chest squared to the
+    // hips the frame a laugh ended turned the whole upper body 19 degrees at once)
+    let restC = restingNow || !!this._resting, restE = 1;
+    if (!ARM_OLD) { const dtE = now - (this._reT ?? -9); this._reT = now; this._reW = dtE > 0 && dtE < 0.5 ? clamp01((this._reW ?? (restC ? 1 : 0)) + (restC ? 1 : -1) * dtE / 0.3) : restC ? 1 : 0; restE = smooth(this._reW); restC = restE > 0; } // (and out again)
+    if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps) clampSpine(this, restC, restE);
     // the face within -15..+20 degrees while they listen or laugh (a capture's own tilt plus the look and a glance can
     // otherwise drop it 30-45 degrees, a crown to the camera); dead air may let a bored head drop further, the phone
     // and a drink are looked at, and the doubled-over laugh goes down with the body
@@ -2322,9 +2368,10 @@ export class Person {
       this._passing = !!(this.near && this.near.some((q) => q.src && q.src._loco && !q.src._loco.hidden));
       if (restW > 0.01) {
         const RS = this.restPoseAt(now);
-        if (RS.k < 1 && RS.prev !== RS.kind) { const A = this.restTargets(RS.prev); over(restW, A.tL, A.tR, A.pL, A.pR); }
-        const A = this.restTargets(RS.kind);
-        over(restW * (RS.prev !== RS.kind ? RS.k : 1), A.tL, A.tR, A.pL, A.pR);
+        const fade = REST_OLD ? RS.prev !== RS.kind : !RS.same;
+        if (RS.k < 1 && fade) { const A = this.restTargets(RS.prev, REST_OLD ? undefined : RS.vPrev); over(restW, A.tL, A.tR, A.pL, A.pR); }
+        const A = this.restTargets(RS.kind, REST_OLD ? undefined : RS.v);
+        over(restW * (fade ? RS.k : 1), A.tL, A.tR, A.pL, A.pR);
         restKind = RS.k > 0.5 ? RS.kind : RS.prev;
         plantFrom = o.table && o.neighbour && restW > 0.85 && /^(tableBoth|forearmsTable)$/.test(restKind);
         if (restKind === 'chairBack') this._intentBack = A.back;
@@ -2483,7 +2530,8 @@ export class Person {
     }
     if (restOn && restW > 0.3 && (restKind === 'thighs' || restKind === 'knees' || restKind === 'thighKnee')) {
       const along = (th, ca, knee) => NV().copy(worldPos(ca, NV())).sub(worldPos(th, NV())).normalize().addScaledVector(NV().set(0, -1, 0).transformDirection(rig.seat.matrixWorld), knee ? 0.3 : 0.2).normalize(); // (the fingers drape over the leg's curve; transformDirection normalises: scale after)
-      const kL = restKind === 'knees' || (restKind === 'thighKnee' && (this._restSide || 1) > 0), kR = restKind === 'knees' || (restKind === 'thighKnee' && (this._restSide || 1) < 0);
+      const rsd = !REST_OLD && this._rso && this._rso.v && !(o.table && o.neighbour) ? (this._rso.k > 0.5 || this._rso.same ? this._rso.v : this._rso.vPrev || this._rso.v).side : this._restSide || 1; // (rest-v2: this rest's own side)
+      const kL = restKind === 'knees' || (restKind === 'thighKnee' && rsd > 0), kR = restKind === 'knees' || (restKind === 'thighKnee' && rsd < 0);
       if (ikL) rig.aim(b.lHand, b.lTip, along(b.lThigh, b.lCalf, kL), 0.6 * restW * (1 - clapW));
       if (ikR) rig.aim(b.rHand, b.rTip, along(b.rThigh, b.rCalf, kR), 0.6 * restW * (1 - clapW));
     }
@@ -2507,7 +2555,7 @@ export class Person {
       rig.upd(arm[0]);
     }
     // (last, after every arm layer: the arms off the bind direction first, then the hands where hands can be)
-    if (clip) this.armsOffBind();
+    if (clip) { const ob0 = this.armsOffBind(); if (ob0 && typeof window !== 'undefined' && window.__armTrace && window.__armTrace.includes(this.name)) this._ob0 = ob0; else this._ob0 = 0; }
     if (clip && stand > 0.6 && walk < 0.05 && clapW < 0.05 && upW < 0.05 && !(coat > 0 && coat < 1) && armW.l < 0.1 && armW.r < 0.1 && (!o.stand || o.standHands === 'down' || o.standHands === 'rail')) this.armsIn(0.7 * smooth((stand - 0.6) / 0.4));
     // anatomy (anatomy.js), last of all: joint limits, then the arms out of every body and the furniture, then the two
     // hands apart (palms meet in a clap, never pass) and the neighbours, then the limits again (a re-solve moves a wrist)
@@ -2515,6 +2563,7 @@ export class Person {
     const seatedNow = stand < 0.3 && !o.stand;
     // (window.__anaDbg = 'Male_Adult_12': that person's arm collisions after each stage, in their _stages)
     const DBG = typeof window !== 'undefined' && window.__anaDbg === this.name ? (this._stages = []) : null;
+    const TR = typeof window !== 'undefined' && window.__armTrace && window.__armTrace.includes(this.name) ? (this._tr = [restKind, 'ob0:' + (this._ob0 || 0)]) : null; // (tools: which arm passes ran this frame)
     if (DBG) { const o = []; armCollisions(this, o); DBG.push('preList ' + JSON.stringify(o.map((x) => [x.what, x.side, x.depth, x.k]))); } if (DBG) DBG.push('pre ' + armCollisions(this) + ' L.y ' + toL(worldPos(b.lHand, NV())).y.toFixed(3) + ' near ' + (this.near || []).map((q) => q.name));
     // arms that have barely moved since their last full pass (every arm bone and both collarbones within 0.9 degrees,
     // the chest within 4 mm, no neighbour on the move) take that pass's result again instead of redoing it: most
@@ -2530,6 +2579,8 @@ export class Person {
     if (still) for (let i = 0; i < 8; i++) if (!AB[i] || Math.abs(AB[i].quaternion.dot(AQ.inp[i])) < 0.99995) { still = false; break; }
     if (still) for (let i = 0; i < 3; i++) if (Math.abs(BW.now[i].dot(BW.q[i])) < 0.99995) { still = false; break; }
     this._armMoved = !still;
+    // (arm-v2: hands at rest, as the fall-backs below have it, and the rest they are in)
+    const restHold = restOn && restW > 0.5 && clapW < 0.02 && upW < 0.02 && !(L && L.gestures.length) && W.talk < 0.1 && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat ? restKind + (this._rso && this._rso.v ? ':' + this._rso.v.id : '') : '';
     let reuse = still && !REUSE_OFF && restOn && restW > 0.85 && W.talk < 0.1 && !(L && L.gestures.length) && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && clip && fitted && !DBG && AQ.n < 5 && !OV && !(T && !T.hidden) && clapW < 0.05 && upW < 0.05 && !this.fresh && !this._armOff && !/^(tableOne|tableBoth|forearmsTable)$/.test(restKind); // (not while an arm is out of its rest rules, see below; nor a hand on the table, which a turn of the body swings through the thigh)
     // (a neighbour on the move, or one whose moving hands come within reach of mine: the full pass)
     if (reuse && this.near) for (const q of this.near) {
@@ -2537,6 +2588,7 @@ export class Person {
       if (q._armMoved && q.rig) { const qb = q.rig.b; let close = false; for (const hq of [qb.lHand, qb.rHand]) for (const hm of [b.lHand, b.rHand]) if (worldPos(hq, NV()).distanceToSquared(worldPos(hm, NV())) < 0.16) close = true; if (close) { reuse = false; break; } }
     }
     if (fitted && clip && Person.reuseCount) Person.reuseCount[reuse ? 'reuse' : still ? 'stillFull' : 'full']++;
+    if (TR) TR.push(reuse ? 'reuse' : still ? 'stillFull' : 'full');
     if (reuse) {
       for (let i = 0; i < 6; i++) AB[i].quaternion.copy(AQ.out[i]);
       rig.upd(b.lUpper); rig.upd(b.rUpper);
@@ -2548,6 +2600,7 @@ export class Person {
       AQ.at.copy(chestW);
       let m1 = 0;
       if (fitted) { joints(this, true); m1 = fixArms(this, seatedNow, clapW > 0.05); }
+      if (TR) TR.push('m1:' + m1);
       if (DBG) DBG.push('fix1 ' + armCollisions(this) + ' L.y ' + toL(worldPos(b.lHand, NV())).y.toFixed(3) + ' elbows ' + limbMetrics(this).arms.map((a) => a.inside.toFixed(2) + '/' + a.out.toFixed(2) + '/' + a.fwd.toFixed(2)).join(' '));
       this._kho = false;
       if (clip && !OFF.fix) this.keepHandsOut(stand < 0.3, clapW > 0.05); // the two hands apart, the neighbours' hands
@@ -2558,11 +2611,17 @@ export class Person {
         const m2 = m1 || this._kho ? fixArms(this, seatedNow, clapW > 0.05) : 0;
         if (DBG) DBG.push('fix2 ' + armCollisions(this) + ' L.y ' + toL(worldPos(b.lHand, NV())).y.toFixed(3) + ' elbows ' + limbMetrics(this).arms.map((a) => a.inside.toFixed(2) + '/' + a.out.toFixed(2) + '/' + a.fwd.toFixed(2)).join(' '));
         // a rest pose this body can't take cleanly (a bulky front and clasped hands): straight to the thighs, fixed again
-        this._fellBack = false;
+        this._fellBack = this._fb1 = false;
         // (only hands that are resting: never a clap, a gesture, a phone, a drink, a talker's or a heckler's hand)
         const handsAtRest = restOn && restW > 0.5 && clapW < 0.02 && upW < 0.02 && !(L && L.gestures.length) && W.talk < 0.1 && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
-        if (handsAtRest && m2 > 0 && armCollisions(this) > 0) {
-          this._fellBack = true;
+        if (TR) TR.push('kho:' + this._kho, 'm2:' + m2);
+        // (arm-v2: the fall-back held: by this rest's key, the kind and its variant)
+        const fbKey = restKind + (this._rso && this._rso.v ? ':' + this._rso.v.id : ''), FBH = (this._fbh ||= { k1: '', k2: '', off: -9 });
+        if (!handsAtRest) { if (now - FBH.off > 0.5) FBH.k1 = FBH.k2 = ''; } else FBH.off = now;
+        const fb1c = handsAtRest && m2 > 0 && armCollisions(this) > 0;
+        if (fb1c && !ARM_OLD) FBH.k1 = fbKey;
+        if (fb1c || (!ARM_OLD && handsAtRest && FBH.k1 === fbKey)) {
+          this._fellBack = this._fb1 = true; if (TR) TR.push(fb1c ? 'FB1' : 'fb1');
           const A = this.restTargets(o.table && o.neighbour ? 'tableBoth' : 'thighs'); // (at a table: on it)
           rig.solve(b.lUpper, b.lFore, b.lHand, rig.seat.localToWorld(NV().copy(A.tL)), NV().copy(A.pL).transformDirection(rig.seat.matrixWorld), rig.bend.lArm, rig.len.arm);
           rig.solve(b.rUpper, b.rFore, b.rHand, rig.seat.localToWorld(NV().copy(A.tR)), NV().copy(A.pR).transformDirection(rig.seat.matrixWorld), rig.bend.rArm, rig.len.arm);
@@ -2572,9 +2631,11 @@ export class Person {
         }
         // (a resting arm locked straight to its leg: the shoulders moved on after the targets were placed, a slouch or
         // a lean back. Placed again from where the shoulders are now, so the elbows rest bent: the limbs rules)
-        if (handsAtRest && !this._fellBack && (this.straightArm(0) || this.straightArm(1) || this.armAngle(0) > 2.44 || this.armAngle(1) > 2.44 || (/^(thighs|knees)$/.test(restKind) && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.78))) {
-          this._fellBack = true;
-          this._leanAdj = Math.min(0.3, (this._leanAdj || 0) + 0.07);
+        const fb2c = handsAtRest && !this._fellBack && (this.straightArm(0) || this.straightArm(1) || this.armAngle(0) > 2.44 || this.armAngle(1) > 2.44 || (/^(thighs|knees)$/.test(restKind) && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.78));
+        if (fb2c && !ARM_OLD) FBH.k2 = fbKey;
+        if (fb2c || (!ARM_OLD && handsAtRest && !this._fellBack && FBH.k2 === fbKey)) {
+          this._fellBack = true; if (TR) TR.push(fb2c ? 'FB2' : 'fb2');
+          if (fb2c) { if (ARM_OLD) this._leanAdj = Math.min(0.3, (this._leanAdj || 0) + 0.07); else this._leanAdjT = Math.min(0.3, Math.max(this._leanAdjT || 0, this._leanAdj || 0) + 0.07); } // (arm-v2: eased in, below)
           // (hands planted on a table's top stay where they are: the lean brings the shoulders back over them)
           if (!this._planted) {
             const A = this.restTargets(restKind || 'thighs');
@@ -2587,14 +2648,15 @@ export class Person {
         }
         if (m1 || m2 || this._kho || this._fellBack) joints(this, true); // (nothing moved since the first: still within them)
         // (a push out of a body can swing an upper arm back out to the bind pose's line: off it again, and clear)
-        if (clip && this.armsOffBind()) { fixArms(this, seatedNow, clapW > 0.05); joints(this, true); }
+        if (clip && this.armsOffBind()) { if (TR) TR.push('OB1'); fixArms(this, seatedNow, clapW > 0.05); joints(this, true); }
         // (the elbows' last word: anatomy.js, the limbs rules; not for someone walking, sitting down or standing up,
         // whose arms are the capture's swing)
-        if (!(T && !T.hidden) && !coat && clapW < 0.05) { guardElbows(this, false); if (clip && this.armsOffBind()) { fixArms(this, seatedNow, clapW > 0.05); joints(this, true); } }
+        if (!(T && !T.hidden) && !coat && clapW < 0.05) { const gn = guardElbows(this, false); if (TR) TR.push('G:' + gn + ':' + (guardElbows.tried || '')); if (clip && this.armsOffBind()) { if (TR) TR.push('OB2'); fixArms(this, seatedNow, clapW > 0.05); joints(this, true); } }
         this._armOff = handsAtRest && (this.armAngle(0) > 2.44 || this.armAngle(1) > 2.44);
         // (resting on both legs, the two elbows alike: the more bent arm's hand slid on along its thigh, a few cm at a
         // time, until they are within 25°; kept only if nothing collides more)
         if (handsAtRest && /^(thighs|knees)$/.test(restKind) && Math.abs(this.armAngle(0) - this.armAngle(1)) > 0.75) { // (within about 43°: two arms at rest needn't match)
+          if (TR) TR.push('BAL');
           const side = this.armAngle(0) < this.armAngle(1) ? 0 : 1, up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
           const keep = [up.quaternion.clone(), fo.quaternion.clone(), ha.quaternion.clone()], before = armCollisions(this);
           const th = side ? b.rThigh : b.lThigh, ca = side ? b.rCalf : b.lCalf, along = NV().copy(worldPos(ca, NV())).sub(worldPos(th, NV())).normalize();
@@ -2615,6 +2677,12 @@ export class Person {
       }
       // (a clap, once more after the wrists' own limits: they turn the hands, and the fingertips with them, towards each other)
       if (clip && clapW > 0.05 && !OFF.fix) { this._kho = false; this.keepHandsOut(stand < 0.3, true); if (this._kho && fitted) fixArms(this, seatedNow, true); } // (and the elbows out of the body again, if it moved them)
+      // (arm-v2: a resting arm's elbow held near where it was last frame: the passes above choose an elbow's place on
+      // its circle round the shoulder-wrist line among discrete answers (bestElbow's 24 points, a fall-back's pole, a
+      // push out of the flank), and a body on the edge between two answers swung the whole arm 15-35 degrees in a frame.
+      // The elbow and the hand turn towards their answer at most 180 degrees a second and the wrist moves at most 0.6 m a
+      // second, each kept only if the arm then hits nothing more than the passes' answer does)
+      if (!ARM_OLD && fitted && clip && seatedNow && restHold) this.holdElbows(now);
       for (let i = 0; i < 6; i++) AQ.out[i].copy(AB[i].quaternion);
       AQ.n = 0;
     }
@@ -2774,6 +2842,7 @@ export class Person {
       for (let i = 0; i < AB.length; i++) if (b[AB[i]]) AQ0[i].copy(b[AB[i]].quaternion);
       this._amOk = true;
     }
+    if (!ARM_OLD && fitted && clip) this.keepElbows(now, restHold); // (arm-v2: where the arms are as shown, for the next frame's hold)
     // how visibly they are laughing (smoothed over ~0.8 s), for the director's choice of close-up (laughRank)
     {
       const gw = (k) => (G[k] ? G[k].w : 0);
@@ -2824,6 +2893,51 @@ export class Person {
    * the time): a smirk, a brow raise, one brow up, surprise, pressed lips, a frown, a shy look down, and the
    * sceptic's eye-roll in dead air. Returns the shape offsets for this frame.
    */
+  /** arm-v2: each elbow's place from its shoulder in the chest's frame, and the wrist's in the seat's, after the arm pass. */
+  keepElbows(now, key) {
+    const b = this.rig.b, H = (this._eh ||= { key: '', at: -9, e: [new THREE.Vector3(), new THREE.Vector3()], w: [new THREE.Vector3(), new THREE.Vector3()], h: [new THREE.Quaternion(), new THREE.Quaternion()] });
+    H.h[0].copy(b.lHand.quaternion); H.h[1].copy(b.rHand.quaternion);
+    const qi = worldQuat(b.spine2, _hq[0]).invert();
+    for (let side = 0; side < 2; side++) {
+      H.e[side].copy(worldPos(side ? b.rFore : b.lFore, _hv[0])).sub(worldPos(side ? b.rUpper : b.lUpper, _hv[1])).applyQuaternion(qi);
+      H.w[side].copy(worldPos(side ? b.rHand : b.lHand, _hv[0])).applyMatrix4(this.rig.inv);
+    }
+    H.key = key; H.at = now;
+  }
+  /** arm-v2: see the arm pass. Turns each resting elbow from last frame's place towards this frame's, at most 6 degrees a frame. */
+  holdElbows(now) {
+    const H = this._eh, rig = this.rig, b = rig.b;
+    const dt = now - (H ? H.at : -9);
+    const TR = typeof window !== 'undefined' && window.__armTrace && window.__armTrace.includes(this.name) ? this._tr : null;
+    if (TR) TR.push('H:' + (H ? H.key + '/' + dt.toFixed(3) : 'none'));
+    if (!H || dt <= 0 || dt > 0.1) return; // (from whatever the arms did last frame: a gesture handing them back to the rest too)
+    const lim = 3.14 * dt, q = worldQuat(b.spine2, _hq[0]);
+    for (let side = 0; side < 2; side++) {
+      const up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
+      const W = worldPos(ha, _hv[2]);
+      // (and the wrist from last frame's place towards this frame's at most 0.6 m a second: a pass that drew a hand back
+      // towards its own side one frame and not the next moved it 7 cm in a frame)
+      const Wp = _hv[3].copy(H.w[side]).applyMatrix4(rig.seat.matrixWorld), dW = Wp.distanceTo(W), wl = 0.6 * dt;
+      if (TR) TR.push('w' + side + ':' + dW.toFixed(3));
+      if (dW > 0.25) continue; // (somewhere else altogether: no hold)
+      const moveW = dW > wl;
+      if (moveW) W.lerpVectors(Wp, W, wl / dW);
+      const S = worldPos(up, _hv[4]), dNow = worldPos(fo, _hv[5]).sub(S).normalize(), dPrev = _hv[6].copy(H.e[side]).applyQuaternion(q).normalize();
+      const ang = dNow.angleTo(dPrev), hAng = 2 * Math.acos(Math.min(1, Math.abs(ha.quaternion.dot(H.h[side])))), hNow = _hq[1].copy(ha.quaternion);
+      // (the hand's own turn on the wrist, towards this frame's at the same rate: a wrist limit or a roll let go of, a frame
+      // to the next, turned a resting hand 15-20 degrees)
+      if (hAng > lim) { const keepH = _hq[2].copy(ha.quaternion), before = armCollisions(this); ha.quaternion.copy(H.h[side]).slerp(hNow, lim / hAng); rig.upd(ha); if (TR) TR.push('h' + side + ':' + (hAng * 57.3).toFixed(1)); if (armCollisions(this) > before) { ha.quaternion.copy(keepH); rig.upd(ha); } }
+      if (TR) TR.push('a' + side + ':' + (ang * 57.3).toFixed(1));
+      if (ang <= lim && !moveW) continue;
+      const want = ang <= lim ? _hv[7].copy(dNow) : _hv[7].copy(dPrev).applyQuaternion(_hq[1].identity().slerp(_hq[2].setFromUnitVectors(dPrev, dNow), lim / ang)); // (towards this frame's answer, lim of the way)
+      const keep = [up.quaternion.clone(), fo.quaternion.clone(), ha.quaternion.clone()], before = armCollisions(this), inBefore = elbowBad(this, side, false, true);
+      rig.solve(up, fo, ha, W, want, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
+      rig.upd(up);
+      if (!inBefore && elbowBad(this, side, false, true)) { if (TR) TR.push('in' + side); up.quaternion.copy(keep[0]); fo.quaternion.copy(keep[1]); ha.quaternion.copy(keep[2]); rig.upd(up); continue; } // (nor the elbow into the body)
+      if (TR) TR.push('c' + side + ':' + before + '>' + armCollisions(this));
+      if (armCollisions(this) > before) { up.quaternion.copy(keep[0]); fo.quaternion.copy(keep[1]); ha.quaternion.copy(keep[2]); rig.upd(up); }
+    }
+  }
   /** An elbow's angle (0 left, 1 right), radians. */
   armAngle(side) {
     const b = this.rig.b, S = worldPos(side ? b.rUpper : b.lUpper, _v[0]), E = worldPos(side ? b.rFore : b.lFore, _v[1]), H = worldPos(side ? b.rHand : b.lHand, _v[2]);
