@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 07:33 UTC.
+**Updated:** 2026-10-19 07:54 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -217,3 +217,12 @@ Flat. The club's laugh still "one person" in the strip (a probe at t 13.0 with t
 APK `~/apk-out/encore-real-v1-pre-emu.apk` (x86) on the Android TV emulator box (720p, -gpu host), then the box stopped.
 - **crowdtest, club cycle, steady state:** 30 fps (the cap), p50 33.3 ms, p90 34–37 ms with every real-v1 term on; the same with `&ab=nodof`, `nohair2`, `noreal`, `nograde` and all of them off. dynres steps to 640×360 after the load jank in every variant, real-v1 on or off (the one run that held 800×450 was a warm second run), so the emulator shows no cost from real-v1; the TV decides (tv-sweep round 10).
 - **Scripted club set** (a fake phone with scripts/standup-demo.json, Vik): bill → live → 3:39 set, 43 lines → cut sheet with the MC's debrief. In-app `[crowd]` fps during the set while recording the screen: 23–27 fps (46 calls / 79.8k tris on the wide, 56 / 134k on close-ups). Frames and a 60 s clip: `docs/android-emu/real-v1-2026-10-19/`.
+
+### 2026-10-19 07:54 UTC: round 13 (seed 1013): life-v1 step 8 (the club's tables laugh with their hands), the bar glow
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 6 | 5 | 5 | 4 | 6 | 6 | 5 | 2 | no |
+| theatre | 4 | 4 | 4 | 3 | 4 | 5 | 3 | 1 | no |
+| openmic | 6 | 6 | 5 | 4 | 4 | 4 | 4 | 2 | no |
+
+The club's reactions rose to 5 (3 for six rounds) and its life to 6; club light 6–7. Top tells: the club's laugh gestures read as distress (hand over an eye, hand to the temple) rather than amusement; the theatre still the weakest (a step-like laugh at t 12.6, the class-photo front row, the house as cut-outs); open mic hair dither and teeth "like braces"; a red bokeh dot and a hard diagonal line at the right edge of the club's "from the stage wing" setup. Gesture and theatre notes sent to the motion agent.
