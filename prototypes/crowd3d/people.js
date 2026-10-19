@@ -694,6 +694,8 @@ const LIFE_OFF = (() => {
 // &laugh=old brings back life-v1's layers and the unsmoothed blends (the A/B)
 const LAUGH_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('laugh') === 'old';
 const SMOOTH = !LAUGH_OLD;
+// (&lv2off=lb,hold,xfade,post,arm,torso,boost: one laugh-v2 part at a time off, for bisecting a gate)
+const LV2_OFF = new Set((typeof location !== 'undefined' ? new URLSearchParams(location.search).get('lv2off') || '' : '').split(',').filter(Boolean));
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
 // (a check view's one gesture for every response: &gesture=clap)
 // (&reuse=0: every arm gets the full anatomy pass every frame, for A/B checks)
@@ -1470,9 +1472,9 @@ export class Person {
     if (c.lb > 0.02 && c.L) {
       // this laugh's take: which capture (chuckle, laugh or big laugh, this gender's or the other's), from where in it,
       // at what speed and size, and mirrored or not
-      const Tk = c.L.take, w = (SMOOTH ? 1.35 : 1) * Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
+      const Tk = c.L.take, w = (SMOOTH && !LV2_OFF.has('boost') && !(seated && this.o.table && this.o.neighbour) ? 1.35 : 1) * Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
       let fadeIn = 1;
-      if (SMOOTH) {
+      if (SMOOTH && !LV2_OFF.has('xfade')) {
         // (laugh-v2: a new laugh's capture cross-fades from the one playing over 0.8 s, never a cut between two takes)
         const id = c.L.id;
         if (id !== this._lxId) { if (this._lxW > 0.02) this._lxOld = { Tk: this._lxTk, reach: this._lxReach, t0: this._lxT0, w: this._lxW, at: now }; this._lxId = id; }
@@ -1486,6 +1488,16 @@ export class Person {
     rig.model.position.set(0, seated ? this.o.seatH - CHAIR_H : 0, seated ? CHAIR_Z : 0);
     rig.additive = true;
     return { walking, seated };
+  }
+
+  /** Whether an upper arm points within 20 degrees of the bind pose's (out and down, as bindcheck measures it; laugh-v2). */
+  _nearBind() {
+    const { rig } = this, b = rig.b, D = (Person._bd ||= [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]);
+    for (const [u, f, sx] of [[b.lUpper, b.lFore, 1], [b.rUpper, b.rFore, -1]]) {
+      D[0].setFromMatrixPosition(u.matrixWorld).applyMatrix4(rig.inv); D[1].setFromMatrixPosition(f.matrixWorld).applyMatrix4(rig.inv);
+      if (D[1].sub(D[0]).normalize().angleTo(D[2].set(sx * 0.722, -0.692, 0)) < 0.35) return true;
+    }
+    return false;
   }
 
   /** A posture angle low-passed by this frame's factor (_fE, set in update; laugh-v2). */
@@ -1770,7 +1782,7 @@ export class Person {
       if (sc > Ls) { Ls = sc; L = r; }
       if (r === this._Lk) { Lp = r; Lps = sc; }
     }
-    if (SMOOTH) {
+    if (SMOOTH && !LV2_OFF.has('hold')) {
       // (laugh-v2: two laughs overlapping in the room flipped a person between their takes frame by frame; the one they
       // are in is kept until another is clearly bigger)
       if (Lp && L !== Lp && Lps > 0.75 * Ls - 0.03) L = Lp;
@@ -1792,7 +1804,7 @@ export class Person {
     if (F.both) G.armsUp = { w: F.both, rate: 1, phase: 0, hand: 1, high: 0.5 };
     const gw = (k) => (G[k] ? G[k].w : 0);
     let lb = F.lb ?? (L ? L.body : 0);
-    if (SMOOTH && F.lb === undefined) { // (laugh-v2: the laugh's level eases, in over ~0.3 s a step and out over ~0.5 s: no snap into or out of it)
+    if (SMOOTH && F.lb === undefined && !LV2_OFF.has('lb')) { // (laugh-v2: the laugh's level eases, in over ~0.3 s a step and out over ~0.5 s: no snap into or out of it)
       const dt = now - (this._lbT ?? -1e9), s0 = this._lbS ?? 0;
       this._lbT = now; this._lbS = dt > 0 && dt < 0.5 ? s0 + (lb - s0) * (1 - Math.exp(-dt / (lb > s0 ? 0.3 : 0.5))) : lb; lb = this._lbS;
     }
@@ -2104,7 +2116,8 @@ export class Person {
       if (!LIFE_OFF.comp && isLaugh) {
         const bt = SMOOTH ? 0.85 : L.bout ?? 1, hv = Math.min(1, LIFE_OFF.laugh ? lb * 1.6 : Math.sqrt(lb) * 1.25) * (0.6 + 0.4 * big) * bt + (lb < 0.05 ? 0.5 * (L.smileOnly || 0) * clamp01(L.smile * 2.5) : 0);
         const LB = LIFE_OFF.laugh ? 1 : 1.7; // (round 06: the laugh too small at TV distance: the body's share up by 40%)
-        comp = SMOOTH ? 0.7 * hv * ((L.bout ?? 1) - 0.6) * LB : hv * (ha - 0.3) * LB; heaveS = hv * (0.04 + 0.08 * haB + (SMOOTH ? 0.06 * ((L.bout ?? 1) - 0.6) : 0)) * LB; // (laugh-v2: the chest and shoulders go with each bout of laughter, about once a second, eased over 0.2 s, not with each "ha": round 16 found the laugh too still) headPitch -= (st === 'over' || st === 'nose' ? -0.02 : 0.03) * hv * haB; // (laugh-v2: no heave of the chest on each "ha"; the shoulders up with the laugh, eased) // (the head goes back on each "ha", not down: a head dropping with an open mouth read as pain)
+        const bh = SMOOTH && !(o.table && o.neighbour) ? (L.bout ?? 1) - 0.6 : 0; // (not at a two-top: the planted hands' arms flexed with it, a hand in and out behind the candle)
+        comp = SMOOTH ? 0.7 * hv * bh * LB : hv * (ha - 0.3) * LB; heaveS = hv * (0.04 + 0.08 * haB + (SMOOTH ? 0.06 * bh : 0)) * LB; // (laugh-v2: the chest and shoulders go with each bout of laughter, about once a second, eased over 0.2 s, not with each "ha": round 16 found the laugh too still) headPitch -= (st === 'over' || st === 'nose' ? -0.02 : 0.03) * hv * haB; // (laugh-v2: no heave of the chest on each "ha"; the shoulders up with the laugh, eased) // (the head goes back on each "ha", not down: a head dropping with an open mouth read as pain)
         if (!LIFE_OFF.laugh) lean += lb * (st === 'back' ? -0.08 : st === 'over' ? 0.06 : st === 'turn' ? -0.03 : 0); // (the torso goes with the take: back, or forward on a doubled-over one)
         // (round 09: everyone the laugh reaches shows it in the body, not one to three per strip: the shoulders up and the
         // weight back, a little, a smile's worth for those who only smile)
@@ -2173,7 +2186,7 @@ export class Person {
     // the spine's lean and turn below are taken back out of them; a laugh's lean no longer drops the knees)
     // (laugh-v2: the posture's angles low-passed over 0.1 s, so a switch of take, style, gesture or look eases over a few
     // frames instead of popping in one; a jump in time (a cut in a still view, the first frame) takes the new pose at once)
-    if (SMOOTH) { const fdt = now - (this._fT ?? -1e9); this._fT = now; this._fE = this.force || !(fdt > 0 && fdt < 0.5) ? 1 : 1 - Math.exp(-fdt / 0.1); lean = this._lp('lean', lean); turn = this._lp('turn', turn); side = this._lp('side', side); }
+    if (SMOOTH && !LV2_OFF.has('post')) { const fdt = now - (this._fT ?? -1e9); this._fT = now; this._fE = this.force || !(fdt > 0 && fdt < 0.5) ? 1 : 1 - Math.exp(-fdt / 0.1); lean = this._lp('lean', lean); turn = this._lp('turn', turn); side = this._lp('side', side); }
     if (OFF.lean) { lean = 0; turn = 0; side = 0; }
     const keepLegs = (stand < 0.3 || o.stand || (OV && stand > 0.9)) && !walk && !(T && !T.hidden) && b.lThigh && b.rThigh; // (standing too: the feet stay planted)
     if (keepLegs) _qk[0].copy(b.pelvis.quaternion).multiply(b.spine.quaternion);
@@ -2186,7 +2199,7 @@ export class Person {
     rig.euler(b.spine1, lean * 0.32 + 0.04 * (1 - stand) * seatK + comp * 0.16 - onsetUp * 0.02, turn * 0.25 + yaw * 0.2 * ys, side * 0.35); // (the look's share on Spine1: the legs hang from Spine)
     rig.euler(b.spine2, lean * 0.3 + 0.03 * (1 - stand) * seatK - breath * 0.5 - breathC + comp * 0.13 - onsetUp * 0.05, turn * 0.25 + yaw * 0.3 * ys, 0);
     let pitch = gPitch * look + headPitch + nod - lean * 0.55;
-    if (SMOOTH) { pitch = this._lp('pitch', pitch); yaw = this._lp('yaw', yaw); headRoll = this._lp('roll', headRoll); }
+    if (SMOOTH && !LV2_OFF.has('post')) { pitch = this._lp('pitch', pitch); yaw = this._lp('yaw', yaw); headRoll = this._lp('roll', headRoll); }
     if (OFF.look) { pitch = -lean * 0.55; yaw = 0; headRoll = 0; }
     rig.euler(b.neck, pitch * 0.4, yaw * (0.4 - 0.2 * ys), headRoll * 0.4);
     rig.euler(b.head, pitch * 0.6, yaw * (0.6 - 0.3 * ys), headRoll * 0.6);
@@ -2195,7 +2208,7 @@ export class Person {
     let shrug = lb * (st === 'shake' ? 0.26 : 0.13 + 0.08 * clamp01((lb - 0.5) / 0.4)) * haS + 0.14 * (this._laughBig || 0) + 0.08 * haS * (isLaugh ? lb : 0) + (this._chuck || 0) * (0.06 + 0.08 * haS) + clapW * 0.03 + Math.sin(Math.PI * coat) * 0.12 + (tk ? tk.laugh : 0) * W.talk * 0.08 * ha + breathS + heaveS + 0.14 * onsetUp;
     // (at a two-top the forearms are on its top: the shoulders shake with the laugh, a third as far, not up and back off them)
     const shrugK = o.table && o.neighbour && stand < 0.3 && this._planted ? (LIFE_OFF.laugh ? 0.5 : 0.75) : 1;
-    if (SMOOTH) shrug = this._lp('shrug', shrug);
+    if (SMOOTH && !LV2_OFF.has('post')) shrug = this._lp('shrug', shrug);
     if (OFF.shrug) shrug = 0;
     rig.euler(b.lClav, 0, -0.12 * clapW, shrug * shrugK - 0.1 + 0.14 * upW);
     rig.euler(b.rClav, 0, 0.12 * clapW, -shrug * shrugK + 0.1 - 0.14 * upW);
@@ -2239,7 +2252,7 @@ export class Person {
     if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps && this.near && this.near.length) clearHeads(this);
     // (laugh-v2: the chest, neck and head turn at most 330 degrees a second, as the arms do below: a clamp letting go, a
     // take or a look switching swung the upper body 15-22 degrees in one frame; Spine itself is left alone, the legs hang from it)
-    if (SMOOTH && !this.force && b.spine1) {
+    if (SMOOTH && !LV2_OFF.has('torso') && !this.force && b.spine1) {
       const dtT = now - (this._tmT ?? -1e9); this._tmT = now;
       const TB = (Person._torB ||= ['spine1', 'spine2', 'neck', 'head']), TQ = (this._tm ||= TB.map(() => new THREE.Quaternion()));
       const ok = !this.fresh && this._tmOk && dtT > 0 && dtT < 0.5, lim = 3.14 * dtT; // (180 degrees a second: at the emulator's 15-20 fps a 330 limit still let a head turn 25 degrees between two frames, round 16)
@@ -2744,14 +2757,14 @@ export class Person {
     // flipping sides, a rest handed over) swung a whole arm 40-105 degrees in one frame, and a resting arm's solve could
     // flip between two answers frame by frame. The eased arms are kept only if they hit nothing the solved ones didn't
     // and a resting or planted hand stays on its rest (within 2 cm); otherwise the solved pose stands.)
-    if (SMOOTH && !this.force && b.lUpper) {
+    if (SMOOTH && !LV2_OFF.has('arm') && !this.force && b.lUpper && !(T && !T.hidden) && walk < 0.05 && stand < 0.05 && !coat && !o.stand && !(this._planted || /^(tableOne|tableBoth|forearmsTable)$/.test(this._restKind || ''))) { // (nor for hands on a table top: eased, a planted hand turned in and out behind the candle, handocc) // (not while getting up, sitting down or walking: the captures have the arms)
       const dtA = now - (this._amT ?? -1e9); this._amT = now;
       const AB = (Person._armB ||= ['lClav', 'rClav', 'lUpper', 'rUpper', 'lFore', 'rFore', 'lHand', 'rHand']), AQ0 = (this._am ||= AB.map(() => new THREE.Quaternion()));
       const AQ1 = (this._am1 ||= AB.map(() => new THREE.Quaternion()));
       const ok = !this.fresh && this._amOk && dtA > 0 && dtA < 0.5, lim = 5.76 * dtA; // (330 degrees a second, in radians)
       let moved = false;
       if (ok) {
-        const before = armCollisions(this) + limbs(this), hL = NV().setFromMatrixPosition(b.lHand.matrixWorld), hR = NV().setFromMatrixPosition(b.rHand.matrixWorld);
+        const bind0 = this._nearBind(), before = armCollisions(this) + limbs(this), hL = NV().setFromMatrixPosition(b.lHand.matrixWorld), hR = NV().setFromMatrixPosition(b.rHand.matrixWorld);
         for (let i = 0; i < AB.length; i++) {
           const bn = b[AB[i]]; if (!bn) continue;
           AQ1[i].copy(bn.quaternion);
@@ -2763,7 +2776,7 @@ export class Person {
           b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
           const rest = this._resting || this._planted;
           const off = rest && (NV().setFromMatrixPosition(b.lHand.matrixWorld).distanceTo(hL) > 0.02 || NV().setFromMatrixPosition(b.rHand.matrixWorld).distanceTo(hR) > 0.02);
-          if (off || armCollisions(this) + limbs(this) > before) {
+          if (off || (!bind0 && this._nearBind()) || armCollisions(this) + limbs(this) > before) {
             // (the solved arms back, but the hands' own easing kept when it hits nothing: a hand's turn doesn't move the wrist)
             for (let i = 0; i < 6; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]);
             b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
@@ -2773,7 +2786,7 @@ export class Person {
       }
       for (let i = 0; i < AB.length; i++) if (b[AB[i]]) AQ0[i].copy(b[AB[i]].quaternion);
       this._amOk = true;
-    }
+    } else this._amOk = false; // (back from traffic: the next frame takes its arms as solved)
     // how visibly they are laughing (smoothed over ~0.8 s), for the director's choice of close-up (laughRank)
     {
       const gw = (k) => (G[k] ? G[k].w : 0);

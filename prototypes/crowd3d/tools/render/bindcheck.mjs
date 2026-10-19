@@ -14,7 +14,7 @@ try {
     const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`${process.env.BASE || "http://localhost:8091/index.html"}?capture=1&hud=0&preset=${preset}&venue=${venue}&state=${mode}`, { timeout: 240000 });
+    await page.goto(`${process.env.BASE || "http://localhost:8091/index.html"}?capture=1&hud=0&preset=${preset}&venue=${venue}&state=${mode}${process.env.EXTRA || ""}`, { timeout: 240000 });
     await page.waitForFunction(() => typeof window.__renderAt === 'function', null, { timeout: 240000 });
     const found = [];
     for (const t of times) {
