@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 05:05 UTC.
+**Updated:** 2026-10-19 04:40 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -137,7 +137,7 @@ Top tells: the club's back of house as flat black cut-outs; laughs too small (mo
 
 The box was stopped by the usage limit at about 17:00 UTC on 18 Oct (the motion agent mid step 3, uncommitted) and restarted at 04:15 UTC on 19 Oct; the user set a new freeze, 16:30 UTC 19 Oct, and the order of fixes above.
 
-### 2026-10-19 05:05 UTC: round 07 (seed 1007): the club's house, the theatre's depth, mouths; life-v1 step 3
+### 2026-10-19 04:35 UTC: round 07 (seed 1007): the club's house, the theatre's depth, mouths; life-v1 step 3
 Changes:
 - **Club back of house (the user's item 1).** The cut-outs were the haze: at 3–20 m (and 3.5–12 m in close-ups) it painted everyone behind row 2 its own colour, and no rim or house-light setting reached them through it (tested: `&rim=10`, `&hemik=40`, depth floors: no change until the fog went). Now (look.js club): haze 4–34 m wide and 4–24 m in close-ups (`fogClose`, new per-venue), a warm low house glow (hemi 21, sky 0x6a4a36), the rows falling 0.2 a row to 0.65, and the close-ups' crowd dim 0.4 (was 0.12). The rows behind read as a full room of dimly lit people in the wide and the mids; the bar crowd stays backlit. `&look=stagedark` gives the old club. (Round 07 had the first step, 0.3 / 0.45, which still left the far band black; the second step came after the round.)
 - **Theatre depth (item 3, the light half):** the rows fall 0.25 a row to 0.35 (was 0.12 to 0.7, the flat lifted house) under haze at 6–32 m. The side key's shift is halved in the theatre (its house-left block ran hot red).
