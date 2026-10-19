@@ -1,131 +1,272 @@
-# Demo video: script, shot list and capture checklist
+# Demo video: shot list, voiceover and capture plan
 
-**Target 2:50, hard limit 2:59** (the rules say "less than three minutes"). The video must be public on YouTube or Vimeo, in English, with no third-party trademarks and no copyrighted music. The judges may not run the app, so this video, the Devpost text and the gallery carry the score (`docs/brief.md`).
+**Final plan, 2026-10-19.** It replaces the earlier plan, which had the user performing live on camera. Now the lead records the TV on the Android TV emulator with the scripted test phone, and the user records a voiceover over it.
 
-**Where it's filmed.**
-- **The TV:** the Android TV emulator at 720p on `BOX=android`, the Android build of Encore. The FAQ says "Android TV Emulator or the Fire TV/Vega simulator is fine". We use the emulator rather than the Vega simulator because the Linux Vega Virtual Device has no WebView, and the live 3D room runs in the WebView (`docs/friction-log.md`, 2026-10-11).
-- **The Vega build:** a short insert from the Vega Virtual Device shows the same app on Vega OS, labelled as such.
-- **The Google TV:** it doesn't count as a Fire TV device, so it doesn't appear.
+**Length:** target 2:50; the hard limit is 2:59, because the rules say "less than three minutes".
 
-**Honesty (rule 6: nothing is faked).**
-- The set is performed live by the user into a real phone. The room reacts only to what the engine measured.
-- The dead bit stays in. If a take gets silence where we hoped for a laugh, the silence is what we show.
-- No reaction is added, moved, looped or re-timed. The scripted test phone (`fake-phone`) is never used for footage in this video.
-- If the MC is unavailable in a take, the screen says why, and we keep it or retake. We never paste in a line from another take.
-- The emulator's frame rate is what it is: about 28 fps at 720p (`docs/android-emu/720p-test/stats.txt`). Don't speed up or interpolate it.
+**Rules for the video:**
+- public on YouTube or Vimeo;
+- in English;
+- no third-party trademarks and no copyrighted music (`docs/brief.md`).
 
-## Sources and labels
+The judges may not run the app, so this video, the Devpost text and the gallery carry the whole score. The script is built to hit each Stage 2 criterion on purpose (the table below).
 
-| Code | Source | How it's captured | On-screen label |
+## Who does what
+
+| Part | Who | Where |
+|---|---|---|
+| **EMU** clips: every TV shot | the lead | The Android TV emulator, 720p, on `BOX=android`, with the final emulator APK (`~/apk-out/encore-final-emu.apk`). The set is performed by the scripted test phone through `~/emu/qa.sh`. |
+| **VO**, the voiceover | the user | Read from the script below, recorded on a quiet mic, and laid over the edit. |
+| **GFX**: the title, the problem card, the architecture, the venue ladder, the judge chart, the Appstore card, the end card | the user, in the editor | The sources are named per shot. Every number comes from a doc in the repo. |
+| **VVD** insert (optional) | the lead, or reuse | `docs/vega/encore-vvd-take.mp4` (on disk; the repo ignores docs mp4s) or a fresh `apps/vega/tools/vvd.sh record`. |
+| **PHONE** insert (optional) | the user | The phone page on the user's own Android phone, if the relay is reachable that day. Otherwise it's left out (see shot 7). |
+
+**Why the emulator.** The FAQ says an "Android TV Emulator or the Fire TV/Vega simulator is fine". We use the Android TV emulator because the Linux Vega Virtual Device has no WebView, and the live 3D room runs in the WebView (`docs/friction-log.md`, 2026-10-11). The Google TV is retired and doesn't appear: it isn't a Fire TV device or an emulator.
+
+## Honesty in this video (rule 6: nothing is faked)
+
+The set in this video is performed by our **scripted test phone** (`services/relay/src/fake-phone.ts` with `services/relay/scripts/standup-demo.json`), not by a person.
+- **What it is:** a program that joins the TV's room like a real phone. It sends the same events a real phone sends:
+  - voice on and off;
+  - each line's timing and levels;
+  - the recogniser's words, as in the phone's "service" words mode.
+- **How the script shapes its timing:** setups run on; punchlines get a louder ending and a held beat; bits 3 and 4 are delivered "dying" (rushed, no beats).
+- **What it decides:** nothing. **The TV's engine decides every reaction, live, from those events**, exactly as for a real phone, and the content judge on Bedrock scores the words live.
+
+So the video must say this, on screen and in the voiceover:
+- **A persistent label** in the corner during every set shot: "scripted test phone · reactions computed live".
+- **One voiceover sentence** (V4 below) says it plainly.
+- **The phone isn't re-voiced.** Nobody reads the script's lines over the take, because that would look like a live performer. The lines appear as subtitles instead, labelled "test phone:", timed from the fake phone's own log (`[phone]` lines).
+- **No edits to the room:**
+  - no reaction is added, moved, looped, re-timed or sweetened;
+  - the dead bits and the heckle stay in;
+  - if the MC is unavailable in a take, the screen says why, and we keep that or retake; we never paste a line from another take.
+- **The emulator's frame rate is what it is.** Don't speed it up or interpolate it.
+- **The video's description** says: "Filmed on the Android TV emulator at 720p (allowed by the hackathon FAQ). The set is performed by a scripted test phone that sends the same events as the phone page; every reaction, caption and MC line is computed live. The Vega insert is the Vega Virtual Device."
+
+## The four criteria, shot by shot
+
+| Criterion | Where the video makes the case |
+|---|---|
+| **Potential impact** (the customer and the need, an audience beyond the hackathon) | Shot 4 and V2: the problem and the people (comics, open-mic performers, speakers practising a talk, poets, singers). Shot 22 and V9: the route to the Fire TV Appstore. |
+| **Quality of the idea** (creative, not obvious) | Shots 5–8 and V3: voice, D-pad and the TV in one flow (the judges' own "creative Fire TV" example). Shots 9–15: a live generated crowd that reacts only to measured moments. Shots 16–18: an honest MC. |
+| **Design** (a complete, coherent product, intuitive on a TV) | One unbroken product loop: bill → set → cut sheet → green room, all on OK, Back and the D-pad. Shots 5, 9, 15, 16 and 18 show each remote key doing one obvious thing. |
+| **Tech implementation** (incl. AWS Builder) | Shots 19–21 and V8: the pure engine, React Native for Vega plus Android TV, Three.js in the WebView, Strands, Bedrock (GLM-5 on the OpenAI-compatible endpoint), Polly, the honesty guard and the measured judge. Shot 22: the Vega Virtual Device insert. |
+
+## Shot list and voiceover
+
+Times are positions in the finished video. "Real time" means one continuous piece of a take, with no cut inside it. Where we skip forward in a set, the lower-third set clock shows the jump, so the edit is visible. **VO** lines are the user's voiceover (the full read-through script is in the next section). **Never put VO over the MC's voice**: the MC is the product.
+
+### 0:00–0:10 · Cold open
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 1 | 0:00–0:05 | EMU | The club, live. A punchline lands (subtitle "test phone: He didn't say which winter."). After a beat, the director cuts to the floor: the front tables laugh, and the caption top-left gives the reason. Real time from the line's end to the laugh. | The room's laugh, as recorded. |
+| 2 | 0:05–0:10 | EMU | A rushed line from a dying bit: the wide holds and nobody laughs. | Room tone, then **V1**. |
+
+### 0:10–0:15 · Title
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 3 | 0:10–0:15 | GFX over EMU | The club wide, dimmed. **ENCORE** in Big Shoulders Display, then "A real audience, honestly scored." Small line: "Fire TV · Amazon Bedrock · Strands Agents · Amazon Polly". | Room tone. |
+
+### 0:15–0:30 · The problem, and who it's for
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 4 | 0:15–0:30 | EMU + GFX | The bill's room preview, empty seats filling. Over it, five words one at a time: **comics · open-mic performers · speakers · poets · singers**. Then "They all rehearse alone." | **V2**. |
+
+### 0:30–0:50 · One flow: the remote, the phone, the TV
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 5 | 0:30–0:38 | EMU | The bill. The D-pad steps the venue Open Mic → Comedy Club → Theatre → Arena, and the room behind changes each time (30 seats to 20,000). Then back to the Comedy Club; the MC row set to Sarcastic. Label: "Android TV emulator · 720p". | **V3**, first half. |
+| 6 | 0:38–0:44 | EMU | The bill's foot: the QR code and room code, then the phone joins: "Aman's phone is on the table and listening · Press OK to go live". | **V3**, second half. |
+| 7 | 0:44–0:47 | PHONE (optional) | The phone page on a real phone: "Start listening", the words toggle, and "Your audio never leaves this phone…". **If it isn't filmed, drop this shot** and hold shot 6. The scripted phone has no screen to show. | No VO. |
+| 8 | 0:47–0:50 | EMU | OK. | Room tone. |
+
+Supers during 5–8 (lower left, one at a time): "The remote runs the show." · "The phone is the microphone: it sends timing and levels, never audio."
+
+### 0:50–1:40 · The set at the Comedy Club (about 50 s from one take)
+
+The label "scripted test phone · reactions computed live" stays in a corner throughout. Subtitles carry the script's lines ("test phone: …").
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 9 | 0:50–0:57 | EMU | The MC's intro card over the room, written by GLM-5 for this set. | **The MC's voice** (Brian, Polly). No VO. |
+| 10 | 0:57–1:10 | EMU | The first bit: the landlord. The room listens; "He didn't say which winter." lands, with a caption naming the reason ("the punch turns 'winter'" or whatever the take shows). The tag right after it ("This winter, I'm hoping for global warming.") gets a bigger laugh. | **V4** over the listening wide, before the punchline; then the room. |
+| 11 | 1:10–1:18 | EMU | A callback or a list of three lands ("Hungry, cricket, and disappointed in me."): different people laugh, and the caption names the pattern. | The room. |
+| 12 | 1:18–1:28 | EMU | **The dead bits** (bits 3 and 4 die by script). Rushed lines, no beat; the wide holds. Past the club's patience (3.5 s), the room gets restless, with a murmur caption. | **V5**, then quiet room tone. |
+| 13 | 1:28–1:35 | EMU | **The heckle** (the club heckles after two dead bits): the title card with the MC's line, written live, and "HECKLE · 2 dead bits in a row". | Room tone. Heckle cards are text only. |
+| 14 | 1:35–1:40 | EMU | The set ends on the script's last line plus 4 s (as if the performer pressed OK). The finale: house lights up, with applause sized by the share of lines the room reacted to. | Applause. |
+
+If a take doesn't heckle, keep its real silence in shot 12 and drop shot 13. Never import a heckle from another take.
+
+### 1:40–2:00 · The cut sheet and the MC's debrief
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 15 | 1:40–1:52 | EMU | The cut sheet. A slow zoom in the edit across the strip: gold cuts are laughs, a striped tile is dead air past 3.5 s. | **The MC's debrief, spoken** (Brian). No VO. |
+| 16 | 1:52–2:00 | EMU | The ledger "Measured, not judged": landed per minute, longest dead air and where, pace, fillers, the content row (patterns counted, and "the MC's model read N in time", labelled an estimate). The MC's note, with its source line "written by the MC (GLM-5 on Amazon Bedrock) from the measured set · an opinion". | **V6** (after the debrief ends). |
+
+### 2:00–2:08 · The green room
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 17 | 2:00–2:04 | EMU | Back opens the green room: the sets ledger (laughs per minute per set) and "Hold OK to talk". | **V7**. |
+| 18 | 2:04–2:08 | EMU | **Only if captured (see request R4):** OK, the question, then the MC's spoken answer. **Otherwise:** hold on the ledger and the MC's last line. | The MC's voice if shown, else room tone. |
+
+### 2:08–2:34 · How it's built, and why it's honest
+
+| # | Time | Src | Picture | Super |
+|---|---|---|---|---|
+| 19 | 2:08–2:18 | GFX | The architecture from `README.md`'s Mermaid diagram, built up in three steps: **(1)** the phone → "events, never audio" → the couch-link relay → the TV; **(2)** the crowd engine (pure TypeScript) → the screens, plus `crowdDrive()` at 10 Hz → the live 3D room in the WebView; **(3)** the TV → the MC service (Strands) → Amazon Bedrock (GLM-5) → the honesty guard → Amazon Polly (a presigned URL the TV streams). Side branch: the content judge (Ministral 3 8B on Bedrock plus a CPU humour model). | "One pure engine decides every reaction." · "The MC is the model, or it's silent." |
+| 20 | 2:18–2:25 | GFX | The venue ladder, each room's bar: Open Mic 0.42 → Club 0.55 → Theatre 0.66 → Arena 0.75. One flat line across all four: "house standard 0.55". | "A tougher venue changes the crowd, never the score." |
+| 21 | 2:25–2:34 | GFX | The judge chart: Spearman ρ against human ratings on 1,000 held-out jokes. Fast LLMs alone: −0.02 to 0.05 (chance). The "longer punchline" baseline: 0.10. Our mix: 0.34. Small line: "verdict on the TV in about 0.25–0.3 s (p50)". | "We measured our joke judge. Fast models alone were at chance." |
+
+V8 runs across 19–21.
+
+Sources for the numbers:
+- shot 20: `docs/concept-encore.md`, Venues;
+- shot 21: `docs/judge-calibration.md`, Results, for ρ and the baselines;
+- the p50 in shot 21: the emulator's 245 ms (2026-10-13, `docs/handoff/README.md`, "Late update") and the retired Google TV's 285–315 ms (`docs/tv-test-log.md`, round 5). **TODO(lead R2):** replace both with the final take's p50.
+
+### 2:34–2:46 · On Fire TV, and the way to the Appstore
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 22 | 2:34–2:42 | VVD | The same app on the Vega Virtual Device: the bill, then a live set with the MC's voice. Label: "Vega Virtual Device (Vega OS simulator) · the 3D room needs a WebView the Linux simulator lacks, so the room shows licensed video plates there". If no VVD clip is used, show a GFX card with the two builds instead. | **V9**. |
+| 23 | 2:42–2:46 | GFX | The Appstore card: "Fire OS build (Android) · Vega OS build (React Native for Vega) · the phone needs no install · acts and venues are JSON packs". Small line: "Not yet tested on a Fire TV device." | **V9**, end. |
+
+### 2:46–2:52 · Close
+
+| # | Time | Src | Picture | Sound |
+|---|---|---|---|---|
+| 24 | 2:46–2:52 | EMU → GFX | The finale wide, then the end card: "Encore · A real audience, honestly scored". "Open source (MIT): couch-link and the crowd engine". "Amazon Bedrock · Strands Agents · Amazon Polly · Amazon S3 · Amazon EC2". The repo URL **[ask]**. Credits: "Laughter: 'Approx 800 Laughter Only 1' by lonemonk, freesound.org, CC BY 4.0. Avatars and motion: Microsoft Rocketbox (MIT)." | **V10**, then silence. |
+
+**Total: 2:52.**
+
+## Voiceover script (for the user to read)
+
+**Before you read:**
+- It's about 330 words, roughly two minutes at an easy pace, which leaves room for the MC and the crowd.
+- Read each block inside its window. Pause where you see "…".
+- Numbers are written as you say them.
+
+**Words to avoid in the video:**
+- "Toastmasters" (a trademark): say "speakers practising a talk" instead.
+- Any brand or real venue.
+
+**V1** (0:06–0:10)
+> Every laugh in this room was earned. So was every silence.
+
+**V2** (0:16–0:30)
+> If you perform, as a comic at an open mic, a speaker practising a talk, a poet, or a singer, you rehearse alone, into silence. A mirror can't laugh. The first time you hear a room react is the night it counts.
+
+**V3** (0:31–0:44)
+> Encore turns your TV into that room. Pick the act, the venue and the MC with the remote. Scan the code, and your phone becomes the microphone. No install. It sends timing and levels, never audio.
+
+**V4** (0:57–1:04, over the listening wide, before the punchline)
+> This set is played by our scripted test phone. It sends exactly what a real phone sends, and the room decides every reaction live, and tells you why.
+
+**V5** (1:18–1:24, as the dead bits start)
+> Dead air counts too. This club's patience is three and a half seconds… and after two dead bits, it heckles.
+
+**V6** (1:52–2:00, after the debrief ends)
+> The cut sheet shows only what was measured. The MC writes its note from those numbers. If the model is late, or our guard catches a number the set didn't produce, the MC stays silent and says why.
+
+**V7** (2:00–2:04)
+> Between sets, the MC remembers your last six sets.
+
+If shot 18 shows a real question and answer, add: "…and answers you out loud."
+
+**V8** (2:08–2:34)
+> Under the hood, one pure TypeScript engine decides every reaction. The TV app is React Native for Vega, with an Android TV build from the same code, and a live 3D crowd drawn in the TV's WebView. The MC is a Strands agent on Amazon Bedrock, using GLM-5, voiced by Amazon Polly. A tougher venue changes the crowd, never the score. And we measured our joke judge against a thousand rated jokes: fast models alone were no better than chance, so we never use them alone.
+
+**V9** (2:34–2:46)
+> Fire TV sticks run Fire OS, so our Android build is the road to the Appstore. The same app runs on Vega OS, here in Amazon's simulator. And new acts and venues are data, not code.
+
+**V10** (2:46–2:50)
+> Encore. A real audience, honestly scored.
+
+Why each claim is true:
+- **V3, "never audio":** CLAUDE.md, honesty rule 4.
+- **V4:** `fake-phone.ts`, header comment.
+- **V5:** `docs/concept-encore.md`, Venues: Club patience 3.5 s, heckles after 2.
+- **V6:**
+  - the MC is silent with the reason: rule 5;
+  - the guard: `services/mc-agent/src/mc_agent/guard.py`.
+- **V7:** memory of the last six records, `storage.ts`.
+- **V8:**
+  - the pure engine: `packages/crowd`;
+  - the two builds: `apps/vega` and `apps/tv-expo`;
+  - Three.js in the WebView: `world/CrowdStage.tsx`;
+  - the MC: Strands, GLM-5 on Bedrock's OpenAI-compatible endpoint, Polly (`services/mc-agent`);
+  - the judge: `docs/judge-calibration.md`.
+- **V9:**
+  - Fire OS is Android underneath (CLAUDE.md; **untested on a stick**, and the super says so);
+  - the Vega build runs on the VVD (`docs/handoff/vega.md`);
+  - act packs are JSON (`packages/crowd/src/packs.ts`, `packsAsJson()`).
+
+## Capture plan for the lead (EMU)
+
+Use the final emulator APK on the 720p AVD (`~/emu/emu720.sh up`, `wm size` 1280×720, `-gpu host`). Services on the box:
+- the relay with `RELAY_DEBUG_ROOMS=1`;
+- the MC with the humour model;
+- `MC_REGION=us-west-2`, which `~/emu/svc.sh` sets. From ap-south-1 the judge is never in time.
+
+**Check the MC log first** for "judge: humour model loaded" and the warm-up lines.
+
+| Clip | What | How | Takes |
 |---|---|---|---|
-| **EMU** | Android TV emulator, 1280×720, `encore_tv34_720` (API 34 Android TV x86, `-gpu host`) | `~/emu/emu720.sh rec start/stop`: x11grab of the 1280×720 window at 30 fps plus the PulseAudio null sink (the room, the MC's voice) | "Android TV emulator · 720p", small, bottom-right corner, first time it appears and in the architecture section |
-| **PHONE** | The performer's Android phone, Chrome, the phone page | The phone's own screen recorder (no mic audio) | "the phone page" |
-| **CAM** | A second phone or camera filming the performer and the phone on the table | 1080p or higher, 30 fps; its mic records the performer's voice | none |
-| **VVD** | Vega Virtual Device (Vega SDK 0.24.12044) on `BOX=vega` | `apps/vega/tools/vvd.sh record 60 out.mp4` (VP9 with the device's sound, converted to H.264) | "Vega Virtual Device (Vega OS simulator)" |
-| **GFX** | Title, architecture diagram, calibration chart, end card | Made in the editor from `README.md`'s Mermaid diagram and `docs/judge-calibration.md`'s numbers | n/a |
+| **E1** | The bill: a fresh launch, the phone joining, then the D-pad over all four venues (about 2 s each) and back to Comedy Club / Sarcastic. | Launch, then `bash ~/emu/qa.sh phone p Aman scripts/standup-demo.json`. Keys: `DPAD_DOWN` to the venue row, `RIGHT` ×3 with 2 s gaps, `LEFT` ×3, `DPAD_DOWN` to the MC row (it's already Sarcastic). Record with `~/emu/bk/brec.sh`. | 2 |
+| **E2** | **The hero take:** a full stand-up set at the Comedy Club, sarcastic MC, words on, from OK through the finale and the debrief to the green room. | `docs/android-emu/black-2026-10-13/tools/setrun.sh <outdir> standup club standup-demo`. It records the screen and sound, the logcat and the phone log, and walks cut sheet ⇄ green room. Keep the fake phone's default dead bits (3,4) so the heckle can happen. | 2–3 |
+| **E3** (optional) | Poetry at the Theatre, for a 3 s "SNAP · … rhymes" cutaway. | `setrun.sh <outdir> poetry theatre poetry-demo`. | 1 |
+| **Stills** | The bill, a laugh with its caption, the heckle, the cut sheet, the green room, for the gallery (`docs/submission/gallery.md`). | `adb exec-out screencap -p` during E2. The captions say "scripted test set". | |
 
-## Script, shot by shot
+**After each take:** save `stats.txt` next to it under `docs/android-emu/<date>-final/`:
+- the APK's md5;
+- the `[crowd] fps` mean and minimum during the set;
+- the MC's model times (intro, between, heckle, debrief) from the MC log;
+- the judge's in-time and late counts, with the TV-side p50 and p90;
+- the `[mc-voice]` start delays;
+- launch to bill, and launch to the 3D room visible.
 
-Times are positions in the finished video. "Real time" means one continuous piece of the take with no cut inside it. Where we skip forward in a set, the lower-third set clock shows the jump, so the edit is visible.
+**Watch every take back once** for crowd glitches (limbs through chairs, a frozen person, a pop, a black frame). If there is one, note its time and pick another take or another moment; never paint over it.
 
-### 0:00–0:10 · Hook
+### Measurement requests for the lead (they fill TODOs here and in `docs/devpost.md`)
 
-| # | Time | Src | Picture | Sound |
-|---|---|---|---|---|
-| 1 | 0:00–0:03 | CAM | The performer (the user) in the living room, mid-set, phone face-up on the coffee table. They land a punchline and hold the beat. | The performer's voice (CAM mic). The room tone under it (EMU). |
-| 2 | 0:03–0:07 | EMU | Hard cut to the TV: the front row of the club laughs; the director's caption top-left ("LAUGH · … · 0.6 s beat · cut to the floor"). Real time from the line's end to the laugh. | The room's laugh (EMU), not sweetened. |
-| 3 | 0:07–0:10 | EMU | The next line gets nothing: the wide holds and nobody moves. Super, centre-low, white: **"It laughs when your timing earns it. Only then."** | Silence: room tone only. |
+- **R1 · fps during the hero take (E2).** Report the mean, minimum and p10 of the in-app `[crowd] N fps` lines between OK and the finale, plus the steady state of `crowdtest` per venue on the final APK. The last numbers on record are from 2026-10-19 (pre-final APK, set 23–27 fps while recording; crowdtest 30 fps capped). These go into devpost "Measured".
+- **R2 · The judge on the final APK.** Report the in-time count, the late count, and the TV-side p50 and p90 during E2, from the logcat judge lines. The last emulator figure is APK m on 2026-10-13: 41/41 in time, p50 245 ms, p90 288 ms.
+- **R3 · The MC and the voice on the final APK.** Report:
+  - the model seconds per kind (intro, between, heckle, end, debrief) from the MC log;
+  - the `[mc-voice]` delay from OK to the intro playing, and from the cut sheet to the debrief playing;
+  - any `unavailable` and its reason.
+- **R4 · The green room with a question.** The fake phone answers every `listen` with "nothing heard" (`fake-phone.ts`, `case 'listen'`), so a real spoken question needs a real phone. Two options:
+  - film shot 18 with the user's phone, if the relay is reachable;
+  - or, if you choose, give the fake phone an `--ask "<question>"` option that answers `listen` with that text. That's a test-tool change, not the app. The video would then label the question "typed by the test phone".
 
-The hook uses two real moments from the same take; the set clock in the lower-third shows where they sit. If the take has no dead line right after a laugh, use the take's real dead bit from shot 13 here and let the clock show the jump.
+  Until then, shot 18 holds on the ledger.
+- **R5 · Load time.** On the final emulator APK, report `am start -W` TotalTime (launch to the first frame) and the time from launch until the 3D room replaces the plate on the bill (the stage's first `ready`/visible in logcat). A warm disk, a second launch. The only figures on record are the Google TV's (historical): a 5.4 s cold start, and the room 12.2 s after launch on APK t.
 
-### 0:10–0:16 · Title
+## Editing rules
 
-| # | Time | Src | Picture | Sound |
-|---|---|---|---|---|
-| 4 | 0:10–0:16 | GFX over EMU | The club wide, dimmed. **ENCORE**, in Big Shoulders Display, then "A real audience, honestly scored." Small line: "Fire TV · Amazon Bedrock · Amazon Polly". | Room tone. |
+- Cut only between pieces of a set, never inside a line-to-reaction moment. The lower-third clock shows every jump.
+- No added laughs, no sweetening, no music, no speed changes. Level the mix only (the room, the MC, the VO).
+- Keep the VO off the MC's voice and off the moment a reaction lands.
+- Every super's number comes from a doc in the repo (listed under each section).
+- Burn in English subtitles for the MC, the VO and the test phone's lines ("test phone: …"), and upload an `.srt` too.
 
-### 0:16–0:38 · The bill and the phone
+## Before upload
 
-| # | Time | Src | Picture | Sound |
-|---|---|---|---|---|
-| 5 | 0:16–0:24 | EMU | The bill. The D-pad moves down the running order. Venue: Left/Right steps Open Mic → Comedy Club → Theatre → Arena, and the room behind changes with each, from a cafe with 30 seats to an arena. Back to Comedy Club. MC: Sarcastic. Label "Android TV emulator · 720p". | Room tone per venue. |
-| 6 | 0:24–0:31 | PHONE | The phone scans the QR code; the page opens: "Your audio never leaves this phone…". Tap Start listening; switch words on, and the toggle's line says the room judges what you say. | None (or a soft tap sound). |
-| 7 | 0:31–0:35 | CAM | The phone goes face-up on the coffee table. The performer steps back to their mark. | Living room. |
-| 8 | 0:35–0:38 | EMU | The bill's foot: "Aman's phone is on the table and listening · Press OK to go live". | Room tone. |
+- [ ] Runtime ≤ 2:59. English. No third-party marks (including "Toastmasters") and no music. The CC BY laughter credit is on the end card.
+- [ ] The label "scripted test phone · reactions computed live" is visible in every set shot.
+- [ ] Public on YouTube or Vimeo **[ask: which account]**. Put the link in `docs/devpost.md`.
+- [ ] The video's description is the paragraph under "Honesty in this video".
 
-Super during 5 to 8 (lower left, one line at a time):
-1. "Pick the act, the room and the MC with the remote."
-2. "The phone is the microphone. It sends timing and levels, never audio."
+## Plan B: a live take with a real phone (only if there's time)
 
-### 0:38–1:40 · The set at the Comedy Club
-
-About 60 s on screen, taken from one 3–4 minute set. Keep every piece in real time; jump only between pieces.
-
-| # | Time | Src | Picture | Sound |
-|---|---|---|---|---|
-| 9 | 0:38–0:46 | EMU | OK. The MC's intro card over the room ("Please welcome…", written by GLM-5 for this set). | **The MC's voice** (Brian, Polly generative), from EMU. |
-| 10 | 0:46–0:58 | EMU, with CAM inset (lower right, 25%) | The first bit. A line lands, and the director cuts to the floor: one person laughs first, the laugh spreads back. The caption names the reason ("a list of three · 0.7 s beat"). The bit counter ticks. | Performer (CAM) plus room (EMU). |
-| 11 | 0:58–1:06 | EMU, CAM inset | A callback lands bigger: caption "a callback to your first bit". Different people, a different laugh. | As above. |
-| 12 | 1:06–1:14 | EMU, CAM inset | **The dead bit.** A line with no beat, then another. The wide holds. Past the club's patience (3.5 s) the room gets restless: people shift, glance away, someone checks a phone. A murmur caption appears. | Performer, then quiet room tone and murmur. |
-| 13 | 1:14–1:24 | EMU | **The heckle** (the club heckles after two dead bits): the title card with the MC's line, written live from the measured set ("Two bits in a row got nothing…" in the test run; the real take's words will differ). The caption top-left: "HECKLE · 2 dead bits in a row". | Room tone. Heckle cards are text only; the MC doesn't speak them. |
-| 14 | 1:24–1:34 | EMU, CAM inset | The recovery: a short tag right after a laugh gets a bigger one. | Performer plus room. |
-| 15 | 1:34–1:40 | EMU | OK ends the set. The finale: the house lights come up, and the applause is sized by the share of lines the room reacted to. | Applause (EMU). |
-
-If the club doesn't heckle in a take (it needs two dead bits in a row), keep the take's real silence in shot 12 and drop shot 13. Never import a heckle from another take.
-
-### 1:40–2:02 · The cut sheet
-
-| # | Time | Src | Picture | Sound |
-|---|---|---|---|---|
-| 16 | 1:40–1:48 | EMU | The cut sheet. A slow zoom in the edit across the strip: gold cuts are laughs the room gave, a striped tile is dead air past 3.5 s. | **The MC's debrief, spoken** (about 10 s, `docs/tv-test-log.md` round 5). |
-| 17 | 1:48–2:02 | EMU | The ledger "Measured, not judged": landed per minute, longest dead air and where, pace, fillers, the content row (callbacks, tags, and the MC's model read "N in time" as an estimate). The MC's note on the right, with its source line "written by the MC (GLM-5 on Amazon Bedrock) from the measured set · an opinion". | The debrief continues. |
-
-Super during 17: "Every number on screen is one the phone measured. Words off? Pace and fillers say 'not measured'."
-
-### 2:02–2:17 · The green room
-
-| # | Time | Src | Picture | Sound |
-|---|---|---|---|---|
-| 18 | 2:02–2:06 | EMU | Back opens the green room: the sets ledger, "Hold OK to talk". | Room tone. |
-| 19 | 2:06–2:09 | CAM, PHONE inset | The performer holds OK and asks the phone: "Which bit should I cut?" The phone page shows it's listening for one question. | Performer (CAM). |
-| 20 | 2:09–2:17 | EMU | The MC answers in character, from this set and the earlier ones it remembers. | **The MC's voice** (EMU). |
-
-**[verify]** The green-room voice question hasn't been QA'd since the latest changes (`docs/handoff/README.md`, open item 4). Rehearse it before the real take.
-
-### 2:17–2:43 · How it works, and why it's honest (26 s)
-
-| # | Time | Src | Picture | Sound / super |
-|---|---|---|---|---|
-| 21 | 2:17–2:25 | GFX | The architecture, built up in three steps (from `README.md`'s Mermaid diagram). **1:** Phone (mic → voice activity → phrases) → "events, never audio" → couch-link relay → TV. **2:** TV: the crowd engine (pure TypeScript) → the bill, live, the cut sheet, plus `crowdDrive()` at 10 Hz → the live 3D room in the WebView. **3:** TV → the MC service (Strands) → Amazon Bedrock (GLM-5) → the honesty guard → Amazon Polly (a presigned URL the TV streams) → back to the TV. A side branch: the judge (Ministral 3 8B on Bedrock plus a CPU humour model). | Supers, one per step: "The phone sends events, never audio." · "One pure engine decides every reaction." · "The MC is the model, or it's silent. A guard checks every number." |
-| 22 | 2:25–2:31 | GFX | The venue ladder: Open Mic 0.42 → Club 0.55 → Theatre 0.66 → Arena 0.75 (the room's bar), with one flat line across all four: "house standard 0.55". | "A tougher venue changes the crowd, never the score." |
-| 23 | 2:31–2:37 | GFX | The judge chart: Spearman ρ against human ratings on 1,000 held-out jokes. Fast LLMs alone: −0.02 to 0.05 (chance). Punchline-length baseline: 0.10. Our mix: 0.34. Small line: "verdict on the TV in about 0.3 s (p50)". | "We measured the content judge. The fast models alone were at chance, so we don't use them alone." |
-| 24 | 2:37–2:43 | VVD | The same app on the Vega Virtual Device: the bill, then a live set with the MC's voice. Label "Vega Virtual Device (Vega OS simulator)". | Super: "The same app on Vega OS. The Linux simulator has no WebView, so the room falls back to video there." |
-
-Numbers in shots 22 and 23: `docs/concept-encore.md` (venue thresholds, house standard), `docs/judge-calibration.md` (ρ, baselines), `docs/handoff/README.md` and `docs/tv-test-log.md` (judge latency on the TV: p50 285–315 ms).
-
-### 2:43–2:55 · Close
-
-| # | Time | Src | Picture | Sound |
-|---|---|---|---|---|
-| 25 | 2:43–2:49 | EMU | The finale wide from the take, house lights up. **"A real audience, honestly scored."** | Applause tail. |
-| 26 | 2:49–2:55 | GFX | End card. "Encore". "Open source (MIT): couch-link and the crowd engine". "Amazon Bedrock · Strands Agents · Amazon Polly · Amazon S3 · Amazon EC2". The repo URL **[ask]**. Credit line: "Laughter: 'Approx 800 Laughter Only 1' by lonemonk, freesound.org, CC BY 4.0. Avatars and motion: Microsoft Rocketbox (MIT)." | Silence. |
-
-Total: 2:55.
-
-## Shot list (for the capture day)
-
-| Shot | Source | What to capture | Takes | Status |
-|---|---|---|---|---|
-| A | EMU + CAM | A full stand-up set at the Comedy Club, sarcastic MC, words on, 3–4 minutes, the user performing live. It must include at least two landed lines with content captions, one dead bit (ideally two in a row, for the heckle) and a tag. Record from the bill to the cut sheet's debrief. | 3 full takes | to capture |
-| B | EMU | The bill, stepping through all four venues slowly (about 2 s per venue) and every MC. | 2 | to capture |
-| C | PHONE | Scan the QR code → the page → Start listening → words on → "on the table". | 2 | to capture |
-| D | CAM | The phone placed on the table; the performer walking to their mark; wide shots of the room for the inset. | 3 | to capture |
-| E | EMU + CAM + PHONE | The green room: Back, hold OK, one spoken question, the MC's spoken answer. Right after a take of A, so the memory holds real sets. | 3 | to capture |
-| F | VVD | The Vega build: the bill, OK, about 20 s live, the cut sheet with the debrief's voice. `docs/vega/encore-vvd-take.mp4` is a usable fallback, but it predates the intro fix (`docs/handoff/vega.md`, "Next steps" 4). | 1 | retake or reuse |
-| G | GFX | Title, the architecture build, the venue ladder, the judge chart, end card. | n/a | to make |
-| H | EMU (optional) | A short poetry piece at the Theatre ("SNAP · 'moon' rhymes"), as a 3 s cutaway in shot 21 if time allows. | 1 | optional |
-
-## Signal path for a live take on the emulator box
+Optional. A human take is stronger for "a real audience", but the scripted take above is enough and is what we plan for. Signal path:
 
 ```
 performer's phone (Chrome, https://<laptop LAN IP>:5173/?room=CODE)
@@ -133,53 +274,14 @@ performer's phone (Chrome, https://<laptop LAN IP>:5173/?room=CODE)
 laptop: yarn dev:companion (:5173) and yarn dev:relay (:8787)     ← light jobs only
    │ ssh -R 8787:localhost:8787   (the box reaches the laptop's relay)
 BOX=android: adb reverse tcp:8787 tcp:8787 and tcp:18080 tcp:8080 → the emulator (Encore release APK)
-             MC service on the box (:8080, instance role: Bedrock and Polly; MC_HUMOR_MODEL_DIR=~/models/humor-int8;
-             MC_REGION=us-west-2, the box's own region, which ~/emu/svc.sh sets: from ap-south-1 the judge is never in time)
-   │ the emulator's screen and sound: x11grab + the null sink (recorded), plus a live view for the performer
-performer watches and hears the room on the laptop (VNC or a low-latency stream) **[verify]**
+             the MC service on the box (MC_REGION=us-west-2, the humour model)
 ```
 
-- The QR code points at `config.ts` `LAN_HOST`. Check it matches the laptop's Wi-Fi address on the day, or the phone can't join. Changing it means rebuilding the APK.
-- **Room sound must not reach the phone's mic.** The TV hushes the phone while it plays a cue or the MC's voice, but a streamed copy arrives late, so its tail could count as the performer. So the performer hears the room on headphones or one earbud, and the room's audio in the video comes from the null sink. **[verify]** Rehearse it once. If headphones show in shot, that's fine; it's the truth.
-- Nothing is exposed publicly: the box reaches the laptop through the reverse tunnel, and the emulator reaches the box through `adb reverse`.
+**Before attempting it:**
+- **The QR code** points at `config.ts` `LAN_HOST`. It must match the laptop's Wi-Fi address on the day, or the phone can't join; changing it means rebuilding the APK.
+- **The room's sound must not reach the phone's mic.** The performer hears the room on headphones, and the video's room audio comes from the emulator's null sink.
 
-## Capture checklist
-
-**The day before**
-- [ ] Build the release APK for the emulator (x86 + x86_64) from the final tree, with the crowd page packed with `--tv`. Note its md5 in the take's `stats.txt`.
-- [ ] Smoke-test the crowd page on the build box (`~/tools/pw/smoke-crowd.mjs`): calls, triangles and texture MB per venue.
-- [ ] Rename or avoid the house names "Prithvi" and "Wankhede" (real venues; no third-party trademarks in the video). **[ask]**
-- [ ] Rehearse the green room (shot E) and the audio path end to end.
-- [ ] Pick the material. The performer brings real stand-up with a callback, a list of three and a tag, plus one bit that may well die. The room decides; we don't rig it.
-
-**Before each take**
-- [ ] `BOX=android` up (launched from its image in us-west-2 in place of the render box; 8 vCPU per region). `~/emu/emu720.sh up`, then check `wm size` is 1280×720.
-- [ ] Relay and phone page on the laptop; the reverse tunnel; MC on the box with the humour model (the log says "judge: humour model loaded"), in the box's region ("warm-up: model connection open (zai.glm-5, us-west-2)"; `~/emu/svc.sh` sets `MC_REGION=us-west-2`) and warm voices for all four personas ("warm-up: voices warm …").
-- [ ] On a box freshly launched from its image, the disk is cold (its blocks load lazily): boot the emulator, launch Encore once and let it settle before the take. Two cold launches were killed by an ANR on 2026-10-12; the app now creates its 3D stage only after the bill has painted, but the first launch on a cold disk is still slow.
-- [ ] Open the app with the 3D stage (it's the default on Android; `com.strumble.tv://stage?crowd=3d` if relaunched).
-- [ ] The phone: Chrome on Android (words need it), volume and notifications off, Do Not Disturb, screen recorder ready for shots C and E.
-- [ ] CAM: focus on the performer, 30 fps, mic on, the phone on the table in frame.
-- [ ] Start the logcat capture, the MC log and `emu720.sh rec start` before OK, so the take keeps its evidence: the `[crowd] fps` lines, `[mc-voice]` traces, judge timings and the phone's event log.
-- [ ] One sharp clap in view of CAM before OK, a reference for the editor.
-
-**During the take**
-- [ ] Perform the whole set. Don't stop for a dead bit.
-- [ ] Don't touch the emulator except with the remote keys the performer would press (OK, Back).
-- [ ] If the MC says "unavailable", keep going. That take shows the honest state.
-
-**After each take**
-- [ ] `emu720.sh rec stop`, then save `stats.txt` next to the take (the APK md5, mean and min fps, MC timings, judge in-time and late counts) under `docs/android-emu/<date>-final/`.
-- [ ] Screenshots of the bill, a laugh with its caption, the heckle, the cut sheet and the green room for the gallery (`docs/submission/gallery.md`).
-- [ ] Watch the take back once for crowd glitches (limbs through chairs, a frozen person). If there is one, note its time. Don't paint over it in the edit; pick another take or another moment.
-
-**Editing rules**
-- [ ] Align CAM's audio to the emulator recording **once**, for the whole take: the performer's voice must stop where the phone's `line` event ends (from the phone log, through `started.startedAt`), and the clap confirms it. Never slide it per line.
-- [ ] Cuts happen only between pieces of a set, never inside a line-to-reaction moment. The lower-third clock shows every jump.
-- [ ] No added laughs, sweetening, music or speed changes. Level the mix only (performer and room).
-- [ ] Every super's number must come from a doc in the repo (listed under each section above).
-- [ ] Burn in English subtitles for the performer and the MC, and upload an `.srt` too.
-
-**Before upload**
-- [ ] Runtime ≤ 2:59. English. No third-party marks or music. The CC BY laughter credit is on the end card.
-- [ ] Public on YouTube or Vimeo **[ask: which account]**. Put the link in `docs/devpost.md`.
-- [ ] The video's description says: "Filmed on the Android TV emulator at 720p (allowed by the hackathon FAQ); the Vega insert is the Vega Virtual Device. Every reaction is live; nothing is scripted."
+**If it's filmed:**
+- it replaces shots 10–14;
+- V4 becomes "This is a live set into a real phone…";
+- the scripted-phone label comes off.

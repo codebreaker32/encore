@@ -368,6 +368,29 @@ Severity: **Blocker** (no workaround) · **Major** (costly workaround) · **Mino
 - **Workaround:** a Support case asking to restore the defaults; the MC keeps running on EC2 meanwhile, with the same code, behind `MC_BACKEND=local`.
 - **Suggestion:** give new accounts a default of at least 1–2 runtimes (or say "your account's quota is 0; request an increase at <link>" in the error), and mention the quota in the AgentCore quick start.
 
+## 2026-10-12: A box launched from our own AMI reads its disk so slowly at first that the Android TV emulator takes 3 minutes to boot and the app's first launches are killed
+- **Tool:** Amazon EC2 and EBS: our Android TV emulator box (`c7i.2xlarge`, nested virtualization), launched in us-west-2 from an AMI copied out of the old account during the 2026-10-12 account move.
+- **Task:** start the emulator box from its image and run the app QA pass before filming (`docs/android-emu/qa-2026-10-12/qa-report.md`, issue 1).
+- **Steps:**
+  1. Launch the instance from the AMI.
+  2. Boot the 720p Android TV emulator.
+  3. Install the release APK and launch Encore from the TV launcher.
+- **Expected:** the same timings as on the box the image was made from.
+- **Actual:**
+  - **The emulator took 179 s to boot,** against 17–28 s on the original box.
+  - **Two launches in a row were killed by an ANR** ("Input dispatching timed out … Waited 5002ms for FocusEvent"). The app's main thread was in `state=D` (waiting on disk), reading the system WebView's `TrichromeLibrary.apk`.
+  - **The guest showed heavy I/O pressure** ("some avg10=57.15 … full avg10=40.66").
+  - **A third launch, about a minute later, worked.**
+  - **The cause:** a volume restored from a snapshot fetches each block from S3 on its first read. That is documented in the EBS "initialize volumes" page, but nothing in the launch flow, the AMI page or the instance's status says the first minutes will be slow. An image-based box looks broken, not cold.
+- **Severity:** Minor (documented behaviour), but it cost a QA session's diagnosis, and it would have ruined a filming slot.
+- **Workaround:**
+  - **Warm the box before filming:** boot the emulator, launch the app once and let it settle (`docs/demo-video.md`, capture plan).
+  - **Take the WebView off the first frame:** the app now creates its WebView only after the first frame has painted (`useStageMount`), so WebView start-up is off the window's focus path.
+  - **Test the fix under a cold disk:** we re-tested with the guest disk capped at 3 MB/s through a cgroup. The old build hit the ANR 2 times out of 2, the fixed build 0 out of 2 (`docs/handoff/README.md`, "Late update").
+- **Suggestion:**
+  - say in the EC2 launch wizard, when the root volume comes from a snapshot, that first reads are slow until each block is fetched, and link to the initialization page;
+  - offer a one-click "initialize the volume after launch" option (or make fast snapshot restore selectable from an AMI's launch page), so an image can be used for timing-sensitive work straight away.
+
 ## 2026-10-13: Two stale Bedrock quota cases block an unrelated EC2 vCPU request, and they can't be closed from the CLI
 - **Tool:** Service Quotas (AWS CLI v2), AWS Support.
 - **Task:** request 16 standard vCPUs in ap-south-1, so the Android TV emulator can run at 1080p for the demo video.

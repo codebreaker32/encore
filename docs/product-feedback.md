@@ -8,7 +8,7 @@ The rules require feedback on **every** tool, API and SDK we used, and "Strong S
 4. How was onboarding (zero to hello world)?
 5. Would we build with it again?
 
-Every claim points at a measurement or a dated entry in `docs/friction-log.md` (28 entries, each with steps, expected vs actual, a workaround and a suggestion). Paste each section into Devpost's feedback fields as it stands.
+Every claim points at a measurement or a dated entry in `docs/friction-log.md` (32 entries, each with steps, expected vs actual, a workaround and a suggestion). Paste each section into Devpost's feedback fields as it stands.
 
 **AWS services used (AWS Builder):**
 - **Amazon Bedrock:** GLM-5 for the MC and Ministral 3 8B for the content judge, on the OpenAI-compatible endpoint.
@@ -19,6 +19,7 @@ Every claim points at a measurement or a dated entry in `docs/friction-log.md` (
 - **Amazon EC2:** build, render, Vega simulator and Android TV emulator boxes.
 - **AWS IAM:** a box role limited to Bedrock and Polly.
 - **AWS Budgets and Amazon CloudWatch:** spend alarms.
+- **Service Quotas, AWS Support and the AWS CLI v2:** quota requests and every infrastructure step.
 - **Amazon Nova 2 Sonic:** auditioned as a voice, not shipped.
 
 ---
@@ -31,7 +32,7 @@ Every claim points at a measurement or a dated entry in `docs/friction-log.md` (
    - **How we chose the models:** GLM-5 over Qwen3 235B, Kimi K2.5, GLM-4.7, GPT-OSS, Mistral Large 3 and DeepSeek V3.2, for clean English and a persona voice. The judge we chose by measurement: 1,000 held-out rated jokes, with latency timed from the TV (`docs/judge-calibration.md`).
 2. **What worked well.**
    - **The OpenAI-compatible endpoint is a pleasure.** It is standard chat completions plus SigV4, so any OpenAI client works, and one region holds many open-weight models side by side, which made a fair bake-off easy.
-   - **Latency suits live use.** A GLM-5 moment line took 0.47–0.62 s during a set (`docs/android-emu/2026-10-12-night/stats.txt`). Ministral 3 8B answered at p50 151 ms service-side and p90 243 ms from the TV on a kept connection (`docs/judge-calibration.md`, Results).
+   - **Latency suits live use.** A GLM-5 moment line took 0.47–0.62 s during a set (`docs/android-emu/2026-10-12-night/stats.txt`). Ministral 3 8B answered at p50 151 ms service-side and p90 243 ms from the TV on a kept connection (`docs/judge-calibration.md`, Results). In the app, the judge's verdict reached the Android TV emulator at p50 245 ms, p90 288 ms, 41 of 41 lines in time (`docs/handoff/README.md`, 2026-10-13).
    - **Throttling is explicit:** at 8 parallel requests, three models returned HTTP 429, which is easy to back off on.
 3. **What needs work.**
    - **New-account access is the biggest problem we hit in the whole project.** On two new accounts the Converse API answered `ValidationException: Operation not allowed` for every model (Nova, Claude, GPT, GPT-OSS) in two regions, with no reason given. Every on-demand quota was 0. `PutUseCaseForModelAccess` said to open a support case. Service Quotas rejected any request at or below the default. Support's reply ("use your current capacity first") is circular when the capacity is 0. It cost two days (friction log, 2026-10-11).
@@ -61,7 +62,7 @@ Every claim points at a measurement or a dated entry in `docs/friction-log.md` (
 1. **What for.** The MC's voice: Kajal (warm), Brian (sarcastic), Stephen (strict) and Matthew (deadpan) on the generative engine, with the same words on neural as a fallback, read as SSML. Only the intro, the debrief and green-room replies are spoken. The service returns a **presigned SynthesizeSpeech GET URL** (600 s), and the TV streams the MP3 itself (`voice.py`). We ran two audition rounds: 24 voice and engine combinations on the same ear-written lines (`docs/voice-samples/v2/index.md`).
 2. **What worked well.**
    - **Presigned URLs are the right shape for a TV.** Signing is local (about 1 ms), so the voice costs the model's budget nothing. Synthesis streams: the first byte arrives in about 0.3 s for generative in ap-southeast-1, and under 0.1 s for neural in ap-south-1. Both the Android player and Vega's w3cmedia can play an HTTPS URL, and neither could play the base64 `data:` URI we started with.
-   - **Measured on the TV:** the intro starts 0.25 s after OK, and the debrief 2.1 s after the cut sheet appears (`docs/tv-test-log.md`, round 5).
+   - **Measured:** on the Android TV emulator the intro starts 39–72 ms after OK (it's written and loaded while the bill rests), and debriefs start 0.4–1.2 s after they're queued (`docs/android-emu/qa-2026-10-12/qa-report.md`); on the retired Google TV, 0.25 s and 2.1 s (`docs/tv-test-log.md`, round 5).
    - **SSML is well supported.** One voice ID across engines keeps a persona's identity on the fallback, `<break>` works on every engine, and SSML tags aren't billed.
 3. **What needs work.**
    - **Region coverage.** Generative isn't in ap-south-1, where the rest of our stack runs (it is in ap-southeast-1), and long-form exists only in us-east-1. From India, generative in us-east-1 took 1.36–2.41 s per line, against 0.27–0.40 s for neural in ap-south-1 (friction log, 2026-10-11).
@@ -103,7 +104,7 @@ Every claim points at a measurement or a dated entry in `docs/friction-log.md` (
 
 ## Amazon EC2 (build, render and simulator boxes)
 
-1. **What for.** Everything heavy, because the development laptop's WSL has 6 GB and no KVM. All the boxes are c7i.2xlarge (8 vCPU, 16 GB):
+1. **What for.** Everything heavy, because the development laptop's WSL has 6 GB and no KVM. The boxes were c7i.2xlarge (8 vCPU, 16 GB); in the last week the box running the long crowd-rendering sessions was an m7i.xlarge (4 vCPU) because of the account's vCPU quota (`docs/handoff/box-session.md`):
    - a **build box** for Gradle, Metro and APKs, the MC, and the humour model;
    - a **render box** for headless-browser renders and checks of the 3D room;
    - a **Vega box** with nested virtualization for the Vega Virtual Device;
@@ -114,14 +115,63 @@ Every claim points at a measurement or a dated entry in `docs/friction-log.md` (
    - **Nested virtualization on c7i** ran both TV emulators with KVM.
    - **Fast builds:** a clean release APK build took 4m47s, an incremental one 27 s, and the toolchain setup about 3 minutes (`docs/tv-test-log.md`; `docs/dev-setup.md`).
    - **The 720p Android TV emulator** with `-gpu host` (Mesa on the CPU) ran the 3D room at 28.4 fps on average during a recorded set (`docs/android-emu/720p-test/stats.txt`).
+   - **Images made the account move and the filming box cheap:** the emulator box lives as an AMI and is launched in place of the render box only when filming, so it uses no instance hours in between.
 3. **What needs work.**
    - **Quotas shaped our architecture.**
      - The account allows 8 on-demand vCPUs in only some regions (5 elsewhere), so we ran one box per region and swap the render box for the emulator box when filming.
      - The GPU quota is 0, so the emulators render in software: 1080p gives about 15 fps, which is why we film at 720p (`CLAUDE.md`).
      - A hackathon builder will hit both limits on day one.
+   - **A box launched from an AMI is slow until its disk warms up, and nothing says so.** Our emulator box from its image took 179 s to boot the emulator (17–28 s on the original), and the app's first two launches were killed by an ANR while the system WebView's files trickled in from the snapshot. It's documented EBS behaviour, but the launch flow never mentions it (friction log, 2026-10-12).
    - **Moving accounts isn't simple.** Moving to a new account on 2026-10-12 meant copying images region by region and re-creating roles, groups, keys and buckets by hand. There is no "copy this project to another account" path.
 4. **Onboarding.** Minutes to a running box. About 3 minutes of setup script per box.
 5. **Again?** **Yes.** A GPU instance would let the emulators run at 1080p, but a new account can't get one without a quota request.
+
+## AWS IAM
+
+1. **What for.**
+   - **One instance role for every box** (`encore-box-role`, profile `encore-box-profile`), limited to Bedrock and Polly. The MC signs its Bedrock and Polly calls with it, so no box holds an access key.
+   - **A small extra policy** (`emu-box-control`), so the build box can start and stop the emulator box.
+   - **An execution role** for the AgentCore runtime (`encore-mc-runtime-role`): `services/mc-agent/deploy/agentcore.sh role` creates it, and it waits on the runtime quota.
+2. **What worked well.**
+   - **Instance roles do exactly what a hackathon needs.** botocore picks them up with no code: the MC's presigned Polly URLs and its SigV4 Bedrock client both sign with the role's credentials.
+   - **Scoping per box** let an agent drive the boxes without ever seeing a key.
+3. **What needs work.**
+   - **Signing in as root rules out role chaining.** `aws login` with the account's root user can't assume a role in another account ("Roles may not be assumed by root accounts"), and nothing at login warns about it (friction log, 2026-10-13).
+   - **A role that can invoke a model can't ask whether it may.** `GetFoundationModelAvailability` is AccessDenied for a role that invokes the model fine (see Bedrock).
+4. **Onboarding.** Minutes for a role and an instance profile with the CLI.
+5. **Again?** **Yes.**
+
+## AWS Budgets and Amazon CloudWatch (spend alarms)
+
+1. **What for.** Keeping a hackathon's credits safe:
+   - the budget `encore-usage`, at $150 a month of usage before credits;
+   - the budget `encore-out-of-pocket`, at $5 a month after credits;
+   - the CloudWatch alarm `encore-estimated-charges-150`;
+   - all of them email the user.
+2. **What worked well.** Two budgets, one before and one after credits, answer the two real questions: "are we burning the credits too fast?" and "is anything costing us money?". Both were created from the CLI.
+3. **What needs work.** The CloudWatch billing alarm does nothing until billing alerts are turned on in a separate account preference and the SNS email is confirmed. Neither step is part of creating the alarm, so it's easy to believe you're covered when you aren't (`docs/handoff/README.md`, "AWS account move").
+4. **Onboarding.** Minutes.
+5. **Again?** **Yes.**
+
+## Service Quotas, AWS Support and the AWS CLI v2
+
+1. **What for.**
+   - **Service Quotas and Support:** quota requests for Bedrock models, AgentCore runtimes and EC2 vCPUs.
+   - **The AWS CLI v2 with `aws login`:** every box, bucket, role and budget we made, mostly driven by agents.
+2. **What worked well.**
+   - **The CLI is complete and scriptable.** Every step of the account move (images, roles, groups, keys, buckets, budgets) was a CLI call that an agent could run and log.
+   - **`aws login`** made short-lived console credentials easy to use on the laptop.
+3. **What needs work.** Each of these is a friction-log entry:
+   - **Quotas at 0 that Service Quotas can't raise:**
+     - AgentCore's agents, endpoints and versions are at 0 against defaults of 1000, 10 and 1000;
+     - Bedrock's on-demand model quotas are at 0 too;
+     - requests "at or below the default" are refused, so only a console Support case can help (2026-10-11, 2026-10-12).
+   - **Open requests for one service block requests for another:**
+     - two stale Bedrock requests blocked an EC2 vCPU request for a day;
+     - neither could be closed from the CLI, because the Support API needs a paid plan (2026-10-13).
+   - **An expired `aws login` session can fail with a bare hash** (`aws: [ERROR]: '4b85d1cc…'`) instead of "session expired". Automation can't tell that apart from a real error (2026-10-13).
+4. **Onboarding.** The CLI: minutes. The quota and Support path: days.
+5. **Again?** **Yes for the CLI.** The quota path needs a first-run default for new accounts and errors that name the quota.
 
 ## Vega SDK, React Native for Vega and the Vega Virtual Device
 
@@ -192,9 +242,9 @@ Every claim points at a measurement or a dated entry in `docs/friction-log.md` (
    - **Fire OS:** sticks are Android underneath and should install the same APK. **We have no Fire TV device, so this is untested.**
 2. **What worked well.**
    - **The system WebView** gave us Chromium with WebGL 2 for the 3D room, with nothing to bundle.
-   - **adb on the TV is solid for measurement.** `adb reverse` reaches the relay and the MC even from WSL in NAT mode. `dumpsys gfxinfo` and `meminfo` worked, and five rounds of A/B speed sweeps measured each rendering cost on the real GPU (`docs/tv-test-log.md`).
+   - **adb on the TV is solid for measurement.** `adb reverse` reaches the relay and the MC even from WSL in NAT mode. `dumpsys gfxinfo` and `meminfo` worked, and ten rounds of A/B speed sweeps measured each rendering cost on the real GPU (`docs/tv-test-log.md`; `prototypes/crowd3d/tools/render/tv-sweep.md`). The TV was retired on 2026-10-19; later checks run on the emulator.
    - **The release APK** cold-starts in 5.4 s on the Google TV.
-   - **The TV emulator image with `-gpu host`** ran the full app headless on a GPU-less box.
+   - **The TV emulator image with `-gpu host`** ran the full app headless on a GPU-less box. On the final build it holds the 3D room at its 30 fps cap in the club, theatre and open mic, with 23–27 fps through a recorded set while capturing the screen (`docs/handoff/box-progress.md`, 2026-10-19).
 3. **What needs work.**
    - **The Android WebView on the TV reports `innerWidth` after its own zoom** (961×541 CSS px for a 1920×1080 page), so our stage first drew a quarter of itself at 2×. We size from `documentElement.clientWidth` with `scalesPageToFit={false}`.
    - **`resizeMode="repeat"` on this TV** drew one tile and smeared its edges across the frame.
