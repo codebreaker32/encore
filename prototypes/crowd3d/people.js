@@ -724,7 +724,7 @@ const REST_OLD = typeof location !== 'undefined' && new URLSearchParams(location
 // by 15-35 degrees at the elbow: a person on the edge of one flipped between the two. Now, once one fires, it holds for
 // as long as that rest does (and half a second after the hands leave it), and the lean it asks for eases in. And the
 // passes' other discrete choices (bestElbow's point on the circle, guardElbows' kept or undone hand, a wrist limit) are
-// followed, for resting arms, at most 180 degrees a second for the elbow and the hand and 0.6 m a second for the wrist,
+// followed, for resting arms, at most 180 degrees a second for the elbow and the hand and 1 m a second for the wrist,
 // from where the arm was shown last frame (holdElbows). &armold=1: decided each frame, no hold, the lean stepped (the A/B)
 const ARM_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('armold') === '1';
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
@@ -2680,7 +2680,7 @@ export class Person {
       // (arm-v2: a resting arm's elbow held near where it was last frame: the passes above choose an elbow's place on
       // its circle round the shoulder-wrist line among discrete answers (bestElbow's 24 points, a fall-back's pole, a
       // push out of the flank), and a body on the edge between two answers swung the whole arm 15-35 degrees in a frame.
-      // The elbow and the hand turn towards their answer at most 180 degrees a second and the wrist moves at most 0.6 m a
+      // The elbow and the hand turn towards their answer at most 180 degrees a second and the wrist moves at most 1 m a
       // second, each kept only if the arm then hits nothing more than the passes' answer does)
       if (!ARM_OLD && fitted && clip && seatedNow && restHold) this.holdElbows(now);
       for (let i = 0; i < 6; i++) AQ.out[i].copy(AB[i].quaternion);
@@ -2915,12 +2915,12 @@ export class Person {
     for (let side = 0; side < 2; side++) {
       const up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
       const W = worldPos(ha, _hv[2]);
-      // (and the wrist from last frame's place towards this frame's at most 0.6 m a second: a pass that drew a hand back
+      // (and the wrist from last frame's place towards this frame's at most 1 m a second: a pass that drew a hand back
       // towards its own side one frame and not the next moved it 7 cm in a frame)
-      const Wp = _hv[3].copy(H.w[side]).applyMatrix4(rig.seat.matrixWorld), dW = Wp.distanceTo(W), wl = 0.6 * dt;
+      const Wp = _hv[3].copy(H.w[side]).applyMatrix4(rig.seat.matrixWorld), dW = Wp.distanceTo(W), wl = 1.0 * dt;
       if (TR) TR.push('w' + side + ':' + dW.toFixed(3));
       if (dW > 0.25) continue; // (somewhere else altogether: no hold)
-      const moveW = dW > wl;
+      const moveW = dW > wl, W0 = _hv[1].copy(W); // (W0: the passes' wrist)
       if (moveW) W.lerpVectors(Wp, W, wl / dW);
       const S = worldPos(up, _hv[4]), dNow = worldPos(fo, _hv[5]).sub(S).normalize(), dPrev = _hv[6].copy(H.e[side]).applyQuaternion(q).normalize();
       const ang = dNow.angleTo(dPrev), hAng = 2 * Math.acos(Math.min(1, Math.abs(ha.quaternion.dot(H.h[side])))), hNow = _hq[1].copy(ha.quaternion);
@@ -2931,11 +2931,18 @@ export class Person {
       if (ang <= lim && !moveW) continue;
       const want = ang <= lim ? _hv[7].copy(dNow) : _hv[7].copy(dPrev).applyQuaternion(_hq[1].identity().slerp(_hq[2].setFromUnitVectors(dPrev, dNow), lim / ang)); // (towards this frame's answer, lim of the way)
       const keep = [up.quaternion.clone(), fo.quaternion.clone(), ha.quaternion.clone()], before = armCollisions(this), inBefore = elbowBad(this, side, false, true);
-      rig.solve(up, fo, ha, W, want, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
-      rig.upd(up);
-      if (!inBefore && elbowBad(this, side, false, true)) { if (TR) TR.push('in' + side); up.quaternion.copy(keep[0]); fo.quaternion.copy(keep[1]); ha.quaternion.copy(keep[2]); rig.upd(up); continue; } // (nor the elbow into the body)
-      if (TR) TR.push('c' + side + ':' + before + '>' + armCollisions(this));
-      if (armCollisions(this) > before) { up.quaternion.copy(keep[0]); fo.quaternion.copy(keep[1]); ha.quaternion.copy(keep[2]); rig.upd(up); }
+      const Wg = _hv[0], wg = _hv[4]; // (S is not needed past here)
+      // (held where it was; if that hits something new or puts the elbow into the body, a quarter, a half, three
+      // quarters of the way to the passes' answer: rather a few large steps than one jump)
+      for (const g of [0, 0.25, 0.5, 0.75]) {
+        Wg.lerpVectors(W, W0, g); wg.copy(want).lerp(dNow, g).normalize();
+        rig.solve(up, fo, ha, Wg, wg, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
+        rig.upd(up);
+        const bad = (!inBefore && elbowBad(this, side, false, true)) || armCollisions(this) > before;
+        if (TR) TR.push('g' + side + ':' + g + (bad ? 'x' : ''));
+        if (!bad) break;
+        up.quaternion.copy(keep[0]); fo.quaternion.copy(keep[1]); ha.quaternion.copy(keep[2]); rig.upd(up);
+      }
     }
   }
   /** An elbow's angle (0 left, 1 right), radians. */
