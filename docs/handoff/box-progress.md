@@ -210,3 +210,5 @@ Changes: DOF blur back at f/6; candle pools on the club's table tops (one additi
 | openmic | 6 | 6 | 5 | 5 | 6 | 5 | 5 | 2 | no |
 
 Flat. The club's laugh still "one person" in the strip (a probe at t 13.0 with the judge's drive: every front person has a take, but the laugh's size per person is 0–0.54 for five of six; sent to the motion agent with the numbers). New light tells: the bar's backlit shelf clips as the brightest thing in the club (dimmed to 0.6 after the round), the open mic's flat door panel and black ceiling band, laugh mouths with dark flat insides ("grimaces"), the open mic's same forward slump ten times over.
+
+**Stop rule (brief §4):** every venue's minimum has moved less than 0.5 for two rounds in a row (rounds 10–12: club 4/4/4, theatre 3/3/3, open mic 4/5/5 overall). By the rule each venue stops as a whole; the remaining time goes to the weakest categories, which are motion (club reactions 3, theatre posture 3: the motion agent's) and artefacts, plus the end-of-session items (gates, APKs, the emulator check, the deliverables).
