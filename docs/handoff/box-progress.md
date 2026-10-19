@@ -368,3 +368,19 @@ Frames are the merged tree (`e9eb261`: laugh-v2 with the gated arm easing, and t
   - the laugh capture plays 1.35× bigger, with a chest and shoulder heave per bout (eased, about 1 Hz) and the mouth's full swing back;
   - front onsets 0.1–0.65 s again (theatre 1.0 s);
   - head and neck turns limited to 180°/s.
+
+### 2026-10-19 20:15 UTC: video findings fixed; laugh-v2 gates; the app flow on the emulator
+- **Video findings** (`docs/handoff/box-video-findings.txt`):
+  1. **The MC said "Prithvi".** The emulator box's `~/strumble` was the old 13 Oct checkout with local changes. I stashed them (`stash@{1}`, plus the untracked files in `stash@{0}`, nothing lost) and moved it to `real-v1` (`361cc81`) from a git bundle. `yarn install` and `uv sync --group humor` there; `test_houses_in_step.py` passes; no "Prithvi", "Wankhede" or "Toastmasters" in the MC or crowd source. svc.sh restarted from it.
+  2. **"THE END" text over the LIVE line.** The top-right LIVE block is now at most 520 wide, its small line wrapping right-aligned. The top-left caption ends 640 from the right edge, so they no longer meet.
+  3. **The heckle's MC line never showed.** The MC answered every heckle in about 0.5 s (box MC log), but the engine only put words up while the wide was on and the performer quiet. The scripted phone starts its next bit at once, so the line always expired as "late" after 4 s. A heckle's words now go up at once, even while the performer talks (a heckler doesn't wait for a pause); other cards still wait for quiet. Engine change and test in `packages/crowd`: 110/110 tests pass; tv-expo and vega typecheck clean.
+- **laugh-v2 gates.** I bisected with `&lv2off=` to find what broke them:
+  - the club's flickers came from easing hands planted on a table top: those are no longer eased;
+  - the theatre's bind pose came from the arms eased past the bind direction while a seated woman moved from a talk gesture to a rest: such a frame now takes the arms as solved.
+  - The arm easing applies only to seated people (not while standing, walking or putting a coat on). The 1.35× capture and the bout heave are skipped at two-tops.
+  - Checked one at a time on `1b9398f`: handocc club 0, bindcheck clean, anatomy 0 (on `361cc81`). Full gates (g4) are running.
+- **The full app flow on the emulator, with sound** (APK `encore-laugh-v2c-emu.apk`, tree `6e3b140`):
+  - bill → words-on stand-up set at the club with the sarcastic MC (scripted phone, 43 lines, 3:39) → cut sheet with the debrief → green room;
+  - no black screens; the intro voice started 69 ms after it was queued and the debrief voice played (13.5 s, generative); the crowd ran at 24–28 fps during the set (26–29 calls);
+  - contact sheet: `docs/android-emu/2026-10-19-flow/flow-f1-contact.jpg`.
+  - No heckle came in this run (dead bits weren't forced); E2 will cover it.
