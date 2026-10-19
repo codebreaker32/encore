@@ -1722,9 +1722,9 @@ export class Person {
     rig.seatChanged();
     if (rig.fit) rig.fit.fresh = false; // (the body is about to be posed: its fitted sections are stale until refreshed below)
     // per-update scratch: a pool of vectors (nothing in this function allocates per frame)
-    const VP = (this._vp ||= Array.from({ length: 144 }, () => new THREE.Vector3()));
+    const VP = (this._vp ||= Array.from({ length: 256 }, () => new THREE.Vector3()));
     let vpi = 0;
-    const NV = () => VP[vpi++ % 144];
+    const NV = () => VP[vpi++ % 256];
     const toL = (v) => v.applyMatrix4(rig.inv);
     const o = this.o;
     const sd = this.seed;
@@ -2672,7 +2672,7 @@ export class Person {
     else { if (b.lEye) b.lEye.updateMatrixWorld(true); if (b.rEye) b.rEye.updateMatrixWorld(true); if (b.lHand) b.lHand.updateMatrixWorld(true); if (b.rHand) b.rHand.updateMatrixWorld(true); } // (and the fingers, left out until now)
     for (let i = 0; i < rig.skeletons.length; i++) rig.skeletons[i].dirty = true;
     SEC && SEC.mark('matrices');
-    if (vpi > 144 && !Person._vpWarned) { Person._vpWarned = true; console.warn('[crowd] Person.update used', vpi, 'scratch vectors of 144'); }
+    if (vpi > 256 && !Person._vpWarned) { Person._vpWarned = true; console.warn('[crowd] Person.update used', vpi, 'scratch vectors of 256'); }
   }
 
   /** Between a calm person's held poses: the eyelids only (blinks are 250 ms; a 5 Hz pose would miss most of them). */
