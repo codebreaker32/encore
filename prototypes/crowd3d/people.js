@@ -498,7 +498,7 @@ export const VENUE_LAUGH = {
   // sparse and personal: few at once, often a pair, a friend's look, a few claps, the lone loud laugher
   openmic: { share: 0.62, rowRipple: 1, pair: 0.22, styles: { turn: 1.0, giggle: 1.3, nose: 1.2, back: 1.4, over: 0.6, shake: 1 }, gestures: { clapShort: 1.7, mouth: 1.2, chest: 1.2, slap: 0.6, knee: 0.6, none: 1.2, wipe: 0.6 } },
   // rowdy and close: table slaps, leaning in, head-back roars, loud cackles
-  club: { share: 1.05, rowRipple: 1, pair: 0.1, styles: { back: 2.0, over: 1.4, turn: 0.6, shake: 1.2, giggle: 0.7, nose: 0.6 }, gestures: { slap: 1.9, knee: 1.3, wipe: 1.2, clapShort: 0.8, mouth: 0.7 } },
+  club: { share: 1.05, rowRipple: 1, pair: 0.1, styles: { back: 2.0, over: 1.4, turn: 0.6, shake: 1.2, giggle: 0.7, nose: 0.6 }, gestures: { slap: 1.9, knee: 1.3, wipe: 0.5, clapShort: 0.8, mouth: 0.7 } },
   // a polite ripple back through the rows: chuckles, a hand over the mouth, a look to the companion, applause
   theatre: { share: 0.95, rowRipple: 2.4, pair: 0.12, styles: { giggle: 1.1, nose: 0.7, shake: 1.8, turn: 0.7, back: 2.2, over: 0.15 }, stylesOld: { giggle: 1.7, nose: 1.6, shake: 1.3, turn: 1.4, back: 0.6, over: 0.35 }, // (life-v1: heads back or to a neighbour: dropped heads with open mouths read as pain)
     gestures: { mouth: 2.1, clapShort: 1.7, chest: 1.3, slap: 0.35, knee: 0.4, wipe: 0.8, none: 1.3 } },
@@ -719,7 +719,7 @@ const GESTURE_FORCE = typeof location !== 'undefined' ? new URLSearchParams(loca
 // (mostly on the thighs, elbows bent and relaxed; both hands out on the knees, arms near straight, read stiff in a row)
 // (round 11: at the club's tables a laugh was nearly all 'none', the hands kept on the top: a hand to the face or the chest,
 // a short clap, for more of them)
-const TABLE_LAUGH_G = { none: 0.12, chest: 2.2, mouth: 1.2, wipe: 1.3, clapShort: 2 };
+const TABLE_LAUGH_G = { none: 0.12, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 2.2 }; // (round 13: a hand at the eye read as a facepalm, a headache)
 const CLAP_W = LIFE_OFF.hands ? 0.042 : 0.047; // (the wrists a little further apart at the clap's contact: the forearms crossed by a centimetre in a packed row; life-v1)
 const REST_SEAT_OLD = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
 // (life-v1: fewer hands out on the knees, more clasped in the lap; one hand over the other's wrist was tried: its crossing
@@ -1633,7 +1633,7 @@ export class Person {
       const f = castShare(s, venue), u = this.castU(id, ev.t, VL);
       reach = u < f ? clamp01(0.35 + ((f - u) / Math.max(0.15, f)) * 0.75 + (this.eager - 0.5) * 0.15 - this.o.row * 0.025) : 0;
       if (!reach && u < f + 0.3) smileOnly = 1 - (u - f) / 0.3;
-      if (reach && this.kind === 'front' && !LIFE_OFF.laugh) reach = Math.max(reach, 0.55); // (round 10: a front-row laugh reads at TV distance: no one in it at a third of a laugh)
+      if (reach && this.kind === 'front' && !LIFE_OFF.laugh) reach = Math.max(reach, 0.4 + 0.45 * s); // (round 10-11: a front-row laugh reads at TV distance: whoever is cast laughs at least as hard as the measured strength says, 0.8 at 0.9)
       if (reach > 0.75) this._bigAt = ev.t;
       if (this._tallied !== id) { this._tallied = id; castTally(id, reach > 0.02); }
     } else {
@@ -1674,7 +1674,7 @@ export class Person {
     };
     // (life-v1: in the front rows a laugh lands on everyone within 0.1-0.6 s of the measured moment, each at their own
     // delay, the order kept: the spread and the row ripple squeezed, not shuffled; the attack no slower than 0.35 s)
-    if (kind === 'laugh' && this.kind === 'front' && !LIFE_OFF.onset) c.delay = 0.1 + 0.5 * (1 - Math.exp(-Math.max(0, c.delay - 0.1) / 0.45));
+    if (kind === 'laugh' && this.kind === 'front' && !LIFE_OFF.onset) { const span = venue === 'theatre' ? 0.85 : 0.5; c.delay = 0.1 + span * (1 - Math.exp(-Math.max(0, c.delay - 0.1) / 0.45)) + (venue === 'theatre' ? 0.2 * jitter : 0); } // (the theatre's polite ripple: 0.1-1.1 s, never a step of mouths at once, round 13)
     c.res = { reach, smileOnly, body: 0, smile: 0, t: 0, jitter, style, gestures: [], kind, id, take: T, pulse: 0.5, bout: 1 };
     this._rc.set(id, c);
     if (this._rc.size > 16) this._rc.delete(this._rc.keys().next().value);
@@ -1960,10 +1960,11 @@ export class Person {
     if (clip && !o.stand && stand < 0.3) {
       const ps = this.posture || 'upright', drift = noise(sd + 71, now * 0.025) * 0.05 + noise(sd + 73, now * 0.011) * 0.03;
       // (small: the capture sits its own way already; these only vary it from seat to seat)
-      lean += (ps === 'upright' ? 0.02 + 0.03 * clamp01((attention - 0.6) * 3) : ps === 'back' ? -0.08 : ps === 'slouch' ? 0.06 : 0) + drift;
+      const PK = LIFE_OFF.rest ? 1 : 1.6; // (round 11: the theatre's front row one rigid pose: each seat's own way of sitting, more of it)
+      lean += (ps === 'upright' ? 0.02 + 0.03 * clamp01((attention - 0.6) * 3) : ps === 'back' ? -0.08 * PK : ps === 'slouch' ? 0.06 : 0) + drift; // (not more slouch: a rounded back under a head held up reads as a jutting neck, round 13)
       if (ps === 'slouch') headPitch -= 0.04; // (the head kept up over a rounded back)
-      if (ps === 'shoulder') side += (this.side || 1) * 0.05;
-      if (ps === 'turnIn') turn += (this.side || 1) * 0.1;
+      if (ps === 'shoulder') side += (this.side || 1) * 0.05 * PK;
+      if (ps === 'turnIn') turn += (this.side || 1) * 0.1 * PK;
     }
     const hk = room.heckle ? room.heckle.level : 0;
     if (idle === 'heckle') { lean += 0.12 * hk; headPitch -= 0.08 * hk; } // (a bigger lean folds the belly onto the forearms)
@@ -2014,7 +2015,7 @@ export class Person {
         const dk = 1 - clamp01(lb * 2);
         side += (0.022 * noise(lsd + 1, now * 0.045) + 0.035 * ws) * dk;
         turn += (0.03 * noise(lsd + 2, now * 0.035) + 0.04 * wt) * dk;
-        lean += (0.015 * noise(lsd + 5, now * 0.05) - 0.012 * Math.abs(ws)) * dk;
+        lean += (0.015 * noise(lsd + 5, now * 0.05) - 0.012 * Math.abs(ws) + (LIFE_OFF.busy || room.mode !== 'live' || (o.table && o.neighbour) ? 0 : 0.045 * (lerp(hash(lsd * 1.7 + k + 3), hash(lsd * 1.7 + k + 4), f) * 2 - 1))) * dk; // (and with each shift, leaning in a little or sitting back: round 11; not at a two-top, whose planted hands then came and went behind the candle)
         headRoll += (0.03 * noise(lsd + 3, now * 0.06) - 0.02 * ws) * dk;
         headYaw += 0.035 * noise(lsd + 4, now * 0.08) * dk;
         headPitch += 0.02 * noise(lsd + 6, now * 0.11) * dk; // (the head never quite still: small nods of attention)
@@ -2052,7 +2053,7 @@ export class Person {
       if (!LIFE_OFF.onset && isLaugh && L.t > -0.05 && L.t < 0.7) {
         const a = L.t, amp = L.reach > 0.02 ? 0.75 + 0.25 * L.reach : 0.85 * (L.smileOnly || 0);
         onsetUp = amp * smooth(a / 0.14) * (1 - smooth((a - 0.18) / 0.4));
-        headPitch -= 0.07 * onsetUp;
+        headPitch -= 0.1 * onsetUp; // (a small toss of the head as it lands)
       }
       // and the heave: the belly and chest contract on each "ha" (the shoulders come up with it), the gasp between bouts
       // lets go; a small laugh, a small heave; a smile alone, a silent chuckle in the shoulders
