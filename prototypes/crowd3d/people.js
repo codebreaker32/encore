@@ -2505,6 +2505,8 @@ export class Person {
     // (hands planted on a table's top: the body moves about them, a laugh or a turn; nothing draws them off it)
     this._planted = restOn && restW > 0.85 && /^(tableBoth|forearmsTable)$/.test(restKind) && clapW < 0.02 && upW < 0.02 && !(L && L.gestures.length) && W.talk < 0.1 && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle' && !coat;
     this._armsFolded = false;
+    // (hands lying on a table top, no gesture or clap under way: laugh-v2 leaves them as solved, see the arm easing)
+    this._onTop = restOn && restW > 0.3 && /^(tableOne|tableBoth|forearmsTable)$/.test(restKind) && clapW < 0.02 && upW < 0.02 && !(L && L.gestures.length);
     this._restKind = restKind; this._cheerW = Math.max(clapW, upW); this._standW = stand; this._inTraffic = !!(T && !T.hidden); // (sitting down, standing up, walking: not at rest)
     if (STEPPED) this._doing = `${restKind || '-'} idle:${idle} st:${st} clap:${clapW.toFixed(1)} g:${L ? L.gestures.map((g) => g.g).join('+') : ''} T:${T ? Object.keys(T).find((k) => ['walk', 'turn', 'sit', 'rise', 'coat'].includes(k)) || 'stand' : ''}`;
     const aimW = clamp01(clapW * 1.3) * (1 - clamp01(upW * 1.4));
@@ -2757,7 +2759,7 @@ export class Person {
     // flipping sides, a rest handed over) swung a whole arm 40-105 degrees in one frame, and a resting arm's solve could
     // flip between two answers frame by frame. The eased arms are kept only if they hit nothing the solved ones didn't
     // and a resting or planted hand stays on its rest (within 2 cm); otherwise the solved pose stands.)
-    if (SMOOTH && !LV2_OFF.has('arm') && !this.force && b.lUpper && !(T && !T.hidden) && walk < 0.05 && stand < 0.05 && !coat && !o.stand && !(this._planted || /^(tableOne|tableBoth|forearmsTable)$/.test(this._restKind || ''))) { // (nor for hands on a table top: eased, a planted hand turned in and out behind the candle, handocc) // (not while getting up, sitting down or walking: the captures have the arms)
+    if (SMOOTH && !LV2_OFF.has('arm') && !this.force && b.lUpper && !(T && !T.hidden) && walk < 0.05 && stand < 0.05 && !coat && !o.stand && !(this._planted || this._onTop)) { // (nor for hands on a table top: eased, a planted hand turned in and out behind the candle, handocc) // (not while getting up, sitting down or walking: the captures have the arms)
       const dtA = now - (this._amT ?? -1e9); this._amT = now;
       const AB = (Person._armB ||= ['lClav', 'rClav', 'lUpper', 'rUpper', 'lFore', 'rFore', 'lHand', 'rHand']), AQ0 = (this._am ||= AB.map(() => new THREE.Quaternion()));
       const AQ1 = (this._am1 ||= AB.map(() => new THREE.Quaternion()));
@@ -2774,13 +2776,24 @@ export class Person {
         }
         if (moved) {
           b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
-          const rest = this._resting || this._planted;
-          const off = rest && (NV().setFromMatrixPosition(b.lHand.matrixWorld).distanceTo(hL) > 0.02 || NV().setFromMatrixPosition(b.rHand.matrixWorld).distanceTo(hR) > 0.02);
-          if (off || (!bind0 && this._nearBind()) || armCollisions(this) + limbs(this) > before) {
-            // (the solved arms back, but the hands' own easing kept when it hits nothing: a hand's turn doesn't move the wrist)
-            for (let i = 0; i < 6; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]);
-            b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
-            if (armCollisions(this) + limbs(this) > before) { for (let i = 6; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]); b.lHand.updateMatrixWorld(true); b.rHand.updateMatrixWorld(true); }
+          const bad = () => {
+            const rest = this._resting || this._planted;
+            return (rest && (NV().setFromMatrixPosition(b.lHand.matrixWorld).distanceTo(hL) > 0.02 || NV().setFromMatrixPosition(b.rHand.matrixWorld).distanceTo(hR) > 0.02)) || (!bind0 && this._nearBind()) || armCollisions(this) + limbs(this) > before;
+          };
+          if (bad()) {
+            // (a bigger step towards the solved arms, half then three quarters of the way, the first that hits nothing;
+            // else the solved arms, the hands' own easing kept when it hits nothing: a hand's turn doesn't move the wrist)
+            let done = false;
+            for (const f of [0.5, 0.75]) {
+              for (let i = 0; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy((Person._qs ||= new THREE.Quaternion()).copy(AQ0[i]).slerp(AQ1[i], f));
+              b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
+              if (!bad()) { done = true; break; }
+            }
+            if (!done) {
+              for (let i = 0; i < 6; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]);
+              b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
+              if (armCollisions(this) + limbs(this) > before) { for (let i = 6; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]); b.lHand.updateMatrixWorld(true); b.rHand.updateMatrixWorld(true); }
+            }
           }
         }
       }
