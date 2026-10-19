@@ -41,8 +41,8 @@ async function open() {
 async function stepTo(page, from, to, dt = 0.25) {
   for (let t = from; t < to - 1e-6; t += dt) await page.evaluate(({ t, d }) => { window.encoreMessage({ type: 'drive', drive: d }); window.__renderAt(t); }, { t: +t.toFixed(2), d: drive(t) });
 }
-async function shotAt(page, setup, t, file) {
-  const r = await page.evaluate(({ i, t, d }) => { window.encoreMessage({ type: 'drive', drive: d }); window.__cutTo(i); return window.__renderAt(t); }, { i: setup, t, d: drive(t) });
+async function shotAt(page, setup, t, file, cut = true) { // (cut: false keeps the shot up, as a strip must: every cut reseeds the camera's drift)
+  const r = await page.evaluate(({ i, t, d, cut }) => { window.encoreMessage({ type: 'drive', drive: d }); if (cut) window.__cutTo(i); return window.__renderAt(t); }, { i: setup, t, d: drive(t), cut });
   await page.screenshot({ path: file });
   return `${r.calls}c ${(r.tris / 1000).toFixed(1)}k`;
 }
@@ -62,7 +62,7 @@ try {
   for (let k = 0; k < 6; k++) {
     const t = +(12 + k * 0.2).toFixed(2), f = `${out}/.${venue}-s${k}.png`;
     if (k) await stepTo(page, t - 0.2, t, 0.1);
-    await shotAt(page, A, t, f);
+    await shotAt(page, A, t, f, k === 0);
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', f, '-vf', `scale=640:360,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='t=${t.toFixed(1)}':fontcolor=white:fontsize=14:x=4:y=4:box=1:boxcolor=black@0.5`, f.replace('.png', 't.png')]);
     strip.push(f.replace('.png', 't.png'));
   }
