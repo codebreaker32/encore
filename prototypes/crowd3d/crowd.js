@@ -1804,10 +1804,10 @@ function autofocus(u) {
     const sc = Math.hypot(_af.x, (_af.y - 0.15) * 1.3);
     if (sc < best) { best = sc; dist = _afh.distanceTo(camera.position); }
   }
-  // (the blur itself is off by default since round 08: three judges in every round named its edge halos round in-focus
-  // people and its comb streaks in hair the top artefact; &ab=dofblur turns it back on; bloom keeps the mips)
-  if (!dist || ab('nodof') || !ab('dofblur')) { u.y = 0; return; }
-  const f = 0.007 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), N = num('fstop', 2.4); // (the focal length from the lens: a 14 mm-high gate)
+  // (round 08 turned the blur off for its halos; round 11's judges then read the people behind a face close as faceted
+  // game bodies "not defocus": back on at f/6, a third of the f/2.4 circle, which softens them without the halos)
+  if (!dist || ab('nodof')) { u.y = 0; return; }
+  const f = 0.007 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), N = num('fstop', 6); // (the focal length from the lens: a 14 mm-high gate)
   u.set(dist, ((f * f) / (N * Math.max(0.05, dist - f)) / 0.014) * RH, camera.near, camera.far);
 }
 const post = VIEW === 'avatar' || ab('nopost') || (FOLD && HEJL) || ab('fxaa') || (P.fast && !ab('nofxaa')) ? null : finalPass(); // (FXAA, below, does the final pass's work on tv)

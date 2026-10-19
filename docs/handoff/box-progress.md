@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 06:00 UTC.
+**Updated:** 2026-10-19 07:20 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -189,3 +189,13 @@ Changes: the open mic's house (warm glow hemi ×20, haze 4–24 m, depth fall 0.
 
 ### 2026-10-19 06:22 UTC: gates on a440a7c (lighting through the open mic's house; life step 4)
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edge bands 0 at both viewports in all four venues.
+
+### 2026-10-19 07:20 UTC: round 11 (seed 1011): life-v1 step 6 (shards fixed, livelier listening, laughs at the stage); edge grain lowered
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 4 | 3 | 5 | 4 | 5 | 4 | 4 | 1 | no |
+| theatre | 4 | 4 | 3 | 4 | 5 | 3 | 3 | 1 | no |
+| openmic | 6 | 6 | 5 | 5 | 5 | 4 | 5 | 2 | no |
+
+The shards are gone (theatre artefacts 2 → 3–4); the open mic reaches reactions 6–7 and life 6–7 from two judges. Top tells: the club laugh still carried by one person in the strip and its wide and held frames near-identical; theatre rows 2–3 "paper dolls" at standing height and the front row in one pose; the people behind a face close read as faceted game bodies "not defocus" (the blur was off); open mic legs through legs in the packed rows, a hair seam on the afro man, a floating hand in the face close; the downlights and candles light nothing.
+- After the round: the DOF blur back on at f/6 (a third of the old circle): softens the people behind a face close without the halos (checked on the club and open mic face closes and mids).
