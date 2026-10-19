@@ -428,3 +428,6 @@ Frames are `e558dd5`. The clips are the emulator recordings: before = the 19 Oct
 - Not calm while the hands move to a new rest (held at 5 Hz, that move went in steps).
 - Live-mode probe on `ef12b38` (15 fps, live holds, 20 s), turns over 15°: club 31 (worst 17.5°), open mic 140 (107°), theatre 92 (39°). What's left in open mic and theatre: arms switching between solved and captured (fidgets) at a hard threshold; the arm worker (`fix-arms`, `~/wt-arms`, :8095) is on it.
 - The finished workers' page servers (:8095–8097) are stopped; the arm worker reuses :8095. All gates now run on a frozen copy (`~/strumble-gate` at the commit under test, :8191), not on the tree I'm editing.
+
+### 2026-10-19 23:15 UTC: gates on `ef12b38` (frozen copy), all pass
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB (bundle 1.06 MB), packcheck ready ×4, brightness pass ×4, edges 0 at both viewports in all four venues. This is the first fully gated tree with laugh-v2, rest-v2 and arm-v2.
