@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 05:35 UTC.
+**Updated:** 2026-10-19 06:00 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -175,3 +175,14 @@ Flat against round 07 (overall 4 / 3–4 / 4). Top tells: the club laugh still "
 | openmic | 4 | 5 | 4 | 5 | 4 | 4 | 3 | 2 | no |
 
 Halos are no longer a top tell; hair edges in the open mic face close still are. Top tells: laughs carried by one to three people (the rest hold one pose); listening life too still (the open mic's held frame at t 10.7 "pixel-identical" to the wide at 11.8); everyone front-on and upright; the theatre's front rows under a flat flood dropping to black silhouettes behind; the open mic muddy and underexposed; blue "sparkles" (the phone glints) read as artefacts in close shots; a smeared hand near the lens in face closes. Sent the motion tells (1, 2, posture, open mic knees) to the motion agent.
+
+### 2026-10-19 06:00 UTC: round 10 (seed 1010): the open mic's house; life-v1 step 5 merged
+Changes: the open mic's house (warm glow hemi ×20, haze 4–24 m, depth fall 0.25 to 0.6, the wide at exposure 1.0, `&look=stagedark` for the old one); merged life-v1 step 5 (8300b47: the instanced seated bake leans back, elbows bent; scratch pool 256).
+
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 3 | 5 | 4 | 6 | 5 | 4 | 2 | no |
+| theatre | 4 | 3 | 3 | 3 | 4 | 2 | 3 | 1 | no |
+| openmic | 5 | 5 | 4 | 5 | 5 | 3 | 4 | 2 | no |
+
+**Regression:** step 5's bent-elbow bake leaves detached flesh-coloured shards beside the theatre's rows 1–2 (all three judges; artefacts 2–3). `&bake=old` removes them (checked on theatre-3-mid). Sent to the motion agent as the first fix; if it isn't fixed by the final merge, I set the old bake as the default. Other tells: laughs read as turning to talk rather than laughing at the stage; front rows one pose; forearms into club tables; open mic hair stipple in the face close and a pale floating hand.
