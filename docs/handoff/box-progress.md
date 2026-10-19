@@ -346,3 +346,25 @@ Turns over 8° also fell by two thirds or more. What's left is mostly two people
 4. Final emulator clips per venue: `docs/mockups/final-<venue>.mp4`.
 5. `docs/handoff/box-video-capture.txt`: record the capture plan in `docs/demo-video.md` on the final emulator APK into `docs/android-emu/2026-10-20-final/`, with stats.txt per take, and fill R1, R2, R3 and R5. **E2 first** (the stand-up hero set at the comedy club, sarcastic MC, words on, through the finale, debrief and green room, 2–3 takes), then E1 (the bill and venue tour, 2 takes), E3 (poetry at the theatre, 1 take) and the stills. Watch each take for glitches and mark the best take in a README there. Never use the emulator box while the video agent does (`pgrep -f emu720` on the box).
 6. A "ready for the video" summary at the top of this file. Stop the emulator box (only when the video agent isn't using it).
+
+### 2026-10-19 18:20 UTC: round 16 (seed 1016)
+Frames are the merged tree (`e9eb261`: laugh-v2 with the gated arm easing, and the open mic, theatre and club fixes). The clips are the emulator recordings: before = the 19 Oct real APK, after = the first laugh-v2 build (`4e1a145`). Clip strips (45 consecutive frames after each cut) are in `round-16/clips/`. Minimum of three fresh judges (VFX, DoP, animator):
+
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 4 | 5 | 4 | 6 | 2 | 3 | 2 | no |
+| theatre | 3 | 3 | 3 | 4 | 5 | 3 | 2 | 1 | no |
+| openmic | 4 | 4 | 4 | 2 | 5 | 1 | 2 | 2 | no |
+
+- **Glitch fails:**
+  - A full-screen grey "flash" on every laugh cut in every venue, in both builds, lifting the blacks, letterbox and captions in one frame. It was the TV app's `LightPulse` (a gold wash to 0.18 over the whole screen), not the 3D room.
+  - Open mic (after): a woman's eyes go blank white while her hand is at her chin, then snap back in one frame.
+  - Open mic (after): one head turning about 25° between two frames. The emulator draws at 15–20 fps, so a 330°/s limit still allows that.
+- **Motion:** all three judges found the after laugh smoother (no arm snaps; the old build's hoodie man swung an arm over his neighbour's shoulder in one frame), but too damped to read as laughter.
+- **Theatre:** in the overhead laugh shot most heads bow to the lap, and one woman's head goes far back (a "broken neck").
+- **Known asset limits:** waxy faces, dithered hair edges.
+- **Fixes after the round:**
+  - `LightPulse` is off over the live 3D room (the room lights its own laughs; tv-expo and vega typecheck clean);
+  - the laugh capture plays 1.35× bigger, with a chest and shoulder heave per bout (eased, about 1 Hz) and the mouth's full swing back;
+  - front onsets 0.1–0.65 s again (theatre 1.0 s);
+  - head and neck turns limited to 180°/s.

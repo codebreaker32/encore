@@ -202,7 +202,9 @@ export function LiveScreen({
           <Cut shotKey={`${shot.kind}:${shot.from}`} dip={!stage}>
             {overlay}
           </Cut>
-          <LightPulse pulseKey={positive} />
+          {/* (not over the live 3D room, which lights its own laughs: the gold wash over the whole screen, captions
+              included, read as a video fault on the emulator, judge round 16) */}
+          {stage ? null : <LightPulse pulseKey={positive} />}
           <CrowdSound state={state} duck={ducked} onCue={onCue} audible={!stage} />
           {caption}
           {singing && live ? <PitchTrace samples={state.pitch} now={now} measured={measured.join(' · ')} /> : null}

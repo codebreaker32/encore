@@ -1470,7 +1470,7 @@ export class Person {
     if (c.lb > 0.02 && c.L) {
       // this laugh's take: which capture (chuckle, laugh or big laugh, this gender's or the other's), from where in it,
       // at what speed and size, and mirrored or not
-      const Tk = c.L.take, w = Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
+      const Tk = c.L.take, w = (SMOOTH ? 1.35 : 1) * Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
       let fadeIn = 1;
       if (SMOOTH) {
         // (laugh-v2: a new laugh's capture cross-fades from the one playing over 0.8 s, never a cut between two takes)
@@ -1701,7 +1701,7 @@ export class Person {
     };
     // (life-v1: in the front rows a laugh lands on everyone within 0.1-0.6 s of the measured moment, each at their own
     // delay, the order kept: the spread and the row ripple squeezed, not shuffled; the attack no slower than 0.35 s)
-    if (kind === 'laugh' && this.kind === 'front' && !LIFE_OFF.onset) { const span = SMOOTH ? (venue === 'theatre' ? 1.1 : 0.8) : venue === 'theatre' ? 0.85 : 0.5; c.delay = (SMOOTH ? 0.15 : 0.1) + span * (1 - Math.exp(-Math.max(0, c.delay - 0.1) / 0.45)) + (venue === 'theatre' ? 0.2 * jitter : 0); } // (the theatre's polite ripple: 0.1-1.1 s, never a step of mouths at once, round 13)
+    if (kind === 'laugh' && this.kind === 'front' && !LIFE_OFF.onset) { const span = SMOOTH ? (venue === 'theatre' ? 0.9 : 0.55) : venue === 'theatre' ? 0.85 : 0.5; c.delay = 0.1 + span * (1 - Math.exp(-Math.max(0, c.delay - 0.1) / 0.45)) + (venue === 'theatre' ? 0.2 * jitter : 0); } // (the theatre's polite ripple: 0.1-1.1 s, never a step of mouths at once, round 13)
     c.res = { reach, smileOnly, body: 0, smile: 0, t: 0, jitter, style, gestures: [], kind, id, take: T, pulse: 0.5, bout: 1 };
     this._rc.set(id, c);
     if (this._rc.size > 16) this._rc.delete(this._rc.keys().next().value);
@@ -2104,7 +2104,7 @@ export class Person {
       if (!LIFE_OFF.comp && isLaugh) {
         const bt = SMOOTH ? 0.85 : L.bout ?? 1, hv = Math.min(1, LIFE_OFF.laugh ? lb * 1.6 : Math.sqrt(lb) * 1.25) * (0.6 + 0.4 * big) * bt + (lb < 0.05 ? 0.5 * (L.smileOnly || 0) * clamp01(L.smile * 2.5) : 0);
         const LB = LIFE_OFF.laugh ? 1 : 1.7; // (round 06: the laugh too small at TV distance: the body's share up by 40%)
-        comp = SMOOTH ? 0 : hv * (ha - 0.3) * LB; heaveS = hv * (0.04 + 0.08 * haB) * LB; headPitch -= (st === 'over' || st === 'nose' ? -0.02 : 0.03) * hv * haB; // (laugh-v2: no heave of the chest on each "ha"; the shoulders up with the laugh, eased) // (the head goes back on each "ha", not down: a head dropping with an open mouth read as pain)
+        comp = SMOOTH ? 0.7 * hv * ((L.bout ?? 1) - 0.6) * LB : hv * (ha - 0.3) * LB; heaveS = hv * (0.04 + 0.08 * haB + (SMOOTH ? 0.06 * ((L.bout ?? 1) - 0.6) : 0)) * LB; // (laugh-v2: the chest and shoulders go with each bout of laughter, about once a second, eased over 0.2 s, not with each "ha": round 16 found the laugh too still) headPitch -= (st === 'over' || st === 'nose' ? -0.02 : 0.03) * hv * haB; // (laugh-v2: no heave of the chest on each "ha"; the shoulders up with the laugh, eased) // (the head goes back on each "ha", not down: a head dropping with an open mouth read as pain)
         if (!LIFE_OFF.laugh) lean += lb * (st === 'back' ? -0.08 : st === 'over' ? 0.06 : st === 'turn' ? -0.03 : 0); // (the torso goes with the take: back, or forward on a doubled-over one)
         // (round 09: everyone the laugh reaches shows it in the body, not one to three per strip: the shoulders up and the
         // weight back, a little, a smile's worth for those who only smile)
@@ -2242,7 +2242,7 @@ export class Person {
     if (SMOOTH && !this.force && b.spine1) {
       const dtT = now - (this._tmT ?? -1e9); this._tmT = now;
       const TB = (Person._torB ||= ['spine1', 'spine2', 'neck', 'head']), TQ = (this._tm ||= TB.map(() => new THREE.Quaternion()));
-      const ok = !this.fresh && this._tmOk && dtT > 0 && dtT < 0.5, lim = 5.76 * dtT;
+      const ok = !this.fresh && this._tmOk && dtT > 0 && dtT < 0.5, lim = 3.14 * dtT; // (180 degrees a second: at the emulator's 15-20 fps a 330 limit still let a head turn 25 degrees between two frames, round 16)
       let moved = false;
       for (let i = 0; i < TB.length; i++) {
         const bn = b[TB[i]]; if (!bn) continue;
@@ -2723,7 +2723,7 @@ export class Person {
       const fr = xp.frown + M.frown, frTV = face.slots.mouthFrownLeft.length ? 0 : fr * 0.4;
       face.set('mouthSmileLeft', 1.85 * sm + 0.35 * g + 0.1 + (sk > 0 ? sk * 1.3 : 0) - frTV); face.set('mouthSmileRight', 1.8 * sm + 0.35 * g + 0.1 + (sk < 0 ? -sk * 1.3 : 0) - frTV);
       face.set('mouthUpperUpLeft', 0.6 * g + M.upper); face.set('mouthUpperUpRight', 0.56 * g + M.upper);
-      face.set('jawOpen', Math.min((LIFE_OFF.face ? 0.15 + 0.62 * sm : 0.2 + 0.8 * sm) + speaking * 0.3, Math.max(jaw * fk.jaw + (this._mkJaw || 0), g * (LIFE_OFF.face ? (0.45 + 0.25 * ha) * fk.jaw : (SMOOTH ? 0.5 + 0.4 * ha : 0.45 + 0.6 * ha) * fk.jaw * (L ? 0.6 + 0.75 * hash(this.seed * 0.71 + (L.id | 0) * 3.3) : 1)))));  // (life-v1: the mouth opens wider on each "ha", closes a little between) // (a big laugh's mouth visibly open, within the smile)
+      face.set('jawOpen', Math.min((LIFE_OFF.face ? 0.15 + 0.62 * sm : 0.2 + 0.8 * sm) + speaking * 0.3, Math.max(jaw * fk.jaw + (this._mkJaw || 0), g * (LIFE_OFF.face ? (0.45 + 0.25 * ha) * fk.jaw : (0.45 + 0.6 * ha) * fk.jaw * (L ? 0.6 + 0.75 * hash(this.seed * 0.71 + (L.id | 0) * 3.3) : 1)))));  // (life-v1: the mouth opens wider on each "ha", closes a little between) // (a big laugh's mouth visibly open, within the smile)
       face.set('eyeLookDownLeft', phone * 0.7 + (xp.down + M.down) * 0.5); face.set('eyeLookDownRight', phone * 0.7 + (xp.down + M.down) * 0.5);
       const surprise = Math.max(L && L.t > -0.1 && L.t < 0.35 && st === 'back' ? Math.sin(((L.t + 0.1) / 0.45) * Math.PI) * 0.6 : 0, xp.wide);
       face.set('eyeWideLeft', surprise + vocal * 0.3); face.set('eyeWideRight', surprise + vocal * 0.3);
