@@ -246,3 +246,6 @@ Top tells: a club man doubled over face-down on a table ("passed out"; a two-top
 | openmic | 5 | 6 | 5 | 5 | 5 | 4 | 4 | 1 | no |
 
 Within the judges' noise of round 14 (one judge a point lower everywhere). The face-down man is gone. Remaining tells, all known: the theatre's rows behind read as standing; laugh mouths open without cheek raise or eye squint (the Rocketbox face rig's limit: eyeBlink and duchenne are the only upper-face morphs on the .tv models); the front rows' shared rest pose; open mic hair-card dither.
+
+### 2026-10-19 09:19 UTC: gates on 7c44c06 (life step 9, the theatre house)
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edge bands 0 at both viewports in all four venues.
