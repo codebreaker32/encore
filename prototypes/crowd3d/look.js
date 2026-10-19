@@ -38,7 +38,9 @@ const VENUES = {
     // &look=stagedark keeps the old theatre.)
     // (real-v1, 2026-10-19: the judges read the lifted, flat house as a grid of standing mannequins with no depth; the
     // rows now fall off 0.25 a row to 0.35 under a slightly thicker haze, still people, not cut-outs)
-    depthSlope: 0.15, depthFloor: 0.55, hemi: 14, fill: 1.2, sky: 0x7a6a5e, fogClose: [5, 28], closeDim: 0.35, // (a warm, low house light from above; round 08: the close-ups' haze and dim no longer black out the rows behind)
+    // (2026-10-19, fix-theatre: rows 4-6 all sat on the 0.55 floor, one flat grey band at the back; now each row falls
+    // 0.1 to 0.45, so every row behind the spill is a step darker than the one in front of it. &ab=oldfall: 0.15 to 0.55)
+    depthSlope: 0.1, depthFloor: 0.45, oldfall: { depthSlope: 0.15, depthFloor: 0.55 }, hemi: 14, fill: 1.2, sky: 0x7a6a5e, fogClose: [5, 28], closeDim: 0.35, // (a warm, low house light from above; round 08: the close-ups' haze and dim no longer black out the rows behind)
     dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, fill: 0.35, sky: null, rim: 0.85, fogClose: null, closeDim: 0.12, fog: { color: 0x10121a, wide: [4, 30] } },
   },
   openmic: {
@@ -60,9 +62,10 @@ const VENUES = {
 };
 
 /** Apply a look to the venue spec before the page reads it (crowd.js, right after the preset). Returns null without one. */
-export function applyLook(name, V, venueId, P) {
+export function applyLook(name, V, venueId, P, AB = new Set()) {
   if (name === 'classic') return null;
-  const base = { ...COMMON, ...(VENUES[venueId] || {}) };
+  const vb = VENUES[venueId] || {};
+  const base = { ...COMMON, ...vb, ...(AB.has('oldfall') && vb.oldfall ? vb.oldfall : {}) };
   // &look=stagedark: a venue's darker house where it has one (the theatre before 2026-10-14)
   const L = name === 'stagedark' && base.dark ? { ...base, ...base.dark } : base;
   const lt = V.light;

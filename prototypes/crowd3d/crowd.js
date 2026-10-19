@@ -28,6 +28,9 @@
 //                  surface a flat 1/16 grey added up, depth test on; overdrawall: off; tools/render/overdraw.mjs).
 //                  oldsetups: the six front mid shots instead of each venue's coverage (director.js); setupsee: every
 //                  setup adds what it sees to the build.
+//                  Theatre (fix-theatre, 19 Oct): lowbacks (standard seat backs in rows 1 and up, not the high ones),
+//                  nocaps (no lighter top rolls on the seat backs), oldfall (the house's fall with depth 0.15 a row
+//                  to 0.55 instead of 0.1 to 0.45). All three together give the frames from before pixel for pixel.
 //   &res=360       draw at 640×360 (also 450, 540, 720, 1080)
 //   &log=1&label=  console.log a '[crowd] sweep <label> …' line with fps, p50, p90, max, calls and tris every 2 s (the
 //                  TV sweep: tools/render/tv-sweep.md); the same numbers go out as the stats message
@@ -88,7 +91,7 @@ const VENUE_ID = VENUES[Q.get('venue')] ? Q.get('venue') : 'club';
 const V = VENUES[VENUE_ID];
 { const el = document.querySelector('.lower-third .venue'); if (el) el.innerHTML = V.title; }
 const P = { ...PRESETS[PRESET_NAME], ...(V.presets[PRESET_NAME] || {}) };
-const LOOK = applyLook(Q.get('look') || 'stage', V, VENUE_ID, P); // the stage's-eye look (look.js); &look=classic: the old one
+const LOOK = applyLook(Q.get('look') || 'stage', V, VENUE_ID, P, new Set((Q.get('ab') || '').split(',').map((s) => s.trim()))); // the stage's-eye look (look.js); &look=classic: the old one
 if (LOOK && Q.has('depthfloor')) V.depthFloor = parseFloat(Q.get('depthfloor')); // (test knobs: the house behind the spill)
 if (LOOK && Q.has('depthslope')) V.depthSlope = parseFloat(Q.get('depthslope'));
 if (LOOK && Q.has('hemik')) V.light.hemi *= parseFloat(Q.get('hemik'));
@@ -943,6 +946,7 @@ async function buildRoom() {
   // coverage adds no people or furniture: &ab=setupsee lets every setup add what it sees)
   for (const S of CLOSES) if (S.lit === 'close' || ab('setupsee')) viewCams.push(camOf(S));
   P.lampFix = !ab('oldlamps'); // (the lamps' glows in front of their lenses: see venue.js)
+  P.lowBacks = ab('lowbacks'); P.noSeatCaps = ab('nocaps'); // (the theatre's high seat backs and their top rolls: rooms.js)
   // (arena.js: the sprite tiers. tv default since round 4: outline sprites, nearest first, no upper ring: 51 ms p50 vs 81;
   // &ab=quadsprites, &ab=alltiers bring back the quads and the full bowl)
   const tvArena = !!P.fast;
