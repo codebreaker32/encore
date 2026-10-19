@@ -11,6 +11,7 @@
   - the emulator box's checkout synced to real-v1 (no more "Prithvi").
 - **Running:** gates g8 on the frozen copy of `ef12b38`; an arm worker (`fix-arms`) on the remaining arm snaps in the live build (worst in open mic and theatre: the solved/captured arm switch, report by 04:00 UTC).
 - **Judge:** round 17, overall 3/3/3; every venue fails on visible snaps in the emulator clips. The cut flashes are fixed; arm and head snaps are reduced but not gone.
+- **BLOCKER, needs the user (23:18 UTC):** AWS refused to start the emulator box. `StartInstances` (us-west-2, account 695019458661) returned: *"This account is currently blocked and not recognized as a valid account. Please contact … account-verification"*. Read-only calls still work (`sts get-caller-identity`, `describe-instances`: the box is stopped). Until AWS Support clears it, nothing on the emulator can run: the final clips, the video captures (E1–E3, stills), the R1/R2/R3/R5 measurements and the final emulator check. I retry the start about once an hour and keep working on what doesn't need the emulator.
 - **Needs the user:** whether `real-v1` merges to main (nothing pushed). The demo video uses the scripted phone, disclosed on screen and in the voiceover (honesty rule 6; `docs/demo-video.md`).
 
 **Updated:** 2026-10-19 22:45 UTC.
@@ -431,3 +432,9 @@ Frames are `e558dd5`. The clips are the emulator recordings: before = the 19 Oct
 
 ### 2026-10-19 23:15 UTC: gates on `ef12b38` (frozen copy), all pass
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB (bundle 1.06 MB), packcheck ready ×4, brightness pass ×4, edges 0 at both viewports in all four venues. This is the first fully gated tree with laugh-v2, rest-v2 and arm-v2.
+
+### 2026-10-19 23:18 UTC: candidate APKs; the AWS account is blocked
+- Candidate APKs from the gated `ef12b38`, as a fallback for the finals:
+  - `~/apk-out/encore-candidate-ef12b38-emu.apk`: x86/x86_64 libraries in full; the packed crowd has laugh-v2;
+  - `~/apk-out/encore-candidate-ef12b38-arm.apk`: armeabi-v7a in full.
+- An E2 dry run on the emulator failed to start: `aws ec2 start-instances` returned *"This account is currently blocked and not recognized as a valid account"*. This is an AWS account issue, not ours. It's under "Needs the user" at the top.
