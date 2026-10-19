@@ -956,3 +956,61 @@ the people set-up after `frontBgMats`, the FXAA pass). Every term is a switch:
   edges), `sheetrv.sh` (the real-v1 before/after sheet; `BEFORE=` in realsheet.mjs), `bake_ao.mjs`.
 - **Ports on the box:** 8091 real-v1 tree, 8092 `~/c3d` (the baseline's files), 8093 the motion agent's worktree,
   8094 the motion agent's dev copy, 8191 the frozen gate copy (`~/strumble-gate`).
+
+## Motion agent: life-v1 (box session, 18–19 Oct)
+
+Worktree `~/strumble-life`, branch `real-v1-life`. Files changed: `people.js`, `instances.js` and tools (`tools/render/lifevideo.mjs`, `liveprobe.mjs` new; `anatomy.mjs` `ONLY=`, `handocc.mjs` `EXTRA=`, `bindcheck.mjs` a longer screenshot timeout). `crowd.js` is untouched.
+
+**Commits** (each gated, all gates 0):
+| Commit | Step |
+|---|---|
+| f9ee1c6 | 1: blinks, saccades and lids (the WIP), gated |
+| 8605ace | 2: breathing, drift, the laugh's onset and heave, looks, whispers, faces, hands; the theatre's stray bake arms |
+| 9bed258 | 3: fewer hands on the knees, more clasped; the first life-v1 strips |
+| 9bc4307 | 4: bigger laughs, heads back not down, fewer face smears, scratch pool |
+| 8300b47 | 5: scratch pool 256; the instanced rows sat back (reverted in 6: shards) |
+| 7f5b7de | 6: no shards; a livelier second of listening; laughs at the stage |
+| a22069d | 7: the head back with the laugh; the body's share x1.7; a front-row reach floor |
+| 4aa915c | 8: the club's tables laugh with their hands (chest, short clap) |
+| f7931fd | 9: front tables laugh harder (reach floor 0.4 + 0.45 x strength), no facepalms, the theatre's ripple |
+| e98e058 | 10: the instanced rows turn their heads while listening |
+| da5a03e | 11: no doubled-over take at a two-top; each laugh its own mouth size |
+
+Every step read: anatomy TOTAL 0, handsweep 0 invalid, bindcheck no one in the bind pose, handocc 0 flickers in all four venues (club 7–11 occlusions: hands behind the candle, as before), pack `--tv` 20.1 MB, packcheck 4 venues ready.
+
+**What changed (people.js), each a small layer on top of the captures, each on the person's own seeded phase (never in step with a neighbour):**
+- **Eyes** (step 1): blinks 2–10 s apart from a third seeded stream (r3), doubles, some skipped while rapt; saccades to the performer, to the friend's side and to the room; the upper lids follow a downward gaze; `faceTick()` drives the blinks between a calm person's held 5/3 Hz poses.
+- **Breathing:** Spine2 pitch 0.012 rad and the clavicles 0.022 rad at `breathHz` (0.22–0.3 Hz), the in-breath a little quicker, deeper for a while after a laugh, handed over to the laugh's own heave while it lasts.
+- **Listening life:** a slow side, turn and head-roll drift from `lifeSeed`; a weight shift every 5–14 s eased over 1.3 s; a small turn or tilt of the head every 2.5–6 s eased over 0.45 s (round 09: "one second of listening looks pixel-identical"). A person in a transition is posed every frame, not held at 5 Hz, so nothing steps.
+- **Faces while listening:** a faint smile with the room's warmth, the brows up as attention rises (a setup), the lips pressed now and then, the lips parting, the eyes narrowing with interest.
+- **Fidgets:** a hand to the face, the hair or the head added to the listening list at low weight; the listening rate 0.012 → 0.02.
+- **Pairs:** a look to the friend 1.6–3.4 s into a laugh (the pair's own draw, so both look at once; about one laugh in four, more at the open mic), the chest turning with it and the head tipping, not a swivel on the neck; a rare whisper while listening (about one per party every two minutes).
+- **Laughs:** the front rows land within 0.1–0.6 s (the theatre 0.1–1.1 s, its polite ripple, never a step of mouths at once) of the measured moment (each person's delay squeezed, the order kept) with an attack of at most 0.35 s; an intake of breath at the start (shoulders up, chest up, head back); the chest heaves and the belly contracts on each "ha"; the torso goes with the take (back, or forward when doubled over) and rocks; everyone the laugh reaches shows it in the shoulders and the weight back, a smile's worth for those who only smile; whoever is cast in a front-row laugh laughs at least 0.4 + 0.45 × the measured strength (0.8 at 0.9: who is cast still follows the strength); the body's share grows with the square root of the level, ×1.7; the head goes back with the laugh (clamp 20° on a big head-back laugh); at a two-top the shoulders take 0.75 of the shrug, the capture 0.95 of its strength, and a laugh's hand goes to the chest or a short clap (an eye-wipe read as a facepalm; a hand passing the candle flickered), never folded over the top; the mouth opens wider on each "ha" (each take's own jaw kept: a giggle stays closed-mouthed), its size per person and laugh (0.6–1.35). The theatre and the club favour the head going back and the shoulders shaking over turning to a neighbour (round 10: turned heads read as conversation); in the theatre a laughing head drops 10° at most unless doubled over (round 06: dropped heads with open mouths read as pain). A hand over the face is mostly the front row's (behind it the hand read as a dark smear).
+- **Resting hands:** placement varied per person (±5 cm along the leg, ±1.5 cm in or out, not at a two-top, whose planted hands are fitted to the top and the glasses), half the hands on the little finger's edge, the palm roll and the finger curl per person; fewer hands on the knees (rest weights thighs 2.4, knees 0.35, thighKnee 1.2, clasped 1.4).
+- **Sitting styles:** each seat's lean back, lower shoulder or turn in ×1.6 (not more slouch: a rounded back under a raised head read as a jutting neck); a lean in or back with each weight shift while listening (not at a two-top).
+- **Fixes:** Person.update's scratch pool 112 → 256 (a laugh frame used 164: the vectors wrapped); the clap's contact 4.7 cm (forearms crossed by 1 cm in a packed row).
+
+**What changed (instances.js, the low-detail bake):**
+- Bodies without fitted thighs (the far and xfar levels) rested their hands 19 cm ahead with the arms straight (173°), diagonally past the seat in front: the theatre's "pink strap" arms. Now on the thighs near the hips, elbows bent about 100°, the elbows down and a little out.
+- The laugh frames keep the arms' rest direction instead of swinging them out with the capture's twist of the chest.
+- Instanced listeners turn or tip the head every 3–7 s, eased over 0.5 s, during the set (`&moves=nolife`).
+- Seated types sit a little forward (slouch 0.2). Sitting back (−0.1, step 5) broke the bent forearms into flesh shards on the coarse levels (round 10), so step 6 put it back.
+
+**Switches:** `&life=off` (every life-v1 layer), `&lifeoff=breath,drift,look,whisper,onset,comp,hands,face,fidget,rest,laugh,busy` one at a time (and within them `heads`, `shift`, `roll`, `fingers`, `edge`, `restvar`, `bake`); `&bake=old` (the old low-detail bake); `&moves=nolife` (the instanced head turns).
+
+**Tried and taken out:** one hand over the other's wrist on one thigh (the crossing arm tucked its elbow behind the body); hands loosely on the belly (read as the clasped pose); the resting fingers' own aim along the thigh (a 1 cm forearm crossing in a later clap); resting hands shifting along the leg every few seconds (a hand slid off a narrow thigh: the posture rule's floating hand). Drinking during the set: nobody holds a glass yet, so it would be mime.
+
+**Numbers** (`tools/render/liveprobe.mjs`, the motionstrip drive, the six front people; before = 8092, the v2.1 baseline):
+| Venue | moved in 1 s (10.7→11.8) | laugh started ≤0.5 s / ≤1 s (of 6) | median onset | chest range in the laugh, cm | shoulders, cm |
+|---|---|---|---|---|---|
+| Open mic | 6 → 5 | 2/4 → 4/4 | 0.6 → 0.5 s | 6.5 → 8.4 | 15.1 → 18.7 |
+| Club | 2 → 2 | 1/5 → 4/6 | 0.6 → 0.5 s | 5.7 → 9.0 | 12.4 → 19.8 |
+| Theatre | 6 → 5 | 1/4 → 2/6 | 0.7 → 0.8 s (the ripple, by design) | 2.4 → 7.1 | 7.5 → 18.7 |
+
+"Moved" is a head moving 1.5 cm or a hand 1 cm between the judges' held frame and the wide; one sample window, so it is noisy (the head turns come every 2.5–6 s). Nobody is frozen over 3 s of listening in any venue, before or after.
+
+**CPU:** jsbench at 8× throttle, Person.update for all front people, p50: club 27.7 → 29.5 ms, open mic 29.3 → 30.0 ms (step 2; within the box's noise). The still people still pose at 5/3 Hz; only someone in a transition is posed every frame.
+
+**Deliverables:** `docs/mockups/life-v1-<venue>.png` (motionstrip before over after) and `life-v1-<venue>.mp4` (gitignored: 1280×720, 25 fps, 6 s listening then a laugh; top: the mid shot before | after; bottom: the face close before | after).
+
+**Not done:** the theatre's rows behind read partly as standing because the seat backs in front of them don't show (light or the seat geometry, not the pose); the open mic's packed rows still let knees and shoulders meet between front people and the instanced rows (the anatomy gate checks skinned people only); new rest poses (arms folded, an arm over the chair back, chin on hand) still fail the anatomy rules on these rigs.
