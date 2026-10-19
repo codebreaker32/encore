@@ -1,23 +1,19 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status (2026-10-19 17:30 UTC):** working to the user's final plan (`docs/handoff/box-final-plan.txt`, `box-win-plan.txt`, `box-laughfix.txt`). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct.
-- Done:
-  - `noreal` is the default (`b8e44ff`).
-  - The submission docs are merged (`1ad9212`): demo-video shot list and voiceover, devpost, friction log, product feedback.
-  - Three crowd fixes are merged, each gated clean in its worktree:
-    - open mic chairs spaced apart, which also clears the "broken face" (a bun over a face; `4feea37`);
-    - theatre rows seated, with taller lit seat backs and a row falloff (`0e47978`);
-    - club back-of-house shaped by house, sconce and candle light (`4f772d6`).
-  - laugh-v2 is committed (`4e1a145`): smooth, capture-led laughs.
-  - "Before" emulator clips are recorded: `docs/mockups/laugh-fix-v1-<venue>-before.mp4`.
-- In progress: laugh-v2's arm and torso smoothing broke gates (anatomy 66, bindcheck 2, handocc club 9); I'm reworking where the smoothing sits. "After" clips are recorded with the first laugh-v2 build and wait on the gate fix.
-- Next:
-  - the judge round on the merged tree;
-  - the full app flow on the emulator with sound (the box's checkout is old and still has the "Prithvi" MC name: sync it first);
-  - repeated rest poses.
+**Status (2026-10-19 22:45 UTC):** working to the user's final plan (`docs/handoff/box-final-plan.txt`, `box-win-plan.txt`, `box-laughfix.txt`, `box-video-capture.txt`, `box-video-findings.txt`). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct (checklist below in the log).
+- **Merged on real-v1** (`ef12b38`):
+  - `noreal` as the default;
+  - the submission docs;
+  - the open mic, theatre and club fixes;
+  - laugh-v2 (smooth, capture-led laughs; posture low-pass; arm easing with validity checks; the head turn limited as a whole; a cut wakes everyone);
+  - rest-v2 and arm-v2 from the rest worker;
+  - the TV app fixes: no `LightPulse` over the 3D room, the heckle's MC line shown, the LIVE line kept clear of the end card;
+  - the emulator box's checkout synced to real-v1 (no more "Prithvi").
+- **Running:** gates g8 on the frozen copy of `ef12b38`; an arm worker (`fix-arms`) on the remaining arm snaps in the live build (worst in open mic and theatre: the solved/captured arm switch, report by 04:00 UTC).
+- **Judge:** round 17, overall 3/3/3; every venue fails on visible snaps in the emulator clips. The cut flashes are fixed; arm and head snaps are reduced but not gone.
 - **Needs the user:** whether `real-v1` merges to main (nothing pushed). The demo video uses the scripted phone, disclosed on screen and in the voiceover (honesty rule 6; `docs/demo-video.md`).
 
-**Updated:** 2026-10-19 17:30 UTC.
+**Updated:** 2026-10-19 22:45 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -426,3 +422,9 @@ Frames are `e558dd5`. The clips are the emulator recordings: before = the 19 Oct
   - fewer hands on thighs.
 - **Trial merge** `merge-rest` (`3d2748c`, conflicts only at the flag block and the arm easing's end; both kept): jumps over 15° in 20 s at 15 fps with live holds go from club 63 → 59 (worst 89° → 32°), open mic 177 → 140, theatre 139 → 92. Gates (g7) running on the frozen merge tree.
 - **Next fix found:** people held at 5 Hz while "calm" move their hands to a new rest pose in 5 Hz steps (open mic jumps of 90–107° exactly 0.2 s apart). A rest change in progress should count as not calm.
+
+### 2026-10-19 22:45 UTC: rest work merged; two-top gestures; the arm worker
+- `merge-rest` gated on its frozen tree (g7): anatomy 0, handsweep 0, bindcheck clean, handocc 0 except club 3, packcheck ready, brightness pass ×4, edges 0. The club's 3 came from my two-top gesture change (a hand to the chest crossing the candle): at two-tops the hands now mostly stay on the top (handocc club 0 on `ef12b38`). Merged into real-v1.
+- Not calm while the hands move to a new rest (held at 5 Hz, that move went in steps).
+- Live-mode probe on `ef12b38` (15 fps, live holds, 20 s), turns over 15°: club 31 (worst 17.5°), open mic 140 (107°), theatre 92 (39°). What's left in open mic and theatre: arms switching between solved and captured (fidgets) at a hard threshold; the arm worker (`fix-arms`, `~/wt-arms`, :8095) is on it.
+- The finished workers' page servers (:8095–8097) are stopped; the arm worker reuses :8095. All gates now run on a frozen copy (`~/strumble-gate` at the commit under test, :8191), not on the tree I'm editing.
