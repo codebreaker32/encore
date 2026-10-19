@@ -384,3 +384,27 @@ Frames are the merged tree (`e9eb261`: laugh-v2 with the gated arm easing, and t
   - no black screens; the intro voice started 69 ms after it was queued and the debrief voice played (13.5 s, generative); the crowd ran at 24–28 fps during the set (26–29 calls);
   - contact sheet: `docs/android-emu/2026-10-19-flow/flow-f1-contact.jpg`.
   - No heckle came in this run (dead bits weren't forced); E2 will cover it.
+
+### 2026-10-19 21:20 UTC: round 17 (seed 1017)
+Frames are `e558dd5`. The clips are the emulator recordings: before = the 19 Oct real APK, after = `encore-laugh-v2d-emu.apk` (`e558dd5`), now in `docs/mockups/laugh-fix-v1-<venue>-after.mp4`. Minimum of three fresh judges:
+
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 4 | 5 | 4 | 6 | 2 | 3 | 2 | no |
+| theatre | 4 | 3 | 4 | 4 | 4 | 2 | 3 | 1 | no |
+| openmic | 5 | 4 | 5 | 5 | 6 | 2 | 3 | 2 | no |
+
+- **Gone:** the full-frame flash at every cut (all three judges: none in the after clips, present in all before clips), and the eye-roll "blank eyes".
+- **Glitch fails, still visible frame by frame in the live build:**
+  - club: the hoodie man's arm flicks between a short clap and the planted table pose every few frames (the old build does it too);
+  - open mic: the blonde's head snaps 25–40° in one frame several times;
+  - theatre: a head and an arm snap in the high shot right after a cut.
+- **Why my probe missed them:** it steps every person every frame. The live page holds calm people at 5 Hz and people out of shot at 3 Hz, and the emulator draws at about 15 fps while recording. So someone coming into shot at a cut had a stale pose, and four neck-to-head bones each within their limit still added up to 35–40° between two frames.
+- **Fixes after the round** (`e3373b4`):
+  - a cut (the camera moving more than 0.4 m since the last call) wakes everyone;
+  - the head as a whole turns at most 150°/s in the world;
+  - no short claps at two-tops;
+  - `jumpprobe` runs as the emulator draws (`FPS=15`, `&livehold=1`).
+
+  Turns over 15° in one frame, 20 s at 15 fps, new vs `&laugh=old`: club 63 vs 148, open mic 177 vs 474, theatre 139 vs 360 (most of what's left is resting hands flipping between two IK answers; the rest-pose worker is on that).
+- **Other tells, unchanged:** waxy faces; the laugh too small at TV distance (2–3 people move); the theatre's high "floor" shot showing mostly the tops of heads; identical rest poses; low-detail second rows in mids.
