@@ -1,10 +1,9 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status:** done. Tree `99a5956`+docs on branch `real-v1`, fully gated and packed; the TV and emulator APKs are built and the emulator checked. New features stopped at 10:27 UTC (freeze 16:30): judge scores were flat for 5+ rounds (stop rule), so further changes weren't worth re-gating and rebuilding.
-**Last result:** final judge round 15 (seed 1015): overall club 4–5, theatre 3–4, open mic 4–5 (min of three judges); nothing passes the 7/10 bar. Verdict below: a lively, well-lit game crowd, not yet real people.
-**Next (for the user):** install `~/apk-out/encore-release-2026-10-19-real-arm.apk` on the TV and run tv-sweep round 10 (`prototypes/crowd3d/tools/render/tv-sweep.md`); look at `docs/mockups/real-v1-<venue>.png` and `life-v1-<venue>.mp4`.
-**Needs the user:** (1) the TV check (fps on the Mali-G31 decides whether DOF/hair2/bloom stay on in close-ups); (2) whether `real-v1` merges to main (nothing pushed); (3) the theatre's raked rows still read as standing: needs a seat or camera decision, not tuning.
-**Updated:** 2026-10-19 10:27 UTC.
+**Status (2026-10-19 12:52 UTC):** working to the user's final plan (`~/final-plan.txt`, read 12:50 UTC; it replaces `~/laughfix.txt`'s 03:30 end). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct for the final gates, the final judge round, `~/apk-out/encore-final-{emu,arm}.apk`, final emulator clips `docs/mockups/final-<venue>.mp4` and a "ready for the video" summary here. Order: (1) laugh motion smooth and capture-led, (2) theatre rows seated, (3) open mic interpenetration and the broken back-row face, (4) club back-of-house cut-outs, (5) repeated rest poses, (6) the full app flow on the emulator with sound. The Google TV is retired: every video and audio check is on the Android TV emulator. `noreal` becomes the default (TV round 10: real-v1 cost 2–5 fps). The arena is left alone.
+**Previous session's result:** final judge round 15 (seed 1015): overall club 4–5, theatre 3–4, open mic 4–5; nothing passes the 7/10 bar.
+**Needs the user:** whether `real-v1` merges to main (nothing pushed).
+**Updated:** 2026-10-19 12:52 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -268,3 +267,9 @@ anatomy TOTAL 0; handsweep 0; bindcheck clean; handocc 0 flickers in all four ve
 - TV: `~/apk-out/encore-release-2026-10-19-real-arm.apk` (armeabi-v7a, 128 MB; the packed crowd page carries real.js, the AO files and the candle pools). Emulator: `~/apk-out/encore-release-2026-10-19-real-emu.apk` (x86/x86_64).
 - Emulator (720p, -gpu host), crowdtest cycle per venue: steady 30 fps (the cap) in club, theatre and open mic, with dips to 26–29 at cuts and one 14–17 during load; frames `docs/android-emu/real-v1-2026-10-19/final-crowdtest-3venues.png`. The emulator box is stopped.
 - Branch `real-v1` is local only (never pushed); `real-v1-life` (the motion agent's) is fully merged into it. Worktrees on the box: `~/strumble-base` (baseline), `~/strumble-life`, `~/strumble-gate` (frozen gate copy); servers on 8091/8092/8093/8191 (and the motion agent's dev copy on 8094) can be stopped.
+
+## Session 3 (19–20 Oct): smooth laughs and the final plan
+
+### 2026-10-19 12:52 UTC: new instructions
+- `~/laughfix.txt` (the TV report: "the movement while they laugh is way too unreal and glitchy"; TV round 10: real-v1 costs 2–5 fps, club 21 vs 23 with noreal, open mic 19 vs 22, theatre 17 vs 22) and `~/final-plan.txt` (the plan above). The judge now also watches emulator clips: any visible pose jump, pop, snap, flicker or black frame fails the venue.
+- "Before" clips recording on the emulator box (APK `encore-release-2026-10-19-real-emu.apk`, a words-on stand-up set via the fake phone with `scripts/standup-demo.json`, 85 s per venue from go-live).
