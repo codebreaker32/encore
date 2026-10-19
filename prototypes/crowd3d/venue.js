@@ -151,12 +151,12 @@ export const SEAT_GEOS = {
     box(0.025, 0.44, 0.025, -0.17, 0.22, 0.17), box(0.025, 0.44, 0.025, 0.17, 0.22, 0.17),
   ].map((g) => g.toNonIndexed())),
   // theatre seat, far rows: cushion and back only (the armrests vanish behind the people at that distance)
-  theatreLite: () => mergeGeometries([box(0.5, 0.1, 0.46, 0, 0.4, 0.02), box(0.5, 0.55, 0.09, 0, 0.72, -0.21)].map((g) => g.toNonIndexed())),
+  theatreLite: (dh = 0) => mergeGeometries([box(0.5, 0.1, 0.46, 0, 0.4, 0.02), box(0.5, 0.55 + dh, 0.09, 0, 0.72 + dh / 2, -0.21)].map((g) => g.toNonIndexed())),
   // theatre seat: cushion, back, armrests
-  theatre: () => mergeGeometries([
+  theatre: (dh = 0) => mergeGeometries([
     // (armrest tops at 0.57 m, below hands resting at about 0.62: at 0.67 they hid the hands from the low side-on
     // setups frame to frame, tools/render/handocc.mjs)
-    box(0.5, 0.1, 0.46, 0, 0.4, 0.02), box(0.5, 0.55, 0.09, 0, 0.72, -0.21), box(0.05, 0.12, 0.46, -0.27, 0.51, 0), box(0.05, 0.12, 0.46, 0.27, 0.51, 0),
+    box(0.5, 0.1, 0.46, 0, 0.4, 0.02), box(0.5, 0.55 + dh, 0.09, 0, 0.72 + dh / 2, -0.21), box(0.05, 0.12, 0.46, -0.27, 0.51, 0), box(0.05, 0.12, 0.46, 0.27, 0.51, 0),
   ].map((g) => g.toNonIndexed())),
   // pub chair: a heavier wooden chair with a spindle back
   pub: () => mergeGeometries([
@@ -165,6 +165,13 @@ export const SEAT_GEOS = {
   ].map((g) => g.toNonIndexed())),
 };
 SEAT_GEOS.chairRow = SEAT_GEOS.chair; // the club's raked rows: the same chair, black
+// the theatre's rows behind the front one: high-backed seats (THEATRE_BACK_RISE m taller, tops at 1.17 m). With the
+// 1:3 rake and the wide 2.85 m up, the standard backs (tops at 1.0 m, 0.7 m above the next row's floor) cut each row
+// behind at its hips, so the whole torso and the hands on the thighs showed: upright mannequins on risers. The taller
+// backs cut them at the belly or lower chest, as an audience behind seats reads from the stage (rooms.js; &ab=lowbacks)
+export const THEATRE_BACK_RISE = 0.17;
+SEAT_GEOS.theatreHigh = () => SEAT_GEOS.theatre(THEATRE_BACK_RISE);
+SEAT_GEOS.theatreLiteHigh = () => SEAT_GEOS.theatreLite(THEATRE_BACK_RISE);
 // velvet in the dark for the theatre (0x4a1014), no red seats in the club (docs/crowd-visual-plan.md R2e, R11)
 // (real-v1: theatre velvet that has aged unevenly, each seat a little lighter, darker or more faded than the next, so
 // the rows aren't identical red blocks; vertex colours, no cost)
@@ -172,7 +179,7 @@ function velvet(s) {
   const h = Math.abs(Math.sin(s.x * 12.9898 + s.z * 78.233 + (s.row || 0) * 3.1) * 43758.5453) % 1;
   return new THREE.Color(0x4a1014).multiplyScalar(0.82 + 0.3 * h).lerp(new THREE.Color(0x3a1a1c), 0.25 * ((h * 7.3) % 1)).getHex();
 }
-const SEAT_COLOURS = { chair: () => 0x3a2418, chairRow: () => 0x1a1210, theatre: (s) => velvet(s), theatreLite: (s) => velvet(s), pub: (s) => [0x3a2418, 0x4a2c1a, 0x2a1a12, 0x5a3a22, 0x30241c][Math.abs(Math.round(s.x * 7 + s.z * 3)) % 5] };
+const SEAT_COLOURS = { chair: () => 0x3a2418, chairRow: () => 0x1a1210, theatre: (s) => velvet(s), theatreLite: (s) => velvet(s), theatreHigh: (s) => velvet(s), theatreLiteHigh: (s) => velvet(s), pub: (s) => [0x3a2418, 0x4a2c1a, 0x2a1a12, 0x5a3a22, 0x30241c][Math.abs(Math.round(s.x * 7 + s.z * 3)) % 5] };
 /**
  * Furniture for every visible seat (merged into the room's vertex-coloured mesh) and a contact blob under each.
  * depthFor(seat) darkens the furniture with the rows, the same falloff as the people in it.

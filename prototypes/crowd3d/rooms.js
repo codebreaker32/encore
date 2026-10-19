@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { rng } from './people.js';
-import { Collector, canvasTex, planks, glowPoints, glowTexture, beams, addSeats } from './venue.js';
+import { Collector, canvasTex, planks, glowPoints, glowTexture, beams, addSeats, seatYaw, THEATRE_BACK_RISE } from './venue.js';
 
 const box = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 const uvScale = (g, su, sv) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * su, uv.getY(i) * sv); return g; };
@@ -123,7 +123,17 @@ function buildTheatre(scene, rows, P, visible, depthFor = () => 1) {
   scene.add(beams(lamps.map((p) => ({ from: p.clone().addScaledVector(stagePoint.clone().sub(p).normalize(), 0.16), to: stagePoint.clone().add(new THREE.Vector3(p.x * 0.1, -1.2, 0)), r0: 0.08, r1: 1.1 }))));
   C0.add('lambert', new THREE.PlaneGeometry(W * 2, B + 4).rotateX(Math.PI / 2).translate(0, C, B / 2 - 2), 0x0a0707, { ao: 0 });
   // seats: theatre seats in every visible place (balcony too)
-  addSeats(scene, C0, rows.flatMap((r) => r.seats).filter(visible), (st) => (st.row >= 2 ? 'theatreLite' : 'theatre'), depthFor);
+  // (rows 1 and up on the floor: high backs, so the rows behind read as seated behind them, not standing; venue.js
+  // THEATRE_BACK_RISE. &ab=lowbacks: the standard backs everywhere)
+  const high = (st) => !P.lowBacks && st.row >= 1 && !st.balcony;
+  const seen = rows.flatMap((r) => r.seats).filter(visible);
+  addSeats(scene, C0, seen, (st) => (st.row >= 2 ? 'theatreLite' : 'theatre') + (high(st) ? 'High' : ''), depthFor);
+  // the backs' top rolls, a lighter, worn velvet facing up into the house light: a broken line under each row's chests
+  // that says "seat backs" from the stage, where the velvet's face is near black (merged: no draw call; &ab=nocaps)
+  if (!P.noSeatCaps) {
+    const cap = box(0.5, 0.045, 0.11, 0, 0.995 + (P.lowBacks ? 0 : THEATRE_BACK_RISE) + 0.012, -0.21), mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
+    for (const st of seen) if (st.row >= 1 && !st.balcony) C0.add('lambert', cap, new THREE.Color(0x7a3430).multiplyScalar(depthFor(st)), { matrix: mtx.compose(new THREE.Vector3(st.x, st.y, st.z), q.setFromAxisAngle(up, seatYaw(st)), one), ao: 0 });
+  }
   C0.build(scene, 'lambert', new THREE.MeshLambertMaterial({ vertexColors: true }), 'room');
   C0.build(scene, 'basic', new THREE.MeshBasicMaterial({ vertexColors: true }), 'room-emissive');
   const points = glowPoints(glow, glowTexture());
