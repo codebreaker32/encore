@@ -1797,7 +1797,7 @@ function autofocus(u) {
     if (sc < best) { best = sc; dist = _afh.distanceTo(camera.position); }
   }
   if (!dist || ab('nodof')) { u.y = 0; return; }
-  const f = 0.007 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), N = 2.4; // (the focal length from the lens: a 14 mm-high gate)
+  const f = 0.007 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), N = num('fstop', 2.4); // (the focal length from the lens: a 14 mm-high gate)
   u.set(dist, ((f * f) / (N * Math.max(0.05, dist - f)) / 0.014) * RH, camera.near, camera.far);
 }
 const post = VIEW === 'avatar' || ab('nopost') || (FOLD && HEJL) || ab('fxaa') || (P.fast && !ab('nofxaa')) ? null : finalPass(); // (FXAA, below, does the final pass's work on tv)

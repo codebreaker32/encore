@@ -1,10 +1,10 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status:** round 04 judged and fixed after (DOF halo, cloth sheen, hair highlight, theatre velvet); the lens and the hair's second pass now run only in close and mid shots so the wide keeps its TV cost. Gates running on a frozen copy (:8191). Motion agent working on breathing, poses and laughs.
-**Last result:** round 04 flat (real? club 1, theatre 1, open mic 2). The judges agree the remaining tells are mostly motion (frozen bodies, identical rest poses) plus the asset class itself.
-**Next:** gate results; merge the motion agent's next step; round 05 on the merged tree.
-**Needs the user:** nothing yet.
-**Updated:** 2026-10-18 15:45 UTC.
+**Status:** resumed 19 Oct 04:15 UTC after the usage-limit pause and box restart; round 06 (the retuned judge) logged. New freeze 16:30 UTC 19 Oct.
+**Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
+**Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
+**Needs the user:** nothing.
+**Updated:** 2026-10-19 04:20 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -123,3 +123,16 @@ The motion step lifted motion to 3–4 but not "real?" (1–2); judges still see
 
 ### 2026-10-18 16:25 UTC: gates on the merge with life-v1 step 2 (6941f34, frozen copy :8191)
 anatomy TOTAL 0; handsweep 0; bindcheck clean; handocc 0 flickers (area verdict) in all four venues; pack 20.2 MB; packcheck ready ×4; brightness gate pass ×4; edge bands 0 at both viewports in all four venues. One warning for the motion agent: "Person.update used 114 scratch vectors of 112" (theatre).
+
+### 2026-10-19 04:20 UTC: round 06 (seed 1006), the retuned judge (believable audience at TV distance)
+Frames from the tree at 9139949 (rendering through round 05 plus life-v1 step 2). Columns are the new categories; "real footage" is for reference only.
+
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 3 | 5 | 4 | 6 | 5 | 4 | 1 | no |
+| theatre | 4 | 4 | 3 | 3 | 4 | 4 | 3 | 1 | no |
+| openmic | 5 | 5 | 4 | 4 | 5 | 4 | 4 | 1 | no |
+
+Top tells: the club's back of house as flat black cut-outs; laughs too small (most people hold their rest pose through the laugh, mostly heads and jaws); the theatre's rows behind the front two as standing mannequins with no seats or rake; the theatre laugh's black "hole" mouths reading as pain; open mic bodies interpenetrating in the packed rows and a back-row face smeared; identical hands-on-knees and forearms-on-table rest poses; a dark outline where the DOF meets clothing; the theatre's left block hot red under the side key. Held-out: club "tables: group house right" t 15.5; theatre "track along the front row" t 12.0; open mic "the chairs: the front from house left" t 10.8.
+
+The box was stopped by the usage limit at about 17:00 UTC on 18 Oct (the motion agent mid step 3, uncommitted) and restarted at 04:15 UTC on 19 Oct; the user set a new freeze, 16:30 UTC 19 Oct, and the order of fixes above.
