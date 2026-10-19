@@ -368,3 +368,29 @@ export function velvetLit(m) {
   m.customProgramCacheKey = () => key0() + '|velvet';
   return m;
 }
+
+/**
+ * The candles' pools on the club's table tops (&ab=nocandle drops them with the face term): a warm additive disc on each
+ * top around its candle, flickering with it, one instanced draw. The judges, every round: "the candles light nothing".
+ */
+export function candlePools(scene, tables, top = 0.751) {
+  const g = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+  const m = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: /* glsl */ `varying vec2 vP; varying float vS;
+      void main() { vP = position.xz * 2.0; vS = instanceMatrix[3][0] * 3.1 + instanceMatrix[3][2];
+        gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4( position, 1.0 ); }`,
+    fragmentShader: /* glsl */ `uniform float uTime; varying vec2 vP; varying float vS;
+      void main() { float r = length( vP ); if ( r > 1.0 ) discard;
+        float fl = 0.85 + 0.15 * sin( uTime * 11.0 + vS ) * sin( uTime * 7.3 + vS * 2.1 );
+        float a = pow( 1.0 - r, 2.2 ) * 0.55 * fl;
+        gl_FragColor = vec4( vec3( 1.0, 0.55, 0.22 ) * a, 1.0 ); }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  });
+  const mesh = new THREE.InstancedMesh(g, m, Math.max(1, tables.length));
+  const mx = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3(0.75, 1, 0.75);
+  tables.forEach((t, i) => mesh.setMatrixAt(i, mx.compose(p.set(t.x + 0.01, (t.y || 0) + top, t.z - 0.06), q, s)));
+  mesh.count = tables.length; mesh.frustumCulled = false; mesh.renderOrder = 2; mesh.name = 'candle-pools';
+  scene.add(mesh);
+  return m.uniforms.uTime;
+}

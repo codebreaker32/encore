@@ -61,7 +61,7 @@ import { ARENA } from './arena.js';
 import { makeTraffic } from './traffic.js';
 import { CrowdSound, cueFor } from './sound.js';
 import { applyLook } from './look.js';
-import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue, HandShadows, realHair, velvetLit } from './real.js';
+import { realMasks, realLit, realOptions, Catchlights, Candles, clothHue, HandShadows, realHair, velvetLit, candlePools } from './real.js';
 import { buildSetups, pickSetup, PACE } from './director.js';
 
 const Q = new URLSearchParams(location.search);
@@ -643,7 +643,7 @@ const SKIN_DIRECT = [
 const REAL = !ab('noreal') && P.frontMat === 'lambert';
 realOptions({ nospec: ab('nospec'), nosheen: ab('nosheen'), nopores: ab('nopores'), pores: num('pores', 0), fill: !!PEOPLE_LIGHT, fillK: num('frontfill', 0.6), wrap: num('wrap', 0.15) }); // (the front people's fill and house light at 0.6, the skin's wrap 0.15 (was 0.35, which flattened the faces); &frontfill= and &wrap= are test knobs)
 const catchlights = REAL && !ab('nocatch') ? new Catchlights(scene, key) : null; // (&ab=nocatch: none)
-let candles = null; // (real.js Candles: the club's table candles on the front people)
+let candles = null, candlePoolTime = null; // (real.js Candles: the club's table candles on the front people; their pools on the tops)
 function skinLit(m) {
   const prev = m.onBeforeCompile;
   m.onBeforeCompile = (sh, r) => {
@@ -1057,7 +1057,8 @@ async function buildRoom() {
   for (const p of people) if (p.kind === 'front') p.rig.model.traverse((o) => { if (o.userData.fringe) { o.userData.core = o.parent.getObjectByName(o.userData.coreName); if (o.userData.core) o.userData.core = o.userData.core.material; fringes.push(o); } });
   // (the club's table candles on the people at them: venue.js puts each candle at the table's middle, 6 cm stage-side)
   if (REAL && !ab('nocandle') && VENUE_ID === 'club') {
-    candles = new Candles(scene, num('candle', 0.2));
+    candles = new Candles(scene, num('candle', 0.6));
+    { const tabs = new Set(); for (const p of people) if (p.kind === 'front' && p.src && p.src.twoTop) tabs.add(p.src.twoTop); candlePoolTime = candlePools(scene, [...tabs]); }
     for (const p of people) if (p.kind === 'front' && p.src && p.src.twoTop) { const t = p.src.twoTop; candles.add(p, p.rig.model, new THREE.Vector3(t.x + 0.01, (t.y || 0) + 0.81, t.z - 0.06), t.x * 3.1 + t.z); }
   }
   // (the hands on the club's tables: contact shadows on the tops, real.js HandShadows; venue.js: the top at 0.75 m, r 0.4)
@@ -2188,6 +2189,7 @@ async function main() {
     for (const u of hazeTimes) u.value = now;
     if (candle) candle.intensity = 0.9 * (0.85 + 0.15 * Math.sin(now * 11) * Math.sin(now * 7.3));
     if (candles) candles.now = now;
+    if (candlePoolTime) candlePoolTime.value = now;
     soundTick(now);
     if (frames % 15 === 0) captionFor();
     if (FXAA) FXAA.render(now); else renderer.render(scene, camera);
