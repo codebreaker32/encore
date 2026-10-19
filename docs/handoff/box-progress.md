@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 04:40 UTC.
+**Updated:** 2026-10-19 05:45 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -155,3 +155,14 @@ Top tells: laughs carried by one to three people while the rest hold their pose 
 
 ### 2026-10-19 05:25 UTC: gates on 61986f3 (life step 3 + the round-07 house changes before the second club step)
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edges 0 in club/open mic/theatre at both viewports and the arena at 962×541; the arena's 1018×541 edge run errored (an empty result under load: rerun on the final tree). The scratch-vector warning is fixed in life step 4 (pool 144). Merged life-v1 step 4 (9bc4307: laughs 40% more in the body, shoulders up at onset, theatre heads back not down, hands over faces front row only, more varied resting hands; the agent's gates all 0). Round 08 frames (seed 1008) being judged.
+
+### 2026-10-19 05:45 UTC: round 08 (seed 1008): life-v1 step 4, the club's house in the mids
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 4 | 3 | 5 | 4 | 6 | 5 | 4 | 1 | no |
+| theatre | 4 | 4 | 4 | 3 | 4 | 4 | 3 | 1 | no |
+| openmic | 5 | 5 | 4 | 5 | 5 | 3 | 4 | 1 | no |
+
+Flat against round 07 (overall 4 / 3–4 / 4). Top tells: the club laugh still "never builds" in the strip (a sip, a hand, head turns); the wide and the held frame near-identical in pose; the theatre's back half still read as cut-outs and its front row bolt upright; the DOF's dark halos round every in-focus person and comb streaks in hair (named by all three judges, every round); open mic bodies packed and overlapping.
+- **Decision:** the DOF blur is off by default (`&ab=dofblur` restores it). With it off the halos and the hair streaks are gone and the faces behind read as people (compared on the open mic's held and face frames); it was also the lens's main TV cost. Bloom still uses the mips in close and mid shots.
+- judgeset: the strip now holds its shot with one cut (a probe showed the camera static either way; no change in the frames).

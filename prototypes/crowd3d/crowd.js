@@ -1803,7 +1803,9 @@ function autofocus(u) {
     const sc = Math.hypot(_af.x, (_af.y - 0.15) * 1.3);
     if (sc < best) { best = sc; dist = _afh.distanceTo(camera.position); }
   }
-  if (!dist || ab('nodof')) { u.y = 0; return; }
+  // (the blur itself is off by default since round 08: three judges in every round named its edge halos round in-focus
+  // people and its comb streaks in hair the top artefact; &ab=dofblur turns it back on; bloom keeps the mips)
+  if (!dist || ab('nodof') || !ab('dofblur')) { u.y = 0; return; }
   const f = 0.007 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), N = num('fstop', 2.4); // (the focal length from the lens: a 14 mm-high gate)
   u.set(dist, ((f * f) / (N * Math.max(0.05, dist - f)) / 0.014) * RH, camera.near, camera.far);
 }
