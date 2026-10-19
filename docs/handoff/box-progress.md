@@ -273,3 +273,8 @@ anatomy TOTAL 0; handsweep 0; bindcheck clean; handocc 0 flickers in all four ve
 ### 2026-10-19 12:52 UTC: new instructions
 - `~/laughfix.txt` (the TV report: "the movement while they laugh is way too unreal and glitchy"; TV round 10: real-v1 costs 2–5 fps, club 21 vs 23 with noreal, open mic 19 vs 22, theatre 17 vs 22) and `~/final-plan.txt` (the plan above). The judge now also watches emulator clips: any visible pose jump, pop, snap, flicker or black frame fails the venue.
 - "Before" clips recording on the emulator box (APK `encore-release-2026-10-19-real-emu.apk`, a words-on stand-up set via the fake phone with `scripts/standup-demo.json`, 85 s per venue from go-live).
+
+### 2026-10-19 12:55 UTC: the win plan
+`~/win-plan.txt` (read 12:52 UTC): steer the remaining work by the hackathon's judging criteria (tech implementation incl. the AWS Builder challenge, design, potential impact, quality of the idea; the friction log bonus; judges score the video, description and images). A submission worker takes `docs/demo-video.md` (shot list and voiceover), `docs/devpost.md` (impact, why creative, measured numbers), `docs/friction-log.md` and `docs/product-feedback.md`; the full app flow on the emulator with sound is checked by me (one shared emulator box) and its findings handed to that worker.
+- Done: real-v1's rendering pass off by default (`b8e44ff`; `&ab=real` brings it back).
+- Workers (each in its own worktree and branch, merged only when gates pass): theatre rows `~/wt-theatre` (fix-theatre, :8095), open mic overlap and the back-row face `~/wt-openmic` (fix-openmic, :8096), club back-of-house `~/wt-club` (fix-club, :8097). The laugh motion is mine, in `~/strumble` (:8091).
