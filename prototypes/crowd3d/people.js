@@ -2751,23 +2751,23 @@ export class Person {
       const ok = !this.fresh && this._amOk && dtA > 0 && dtA < 0.5, lim = 5.76 * dtA; // (330 degrees a second, in radians)
       let moved = false;
       if (ok) {
-        const before = armCollisions(this), hL = NV().setFromMatrixPosition(b.lHand.matrixWorld), hR = NV().setFromMatrixPosition(b.rHand.matrixWorld);
+        const before = armCollisions(this) + limbs(this), hL = NV().setFromMatrixPosition(b.lHand.matrixWorld), hR = NV().setFromMatrixPosition(b.rHand.matrixWorld);
         for (let i = 0; i < AB.length; i++) {
           const bn = b[AB[i]]; if (!bn) continue;
           AQ1[i].copy(bn.quaternion);
           const d = 2 * Math.acos(Math.min(1, Math.abs(AQ0[i].dot(bn.quaternion))));
           const k = Math.min(clapW > 0.05 || upW > 0.05 ? 1 : 1 - Math.exp(-dtA / 0.1), d > lim ? lim / d : 1);
-          if (k < 1 && d > 1e-4) { bn.quaternion.copy((Person._qs ||= new THREE.Quaternion()).copy(AQ0[i]).slerp(bn.quaternion, k)); moved = true; }
+          if (k < 1 && d > 0.009) { bn.quaternion.copy((Person._qs ||= new THREE.Quaternion()).copy(AQ0[i]).slerp(bn.quaternion, k)); moved = true; }
         }
         if (moved) {
           b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
           const rest = this._resting || this._planted;
           const off = rest && (NV().setFromMatrixPosition(b.lHand.matrixWorld).distanceTo(hL) > 0.02 || NV().setFromMatrixPosition(b.rHand.matrixWorld).distanceTo(hR) > 0.02);
-          if (off || armCollisions(this) > before) {
+          if (off || armCollisions(this) + limbs(this) > before) {
             // (the solved arms back, but the hands' own easing kept when it hits nothing: a hand's turn doesn't move the wrist)
             for (let i = 0; i < 6; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]);
             b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
-            if (armCollisions(this) > before) { for (let i = 6; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]); b.lHand.updateMatrixWorld(true); b.rHand.updateMatrixWorld(true); }
+            if (armCollisions(this) + limbs(this) > before) { for (let i = 6; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]); b.lHand.updateMatrixWorld(true); b.rHand.updateMatrixWorld(true); }
           }
         }
       }
