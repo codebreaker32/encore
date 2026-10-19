@@ -338,3 +338,11 @@ Turns over 8° also fell by two thirds or more. What's left is mostly two people
 - Merged `fix-openmic` (chairs 0.56 m apart on the arcs, `&ab=omtight`; the "broken back-row face" was a front woman's hair bun over the mouth of the man behind), `fix-theatre` (seat backs 0.17 m taller from row 1, lit top rolls, falloff 0.1 a row to 0.45; `&ab=lowbacks,nocaps,oldfall`), `fix-club` (per-vertex house, sconce and candle light on the instanced back-of-house, per-person variation, falloff to 11.5 m; `&ab=flatback`). Each worker's gates: all 0 / pass (two arena edge runs timed out under load and passed re-run alone). Draw calls equal or lower.
 - The gates on laugh-v2 (`4e1a145`) failed: anatomy 66 findings, bindcheck 2 runs, handocc club 9 flickers. Cause: the arm and torso rate limits ran after the anatomy fixes and undid them. Reworking.
 - The user's note: the session sat for hours on a permission prompt for a file outside the repo. From now on every file I use lives in `~/strumble` (`.box/` for scratch, git-ignored), and the plans are read from `docs/handoff/box-*.txt`.
+
+### End-of-run checklist (from 16:30 UTC on 20 Oct; deadline 18:29 UTC)
+1. Stop new work. Final gates on the final tree, all 0 / pass.
+2. Final judge round (three fresh judges, min score, held-out pick), with emulator clips; any visible glitch fails the venue.
+3. Build `~/apk-out/encore-final-emu.apk` and `~/apk-out/encore-final-arm.apk`.
+4. Final emulator clips per venue: `docs/mockups/final-<venue>.mp4`.
+5. `docs/handoff/box-video-capture.txt`: record the capture plan in `docs/demo-video.md` on the final emulator APK into `docs/android-emu/2026-10-20-final/`, with stats.txt per take, and fill R1, R2, R3 and R5. **E2 first** (the stand-up hero set at the comedy club, sarcastic MC, words on, through the finale, debrief and green room, 2–3 takes), then E1 (the bill and venue tour, 2 takes), E3 (poetry at the theatre, 1 take) and the stills. Watch each take for glitches and mark the best take in a README there. Never use the emulator box while the video agent does (`pgrep -f emu720` on the box).
+6. A "ready for the video" summary at the top of this file. Stop the emulator box (only when the video agent isn't using it).
