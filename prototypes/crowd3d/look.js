@@ -38,12 +38,12 @@ const VENUES = {
     // &look=stagedark keeps the old theatre.)
     // (real-v1, 2026-10-19: the judges read the lifted, flat house as a grid of standing mannequins with no depth; the
     // rows now fall off 0.25 a row to 0.35 under a slightly thicker haze, still people, not cut-outs)
-    depthSlope: 0.25, depthFloor: 0.35, hemi: 14, fill: 1.2, sky: 0x7a6a5e, // (a warm, low house light from above)
-    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, fill: 0.35, sky: null, fog: { color: 0x10121a, wide: [4, 30] } },
+    depthSlope: 0.2, depthFloor: 0.45, hemi: 14, fill: 1.2, sky: 0x7a6a5e, fogClose: [5, 28], closeDim: 0.35, // (a warm, low house light from above; round 08: the close-ups' haze and dim no longer black out the rows behind)
+    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, fill: 0.35, sky: null, fogClose: null, closeDim: 0.12, fog: { color: 0x10121a, wide: [4, 30] } },
   },
   openmic: {
     key: { pos: [0.2, 2.5, -0.6], target: [0, 0.5, 1.8], intensity: 70, angle: 0.42, penumbra: 0.4 }, // (the back arc at 24° off: outside)
-    fog: { color: 0x161009, wide: [3, 14] }, haze: [0.12, 0.08, 0.05], phones: 2, exits: [],
+    fog: { color: 0x161009, wide: [3, 14] }, haze: [0.12, 0.08, 0.05], phones: 2, exits: [], fogClose: [4, 18], closeDim: 0.35, // (round 08: the rows behind in the mids)
   },
   // the arena: only the rail is lit (its skinned people, and the instanced places in row 0); behind it the key falls
   // with row depth too (keyDepth), since a spot 14 m away can't end its pool at the rail
