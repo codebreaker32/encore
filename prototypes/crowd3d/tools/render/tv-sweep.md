@@ -512,6 +512,12 @@ switch and costs nothing when off. What changed on the tv preset:
 - Box costs (software GPU, relative only): calls club 43 → 55, theatre 38 → 47, open mic 48 → 59; triangles +5.7k; DOF
   is the biggest box cost (club wide 3.4 → 5.5 ms, 3.8 with nodof).
 
+**Updated 19 Oct (box session):** the DOF blur now runs at f/6 (gentler; `&fstop=` to try others) and, like the bloom
+and the hair's second pass, only in close and mid shots: the wide keeps the baseline's cost plus 3 calls (catchlights,
+hand shadows, candle pools in the club). The lit house in the club, theatre and open mic is a look change (haze,
+hemisphere, depth), not a per-pixel cost. On the Android TV emulator every variant (all of real-v1 on, each term off,
+all off) held the same 30 fps steady state; the Mali-G31 is the real test.
+
 **What to decide from it:** for each venue compare `base` with `old` (all of real-v1 off). If `base` is within 1 fps of
 `old`, keep everything. If not, read `nodof`, `nohair2`, `noreal` and `nograde` to see which term costs, and make that
 term tv-off (its switch inverted) first: DOF, then hair2. The club must not drop under its 23–25 fps.
