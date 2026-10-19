@@ -2739,27 +2739,40 @@ export class Person {
       const pk = face.duo ? 1.5 : 1; // (the TV's one press shape, overdriven as the brow)
       face.set('mouthPressLeft', Math.min(1.4, (bored * 0.4 + phone * 0.2 + xp.press + M.press) * pk)); face.set('mouthPressRight', Math.min(1.4, (bored * 0.4 + xp.press + M.press) * pk));
     }
-    // (laugh-v2: the arms turn at most 330 degrees a second, about 11 a frame at 30 fps: a switch in the arm pass (a short
-    // clap ending, a hand-to-chest gesture's elbow flipping sides, a rest handed over) swung a whole arm 40-105 degrees in
-    // one frame; now it travels over a few frames. Ordinary motion (a clap at 2-3 Hz, a slap) stays under the limit.)
-    if (SMOOTH && !this.force && rig.b.lUpper) {
+    // (laugh-v2: the arms turn at most 330 degrees a second, about 11 a frame at 30 fps, and outside a clap or a raised
+    // arm they are eased over 0.1 s: a switch in the arm pass (a short clap ending, a hand-to-chest gesture's elbow
+    // flipping sides, a rest handed over) swung a whole arm 40-105 degrees in one frame, and a resting arm's solve could
+    // flip between two answers frame by frame. The eased arms are kept only if they hit nothing the solved ones didn't
+    // and a resting or planted hand stays on its rest (within 2 cm); otherwise the solved pose stands.)
+    if (SMOOTH && !this.force && b.lUpper) {
       const dtA = now - (this._amT ?? -1e9); this._amT = now;
       const AB = (Person._armB ||= ['lClav', 'rClav', 'lUpper', 'rUpper', 'lFore', 'rFore', 'lHand', 'rHand']), AQ0 = (this._am ||= AB.map(() => new THREE.Quaternion()));
+      const AQ1 = (this._am1 ||= AB.map(() => new THREE.Quaternion()));
       const ok = !this.fresh && this._amOk && dtA > 0 && dtA < 0.5, lim = 5.76 * dtA; // (330 degrees a second, in radians)
       let moved = false;
-      for (let i = 0; i < AB.length; i++) {
-        const bn = b[AB[i]]; if (!bn) continue;
-        if (ok) {
+      if (ok) {
+        const before = armCollisions(this), hL = NV().setFromMatrixPosition(b.lHand.matrixWorld), hR = NV().setFromMatrixPosition(b.rHand.matrixWorld);
+        for (let i = 0; i < AB.length; i++) {
+          const bn = b[AB[i]]; if (!bn) continue;
+          AQ1[i].copy(bn.quaternion);
           const d = 2 * Math.acos(Math.min(1, Math.abs(AQ0[i].dot(bn.quaternion))));
-          // (and eased over 0.1 s unless clapping or an arm is up: a resting arm's solve flipped between two answers frame by
-          // frame, the hand 20-25 degrees in the world; eased, the next frame's solve starts from the mean and settles)
           const k = Math.min(clapW > 0.05 || upW > 0.05 ? 1 : 1 - Math.exp(-dtA / 0.1), d > lim ? lim / d : 1);
-          if (k < 1 && d > 1e-4) { bn.quaternion.copy(AQ0[i].slerp(bn.quaternion, k)); moved = true; }
+          if (k < 1 && d > 1e-4) { bn.quaternion.copy((Person._qs ||= new THREE.Quaternion()).copy(AQ0[i]).slerp(bn.quaternion, k)); moved = true; }
         }
-        AQ0[i].copy(bn.quaternion);
+        if (moved) {
+          b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
+          const rest = this._resting || this._planted;
+          const off = rest && (NV().setFromMatrixPosition(b.lHand.matrixWorld).distanceTo(hL) > 0.02 || NV().setFromMatrixPosition(b.rHand.matrixWorld).distanceTo(hR) > 0.02);
+          if (off || armCollisions(this) > before) {
+            // (the solved arms back, but the hands' own easing kept when it hits nothing: a hand's turn doesn't move the wrist)
+            for (let i = 0; i < 6; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]);
+            b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
+            if (armCollisions(this) > before) { for (let i = 6; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]); b.lHand.updateMatrixWorld(true); b.rHand.updateMatrixWorld(true); }
+          }
+        }
       }
+      for (let i = 0; i < AB.length; i++) if (b[AB[i]]) AQ0[i].copy(b[AB[i]].quaternion);
       this._amOk = true;
-      if (moved) { if (b.lClav) b.lClav.updateMatrixWorld(true); if (b.rClav) b.rClav.updateMatrixWorld(true); }
     }
     // how visibly they are laughing (smoothed over ~0.8 s), for the director's choice of close-up (laughRank)
     {
