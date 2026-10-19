@@ -278,3 +278,44 @@ anatomy TOTAL 0; handsweep 0; bindcheck clean; handocc 0 flickers in all four ve
 `~/win-plan.txt` (read 12:52 UTC): steer the remaining work by the hackathon's judging criteria (tech implementation incl. the AWS Builder challenge, design, potential impact, quality of the idea; the friction log bonus; judges score the video, description and images). A submission worker takes `docs/demo-video.md` (shot list and voiceover), `docs/devpost.md` (impact, why creative, measured numbers), `docs/friction-log.md` and `docs/product-feedback.md`; the full app flow on the emulator with sound is checked by me (one shared emulator box) and its findings handed to that worker.
 - Done: real-v1's rendering pass off by default (`b8e44ff`; `&ab=real` brings it back).
 - Workers (each in its own worktree and branch, merged only when gates pass): theatre rows `~/wt-theatre` (fix-theatre, :8095), open mic overlap and the back-row face `~/wt-openmic` (fix-openmic, :8096), club back-of-house `~/wt-club` (fix-club, :8097). The laugh motion is mine, in `~/strumble` (:8091).
+
+### 2026-10-19 13:45 UTC: laugh-v2 (`4e1a145`), the TV's "unreal and glitchy" laugh
+**Audit.** What life-v1 step 2 and the laugh styles put on top of the Rocketbox laugh captures, and what each did on screen:
+- a chest heave, a shoulder bounce, a head bob and a lean bounce on every "ha" (4–5.6 Hz), and the bouts' pumping of the whole laugh level;
+- an intake of breath at the start: head and shoulders up over 0.14 s;
+- a nod at the start (`sin(10 t)`) that began and ended mid-swing;
+- two or three procedural rocks stacked on the capture's own rock;
+- front-row onsets squeezed to 0.1–0.6 s with attacks capped at 0.35 s;
+- partner looks eased over 0.3 s;
+- the "ha" pulse jumping from mid-value to 0.3 at every bout's end, so the mouth and shoulders popped.
+
+Outright glitches:
+- a person flipped between two overlapping laughs' takes frame by frame (style, capture and start all switched);
+- a laugh leaving the room's list cut its capture off;
+- the instanced rows re-seeded each person's head roll per laugh (up to 16° in one frame) and pumped their baked laugh pose on each "ha".
+
+**The probe.** `tools/render/jumpprobe.mjs`: 20 s at 30 fps of a host-driven stretch of set (six laughs, some overlapping), measuring each front person's major bones' world turn per frame. The arm pass itself, not only the laugh, swung whole arms:
+- 105° in one frame when a short clap ended;
+- 36–55° when a hand-to-chest elbow flipped sides;
+- resting arms (clasped hands) oscillating between two IK answers every frame, 20–25° at the hand.
+
+**Changes** (default; `&laugh=old` restores all of it):
+- The laugh is the capture's, played smoothly.
+- The level eases in and out (filters of about 0.3 s up and 0.5 s down; front attacks 0.45–0.7 s; onsets spread over 0.15–0.95 s, theatre to 1.25 s).
+- No per-"ha" body motion: only the mouth keeps the rhythm, at a smaller swing, eased at the bout edges.
+- No intake toss, no start nod, no extra rocks; slower, smaller partner looks.
+- A person keeps the laugh they're in unless another is clearly bigger, and holds it while it fades.
+- A new take's capture cross-fades over 0.8 s.
+- Posture angles are low-passed over 0.1 s.
+- The arm chain and the upper torso turn at most 330° per second; outside claps and raised arms, the arms are eased over 0.1 s.
+- Instanced rows: a quarter of the "ha" bob, an eased level, one baked take held for the whole laugh, and no per-laugh phase.
+
+**Probe results, frames with a bone turning more than 15° in one frame (20 s):**
+
+| Venue | before (`&laugh=old`) | after |
+|---|---|---|
+| club | 44–49 (worst 105°) | 7 (worst 19°) |
+| open mic | 143–303 (8–20 s runs) | 23 (worst 21°) |
+| theatre | 73 | 33 (worst 20°) |
+
+Turns over 8° also fell by two thirds or more. What's left is mostly two people's clasped hands, still flipping now and then.
