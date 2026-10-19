@@ -1857,7 +1857,7 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
             // subject is left out, or its colour bleeds a bright fringe round the subject)
             float lod = clamp( log2( coc ) - 1.2, 0.0, 3.0 );
             vec2 o = uPx * coc * 0.42;
-            vec3 b = textureLod( tDiffuse, vUv, lod ).rgb; float wsum = 1.0; // (the pixel's own blurred colour, so a one-sided gather near the subject keeps its tone)
+            vec3 b = textureLod( tDiffuse, vUv, max( lod - 1.0, 0.0 ) ).rgb; float wsum = 1.0; // (the pixel's own blurred colour, so a one-sided gather near the subject keeps its tone)
             for ( int i = 0; i < 4; i++ ) {
               vec2 d = i == 0 ? vec2( o.x, o.y ) : i == 1 ? vec2( -o.x, o.y ) : i == 2 ? vec2( o.x, -o.y ) : -o;
               float zt = texture2D( tDepth, vUv + d ).x;
@@ -1868,7 +1868,7 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
               float w = z > uDof.x ? max( step( z * 0.75, zt ), step( coc * 0.3, cocT ) ) : 1.0;
               b += w * textureLod( tDiffuse, vUv + d, lod ).rgb; wsum += w;
             }
-            c = mix( c, b / wsum, smoothstep( 0.8, 2.5, coc ) * ( wsum - 1.0 ) * 0.25 ); // (next to the sharp subject, where taps were left out, less blur: no dark line on its outline)
+            c = mix( c, b / wsum, smoothstep( 0.8, 2.5, coc ) ); // (next to the sharp subject the gather is one-sided but still blurred: an unblurred ring of background there read as a dark matte halo)
             ${ab('dofdbg') ? 'gl_FragColor = vec4( b / wsum, 1.0 ); return;' : ''}
           }
         }` : ''}
