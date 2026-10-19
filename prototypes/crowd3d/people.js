@@ -1289,7 +1289,7 @@ export class Person {
     if (!LIFE_OFF.hands && !LIFE_OFF.restvar && this.restVar && !this.force && kind !== 'clasped' && kind !== 'folded' && kind !== 'chin' && kind !== 'chairBack') {
       const V = this.restVar, k = /^table|^forearms/.test(kind) ? (this.o.table && this.o.neighbour ? 0 : 0.6) : 1; // (a two-top's planted hands are fitted to its top and its glasses: there each hand varies by its roll only)
       R.tL.z += V.zL * k; R.tR.z += V.zR * k; R.tL.x += V.xL * k; R.tR.x -= V.xR * k;
-      if (v && k < 1) { const kv = 0.6, zc = (z, dz) => Math.max(-0.06, Math.min(0.06, z + dz)) - z; R.tL.z += zc(V.zL * k, v.zL * kv); R.tR.z += zc(V.zR * k, v.zR * kv); R.tL.x += v.xL * kv; R.tR.x -= v.xR * kv; } // (rest-v2: on a table's top, this rest's own placement on top of the person's, the fit below keeping it on the top and clear of the glasses)
+      if (v && k > 0 && k < 1) { const kv = 0.6, zc = (z, dz) => Math.max(-0.06, Math.min(0.06, z + dz)) - z; R.tL.z += zc(V.zL * k, v.zL * kv); R.tR.z += zc(V.zR * k, v.zR * kv); R.tL.x += v.xL * kv; R.tR.x -= v.xR * kv; } // (rest-v2: on a table's top, this rest's own placement on top of the person's, the fit below keeping it on the top and clear of the glasses)
     }
     // (at a two-top, hands on the table are fitted to the table itself (venue.js cabaretTables): on its top, and 5 cm
     // clear of the two glasses and the candle jar)
