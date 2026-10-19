@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 08:28 UTC.
+**Updated:** 2026-10-19 09:14 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -237,3 +237,12 @@ Changes: the theatre's house (rim 0.4, was 0.85, which haloed the rows into cut-
 | openmic | 6 | 6 | 5 | 5 | 5 | 5 | 5 | 2 | no |
 
 Top tells: a club man doubled over face-down on a table ("passed out"; a two-top laugh take, sent to the motion agent); theatre mouths opening in the same shape in the same frame; a row-2 instanced head reading as a flat card between front people (a LOD limit); open mic hair hatching in the face close; waxy faces; front rows square to camera.
+
+### 2026-10-19 09:14 UTC: round 15 (seed 1015): life-v1 steps 10–11 (instanced heads turn while listening; no folding over at two-tops; each laugh its own mouth)
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 5 | 5 | 4 | 6 | 6 | 4 | 1 | no |
+| theatre | 3 | 4 | 3 | 3 | 5 | 5 | 3 | 1 | no |
+| openmic | 5 | 6 | 5 | 5 | 5 | 4 | 4 | 1 | no |
+
+Within the judges' noise of round 14 (one judge a point lower everywhere). The face-down man is gone. Remaining tells, all known: the theatre's rows behind read as standing; laugh mouths open without cheek raise or eye squint (the Rocketbox face rig's limit: eyeBlink and duchenne are the only upper-face morphs on the .tv models); the front rows' shared rest pose; open mic hair-card dither.
