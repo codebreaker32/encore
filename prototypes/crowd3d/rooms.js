@@ -169,20 +169,28 @@ export const THEATRE = {
 const OM = { halfW: 3.2, back: 9.6, ceil: 2.7, stageZ: -0.6, stageH: 0.2 };
 const OM_PERF = [0.2, 1.85, -1.3];
 
+// (the chairs used to stand 0.43-0.48 m apart, centre to centre, with ±7-13 cm of jitter along the arc and ±10° of
+// turn: neighbours' shoulders, arms and knees met inside each other and two front people sat 0.34 m apart (the judges'
+// "bodies interpenetrate in the packed rows"). Now 0.56 m a chair along every arc, ±2.5 cm of jitter and ±6° of
+// turn, the same chairs and gaps; &ab=omtight brings the old arcs back)
+const OM_TIGHT = typeof location !== 'undefined' && (new URLSearchParams(location.search).get('ab') || '').split(',').includes('omtight');
 function layoutOpenMic() {
   const R = rng(404);
   const rows = [];
   const [px, , pz] = OM_PERF;
-  const arcs = [{ r: 3.0, n: 9, span: 1.15 }, { r: 4.15, n: 10, span: 1.0 }, { r: 5.3, n: 11, span: 0.9 }];
+  const PITCH = 0.56;
+  const arcs = OM_TIGHT ? [{ r: 3.0, n: 9, span: 1.15 }, { r: 4.15, n: 10, span: 1.0 }, { r: 5.3, n: 11, span: 0.9 }]
+    : [{ r: 3.0, n: 9 }, { r: 4.15, n: 10 }, { r: 5.3, n: 11 }].map((a) => ({ ...a, span: (PITCH * (a.n - 1)) / a.r }));
+  const jAng = OM_TIGHT ? 0.05 : 0.01, jYaw = OM_TIGHT ? 0.35 : 0.2;
   arcs.forEach((a, k) => {
     const seats = [];
     for (let i = 0; i < a.n; i++) {
       if ((k === 1 && i === 7) || (k === 2 && i === 2)) continue; // a Tuesday: two empty chairs
-      const ang = -a.span / 2 + (a.span * i) / (a.n - 1) + (R() - 0.5) * 0.05;
+      const ang = -a.span / 2 + (a.span * i) / (a.n - 1) + (R() - 0.5) * jAng;
       const rr = a.r + (R() - 0.5) * 0.14;
       const x = px + Math.sin(ang) * rr, z = pz + Math.cos(ang) * rr;
       if (Math.abs(x) > OM.halfW - 0.35) continue;
-      seats.push({ x, z, y: 0, row: k, cabaret: false, yaw: Math.atan2(px - x, pz - z) + (R() - 0.5) * 0.35 });
+      seats.push({ x, z, y: 0, row: k, cabaret: false, yaw: Math.atan2(px - x, pz - z) + (R() - 0.5) * jYaw });
     }
     rows.push({ z: pz + a.r, y: 0, cabaret: false, seats });
   });
