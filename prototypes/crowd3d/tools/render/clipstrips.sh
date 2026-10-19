@@ -7,7 +7,7 @@ set -eu
 clip=$1; out=$2; max=${3:-4}
 mkdir -p "$out"
 name=$(basename "$clip" .mp4)
-cuts=$(ffmpeg -nostdin -hide_banner -i "$clip" -vf "select='gt(scene,0.35)',showinfo" -f null - 2>&1 | grep -o 'pts_time:[0-9.]*' | cut -d: -f2 | awk 'BEGIN{last=-9} {if ($1-last>1.6) {print $1; last=$1}}' | head -n "$((max - 1))")
+cuts=$(ffmpeg -nostdin -hide_banner -i "$clip" -vf "select='gt(scene,0.1)',showinfo" -f null - 2>&1 | grep -o 'pts_time:[0-9.]*' | cut -d: -f2 | awk 'BEGIN{last=-9} {if ($1-last>1.6) {print $1; last=$1}}' | head -n "$((max - 1))")
 i=0
 for t in 0.1 $cuts; do
   s=$(awk -v t="$t" 'BEGIN{printf "%.2f", t+0.07}')

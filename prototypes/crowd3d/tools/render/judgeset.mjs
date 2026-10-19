@@ -30,6 +30,7 @@ const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--ena
 const log = { venue, seed: +seedArg, frames: {} };
 async function open() {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  page.setDefaultTimeout(240000); // (a loaded box: the 30 s default tripped the screenshots)
   const errs = []; page.on('pageerror', (e) => errs.push(e.message));
   await page.goto(`${base}?venue=${venue}&host=1&preset=tv&capture=1&hud=0&debug=1&venue-lock=1${extra}`, { timeout: 240000 });
   await page.waitForFunction(() => typeof window.__renderAt === 'function' && window.__people && window.encoreMessage && window.__cutTo, null, { timeout: 240000 });
