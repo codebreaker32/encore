@@ -437,8 +437,27 @@ function lightView() {
 // (tv default; &ab=lambert goes back to per-pixel Lambert, &ab=vlit turns it on elsewhere)
 const VLIT = ab('vlit') || (P.fast && !ab('lambert')) ? { uKeyPos: { value: new THREE.Vector3() }, uKeyDir: { value: new THREE.Vector3() }, uKeyColor: { value: new THREE.Color() }, uKeyCos: { value: 0 }, uKeyPen: { value: 1 },
   uSky: { value: new THREE.Color() }, uGround: { value: new THREE.Color() }, uUp: { value: new THREE.Vector3() } } : null;
+// (look.js back, the club: the back of house's volume, per vertex in the tv crowd; &ab=flatback turns it all off,
+// &ab=noshape / nowallsconce / noinstcandle / novary / nobackfar one part at a time)
+const BACK = (() => {
+  const B = VLIT && V.back && !ab('flatback') ? V.back : null;
+  if (!B) return null;
+  const defines = { BACK_LOOK: 1 }, uniforms = {
+    uBackVary: { value: num('backvary', B.vary || 0) }, uBackShapeDir: { value: new THREE.Vector3(...(B.shape || [0, 1, 0])).normalize() }, uBackShapeColor: { value: new THREE.Color() },
+    uBackWall: { value: new THREE.Vector4(...(B.wall || [0, 0, 0, 1])) }, uBackWallColor: { value: new THREE.Color(...(B.wallColor || [0, 0, 0])).multiplyScalar(num('backwall', B.wallK || 0)) },
+    uBackCandleColor: { value: new THREE.Color(...(B.candle || [0, 0, 0])).multiplyScalar(num('backcandle', B.candleK || 0)) },
+    uBackFar: { value: new THREE.Vector3(...(B.far || [0, 1, 1])).setZ(num('backfar', (B.far || [0, 1, 1])[2])) }, // (&backfar=: a test knob)
+  };
+  if (B.far && !ab('nobackfar')) defines.BACK_FAR = 1;
+  if (B.shape && !ab('noshape')) defines.BACK_SHAPE = 1;
+  if (B.wall && !ab('nowallsconce')) defines.BACK_WALL = 1;
+  if (B.candle && !ab('noinstcandle')) defines.BACK_CANDLE = 1;
+  if (B.vary && !ab('novary')) defines.BACK_VARY = 1;
+  return { defines, uniforms, shapeK: num('backshape', B.shapeK || 0) };
+})();
 function vlitFrame() {
   if (!VLIT) return;
+  if (BACK) BACK.uniforms.uBackShapeColor.value.copy(hemi.color).multiplyScalar(hemi.intensity * BACK.shapeK); // (follows the house lights)
   const u = VLIT, vm = camera.matrixWorldInverse;
   u.uKeyPos.value.copy(key.position).applyMatrix4(vm);
   u.uKeyDir.value.copy(key.target.position).sub(key.position).normalize().transformDirection(vm);
@@ -1094,7 +1113,7 @@ async function buildRoom() {
   tmark('front people, textures');
   atlas.flipY = false; atlas.colorSpace = THREE.SRGBColorSpace; atlas.anisotropy = P.aniso;
   alpha.flipY = false;
-  const shared = { uTime: { value: 0 }, uBeat: { value: room.beat }, light: PEOPLE_LIGHT, vlit: VLIT, clothFix: !ab('oldcloth'), rimFlat: !!V.rimFlat, keyDepth: !!V.keyDepth, uMaskOut: { value: 0 } };
+  const shared = { uTime: { value: 0 }, uBeat: { value: room.beat }, light: PEOPLE_LIGHT, vlit: VLIT, back: BACK, clothFix: !ab('oldcloth'), rimFlat: !!V.rimFlat, keyDepth: !!V.keyDepth, uMaskOut: { value: 0 } };
   crowds.shared = shared;
 
   const midSeats = P.mid === 'merged' ? rest.filter((s) => s.row < MID_ROWS) : [];
@@ -1261,6 +1280,8 @@ async function buildRoom() {
     const ti = performance.now();
     try { return new InstancedCrowd(scene, types, seatList, matParams, shared, {
       performer: PERFORMER, variety: (s) => variety(s),
+      // (look.js back: the table candle in front of each sitter at a two-top, where venue.js puts it)
+      lamp: BACK && BACK.defines.BACK_CANDLE ? (s) => (s.twoTop && !s.standing ? [s.twoTop.x + 0.01, (s.twoTop.y || 0) + 0.83, s.twoTop.z - 0.06, 1] : null) : null,
       traffic: (s, now) => (s.bar || s.balcony ? null : traffic(s, room.mode, now - room.modeAt)),
     }); } finally { LOADT.inst += performance.now() - ti; tmark(`crowd built ${seatList.length}`); }
   }

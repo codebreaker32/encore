@@ -23,7 +23,16 @@ const VENUES = {
     // and a gentler fall with depth (0.3 a row to 0.45), so the rows behind read as people in a dim room, with faces and
     // volume, and the bar's crowd stays a silhouette. &look=stagedark keeps the old club.)
     depthSlope: 0.2, depthFloor: 0.65, hemi: 21, sky: 0x6a4a36, closeDim: 0.4, fogClose: [4, 24], // (round 07: still cut-outs at 0.3 / 0.45, and the close-ups' dim of 0.12 made them black again behind the subjects)
-    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, sky: null, closeDim: 0.12, fogClose: null, fog: { color: 0x1a120d, wide: [3, 20] } },
+    // (fix-club, 2026-10-19, with real.js off: the instanced rows behind still read as cardboard. Their light was all
+    // wrap (hemisphere, fill), one level over a whole body. The back of house gets volume per vertex, no new lights or
+    // draws (instances.js BACK_*): a soft house light from house right with plain Lambert, so each body has a lit and a
+    // shadow side (shape: world direction towards it, k of the hemisphere's sky); the side walls' sconces on the
+    // people nearest them (wall: x, y, first z, spacing; colour); the table candle from below on faces and hands
+    // (candle: colour × share); each person their own share of the house light, ±vary; the house light falling on
+    // with distance past the row-depth floor (far: from z, to z, share left). &ab=flatback: none of it; &ab=noshape,
+    // nowallsconce, noinstcandle, novary, nobackfar: one at a time)
+    back: { shape: [0.5, 0.45, -0.74], shapeK: 0.9, wall: [5.05, 2.3, 3.6, 2.8], wallColor: [1.0, 0.62, 0.32], wallK: 1.6, candle: [1.0, 0.55, 0.22], candleK: 0.6, vary: 0.3, far: [4.5, 11.5, 0.4] },
+    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, sky: null, closeDim: 0.12, fogClose: null, fog: { color: 0x1a120d, wide: [3, 20] }, back: null },
   },
   theatre: {
     key: { pos: [0.3, 4.6, -0.3], target: [0.2, 0.6, 2.8], intensity: 200, angle: 0.36, penumbra: 0.4 }, // (row 1 at 12° off its axis, row 2 at 21°: outside)
@@ -78,6 +87,7 @@ export function applyLook(name, V, venueId, P, AB = new Set()) {
   V.fog = { ...V.fog, color: L.fog.color, ...(L.fog.wide ? { wide: L.fog.wide } : {}), close: L.fogClose || [3.5, 12], heckler: L.fogClose || [3.5, 12] }; // (a venue may thin the close-ups' haze too: fogClose)
   Object.assign(V, { closeKeyWiden: L.closeKeyWiden, keyDepth: !!L.keyDepth, depthFrom: L.depthFrom, depthSlope: L.depthSlope, depthFloor: L.depthFloor, wallScale: L.wallScale, closeDim: L.closeDim, midShots: L.midShots, rimFlat: L.rimFlat });
   if (V.exposure) V.exposure = { ...V.exposure, close: 1, heckler: 1, ...(L.expoWide ? { wide: L.expoWide } : {}) };
+  V.back = L.back || null; // (the back of house's volume, the club: see VENUES.club.back)
   if (L.spriteFall) V.stageLook = { spriteFall: L.spriteFall, spriteGain: L.spriteGain, spriteWash: L.spriteWash, phonesOn: L.phonesOn, spriteRim: L.spriteRim, spriteNear: L.spriteNear };
   // skinned people (front, and the merged middle rows on low/high) only where faces are lit: rows 0-1; the instanced
   // bands start where the merged rows end
