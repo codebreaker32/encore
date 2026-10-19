@@ -2,11 +2,11 @@
 // overlapping, strengths 0.4-0.95) and measures, for every front person, how far each major bone turns in the world
 // from one frame to the next. A turn of more than 15 degrees in one frame is a glitch (the user's rule); 8 degrees is
 // reported as a warning. Prints the counts, the worst frames and a per-second histogram of the room's largest turn.
-//   node jumpprobe.mjs <page url> <venue> [extra query] [seconds=20]
+//   [FPS=15] node jumpprobe.mjs <page url> <venue> [extra query, e.g. &livehold=1] [seconds=20]
 import os from 'node:os';
 const { chromium } = await import(process.env.PW || `${os.homedir()}/tools/pw/node_modules/playwright/index.mjs`);
 const [base, venue, extra = '', secArg = '20'] = process.argv.slice(2);
-const DUR = +secArg, FPS = 30, T0 = 2;
+const DUR = +secArg, FPS = +(process.env.FPS || 30), T0 = 2; // (FPS=15 and extra &livehold=1: as the emulator draws it, the calm and out-of-shot people held at 5 and 3 Hz)
 // the stretch of set: [start, strength] per laugh; each rises over 0.4 s, holds to 1.2 + 2 s × strength, falls over 1.5 s
 const LAUGHS = [[3, 0.9], [6.5, 0.5], [8, 0.7], [12, 0.95], [13.6, 0.4], [17, 0.6]];
 const drive = (t) => {

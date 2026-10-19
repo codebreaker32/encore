@@ -701,7 +701,7 @@ const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(locatio
 // (&reuse=0: every arm gets the full anatomy pass every frame, for A/B checks)
 const REUSE_OFF = typeof location !== 'undefined' && new URLSearchParams(location.search).get('reuse') === '0';
 // (capture and still views step time themselves and check every pose: no held frames there)
-const STEPPED = typeof location !== 'undefined' && /[?&](capture=1|still)/.test(location.search);
+const STEPPED = typeof location !== 'undefined' && /[?&](capture=1|still)/.test(location.search) && !/[?&]livehold=1/.test(location.search); // (&livehold=1: a capture with the live page's held poses, for jumpprobe)
 // the camera of the last main render, handed over by a person's mesh in its before-render hook (the shadow pass passes
 // the mesh, not the scene, so it's ignored): who is out of shot. Null until the first render (the bake): all in shot.
 let CAM = null, CAMF = -1, FRF = -2;
@@ -729,7 +729,7 @@ const GESTURE_FORCE = typeof location !== 'undefined' ? new URLSearchParams(loca
 // (mostly on the thighs, elbows bent and relaxed; both hands out on the knees, arms near straight, read stiff in a row)
 // (round 11: at the club's tables a laugh was nearly all 'none', the hands kept on the top: a hand to the face or the chest,
 // a short clap, for more of them)
-const TABLE_LAUGH_G = { none: 0.12, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 2.2 }; // (round 13: a hand at the eye read as a facepalm, a headache)
+const TABLE_LAUGH_G = SMOOTH ? { none: 0.6, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 0 } : { none: 0.12, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 2.2 }; // (laugh-v2: no short clap at a two-top: the arm flicked between the clap and the planted top every few frames on the emulator, round 17) // (round 13: a hand at the eye read as a facepalm, a headache)
 const CLAP_W = LIFE_OFF.hands ? 0.042 : 0.047; // (the wrists a little further apart at the clap's contact: the forearms crossed by a centimetre in a packed row; life-v1)
 const REST_SEAT_OLD = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
 // (life-v1: fewer hands out on the knees, more clasped in the lap; one hand over the other's wrist was tried: its crossing
@@ -1757,7 +1757,12 @@ export class Person {
     this._venue = room.venueId;
     const evk = room.events.length * 2 + (room.heckle ? 1 : 0) + (room.deadBits || 0) * 1000, woke = evk !== this._evk;
     this._evk = evk;
-    if (!STEPPED && !this.fresh && !woke && !(this.src && this.src._loco)) {
+    // (laugh-v2: a cut wakes everyone too: someone held at 3 Hz out of shot came into the new shot with a pose a third of a
+    // second old, then jumped, round 17; a camera that moved more than 0.4 m since this person's last call is a cut, a
+    // drift or a track is not)
+    let cut = false;
+    if (SMOOTH && CAM) { const cp = (this._camP ||= new THREE.Vector3(1e9, 0, 0)); cut = cp.distanceToSquared(CAM.position) > 0.16; cp.copy(CAM.position); }
+    if (!STEPPED && !this.fresh && !woke && !cut && !(this.src && this.src._loco)) {
       const hz = this._off ? 3 : this._calm ? 5 : 0;
       if (hz) { const k = Math.floor(now * hz + (this._ph ??= hash(this.seed * 0.37 + 5))); if (k === this._slot) { this.faceTick(now); return; } this._slot = k; }
     }
@@ -2257,13 +2262,27 @@ export class Person {
       const TB = (Person._torB ||= ['spine1', 'spine2', 'neck', 'head']), TQ = (this._tm ||= TB.map(() => new THREE.Quaternion()));
       const ok = !this.fresh && this._tmOk && dtT > 0 && dtT < 0.5, lim = 3.14 * dtT; // (180 degrees a second: at the emulator's 15-20 fps a 330 limit still let a head turn 25 degrees between two frames, round 16)
       let moved = false;
+      const TP = (this._tp ||= TB.map(() => new THREE.Quaternion()));
       for (let i = 0; i < TB.length; i++) {
         const bn = b[TB[i]]; if (!bn) continue;
+        TP[i].copy(TQ[i]);
         if (ok) { const d = 2 * Math.acos(Math.min(1, Math.abs(TQ[i].dot(bn.quaternion)))); if (d > lim) { bn.quaternion.copy(TQ[i].slerp(bn.quaternion, lim / d)); moved = true; } }
         TQ[i].copy(bn.quaternion);
       }
-      this._tmOk = true;
       if (moved) b.spine1.updateMatrixWorld(true);
+      // (and the head as a whole at most 150 degrees a second in the world: four bones each within their limit still
+      // added up to a 35-40 degree turn between two frames at the emulator's 15 fps, round 17; the chain is pulled back
+      // to its last pose by one common fraction)
+      const HW = (this._hw ||= new THREE.Quaternion()), hq = b.head.getWorldQuaternion(Person._hq ||= new THREE.Quaternion());
+      if (ok && this._hwOk) {
+        const d = 2 * Math.acos(Math.min(1, Math.abs(HW.dot(hq)))), limH = 2.62 * dtT;
+        if (d > limH) {
+          for (let i = 0; i < TB.length; i++) { const bn = b[TB[i]]; if (bn) { bn.quaternion.copy(TP[i]).slerp(TQ[i], limH / d); TQ[i].copy(bn.quaternion); } }
+          b.spine1.updateMatrixWorld(true); b.head.getWorldQuaternion(hq);
+        }
+      }
+      HW.copy(hq); this._hwOk = true;
+      this._tmOk = true;
     }
     if (clip && !o.stand && stand < 0.3 && !(T && !T.hidden) && !OFF.legs && !ANATOMY_OFF) this.shinsApart(); // (the clamps above can swing the legs, which hang from Spine)
     SEC && SEC.mark('spineClamps'); // the torso is final for this frame: its sections once, for the rest poses, the fix and the neighbours' checks
