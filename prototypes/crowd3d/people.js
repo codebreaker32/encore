@@ -717,6 +717,9 @@ const GESTURE_FORCE = typeof location !== 'undefined' ? new URLSearchParams(loca
 // each hand on its own thigh, each on its own knee, one of each, or (rarely) clasped well forward on the lap; every
 // seat's schedule is drawn with its row (assignRest): no two neighbours in the same pose, at most a third of a row in one
 // (mostly on the thighs, elbows bent and relaxed; both hands out on the knees, arms near straight, read stiff in a row)
+// (round 11: at the club's tables a laugh was nearly all 'none', the hands kept on the top: a hand to the face or the chest,
+// a short clap, for more of them)
+const TABLE_LAUGH_G = { none: 0.12, chest: 2.2, mouth: 1.2, wipe: 1.3, clapShort: 2 };
 const CLAP_W = LIFE_OFF.hands ? 0.042 : 0.047; // (the wrists a little further apart at the clap's contact: the forearms crossed by a centimetre in a packed row; life-v1)
 const REST_SEAT_OLD = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
 // (life-v1: fewer hands out on the knees, more clasped in the lap; one hand over the other's wrist was tried: its crossing
@@ -1468,7 +1471,7 @@ export class Person {
         // (from a moment of the capture near its own mean pose, so the laugh starts from the pose the body is in now and
         // grows out of it, the seeded start only choosing among those moments; quietStart)
         sample(lc, (Tk ? quietStart(lc, ref, Tk.t0 * Math.max(0, lc.dur - 3)) : 0) + c.L.t * (Tk ? Tk.rate : 1), A);
-        const w = Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? 0.8 : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
+        const w = Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
         if (Tk && Tk.mirror) addLayerMirror(pose, A, ref, w, pose, MASK.torso, rig); else addLayer(pose, A, ref, w, pose, MASK.torso);
       }
     }
@@ -1489,7 +1492,7 @@ export class Person {
     // (a big laugh: the little clap and the hand on the chest give way to the knee; arms up only on a strong finale)
     const big = kind === 'laugh' && s > 0.7 ? { none: 0.45, clapShort: 0.35, chest: 0.6, knee: 1.5, slap: 1.4, mouth: 1.3 } : {};
     const VG = kind === 'laugh' ? (VENUE_LAUGH[this._vplan] || {}) : {}, vg = VG.gestures || {};
-    const list = base.map(([g, w]) => [g, w * (sw[g] ?? 1) * (big[g] ?? 1) * (vg[g] ?? 1) * (g === 'armsUp' && vocab === 'club' && s < 0.75 ? 0 : 1) * (this.o.table && (g === 'knee' || g === 'slap' || g === 'clapLow') ? 0 : 1) * ((this.o.row | 0) >= 1 && (g === 'mouth' || g === 'wipe') && !LIFE_OFF.laugh ? 0.25 : 1)]); // (life-v1: behind the front row a hand over the face reads as a dark smear at TV distance: mostly the front row's) // (at a table nothing at the table's own height, where a hand comes and goes behind its edge: no slap on it, no low clap, no grab at the knee; their weight goes to the rest)
+    const list = base.map(([g, w]) => [g, w * (sw[g] ?? 1) * (big[g] ?? 1) * (vg[g] ?? 1) * (g === 'armsUp' && vocab === 'club' && s < 0.75 ? 0 : 1) * (this.o.table && (g === 'knee' || g === 'slap' || g === 'clapLow') ? 0 : 1) * ((this.o.row | 0) >= 1 && (g === 'mouth' || g === 'wipe') && !LIFE_OFF.laugh ? 0.25 : 1) * (kind === 'laugh' && this.o.table && this.kind === 'front' && !LIFE_OFF.laugh ? TABLE_LAUGH_G[g] ?? 1 : 1)]); // (life-v1: behind the front row a hand over the face reads as a dark smear at TV distance: mostly the front row's) // (at a table nothing at the table's own height, where a hand comes and goes behind its edge: no slap on it, no low clap, no grab at the knee; their weight goes to the rest)
     if (VG.bigExtra && s > 0.8) for (const e of VG.bigExtra) list.push(e); // (the arena's big laughs: arms up, whistles)
     const mk = (g) => {
       const [a, b] = SHORT[g] || [Infinity, Infinity];
