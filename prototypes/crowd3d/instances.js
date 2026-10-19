@@ -561,6 +561,14 @@ export class InstancedCrowd {
         const chatting = (room.murmur > 0.5 && hash01(t.seed) < 0.12 * room.murmur) || (room.mode === 'preview' && t.chatty < 0.38);
         const chat = (chatting && noise(t.seed + 51, now * 0.16) > -0.35) || glancing ? t.side * 0.9 : 0;
         let yaw = P.yaw0 + P.mir * (turn + chat) + noise(t.seed + 4, now * 0.25 * speed) * 0.16;
+        // (life-v1: listening, each one turns or tips the head now and then, every 3-7 s on their own clock, eased over half a
+        // second: round 13, the theatre's held wide was the 11.8 s wide again; &moves=nolife)
+        let lifeP = 0;
+        if (MOVES_Q !== 'nolife' && room.mode === 'live' && body < 0.1 && !walker) {
+          const per = 3 + 4 * hash01(t.seed * 0.37 + 2), u = now + hash01(t.seed * 0.61) * per, k = Math.floor(u / per), f = smooth01((u - k * per) / 0.5);
+          const v = (hash01(t.seed * 0.13 + k) * (1 - f) + hash01(t.seed * 0.13 + k + 1) * f) * 2 - 1, w = (hash01(t.seed * 0.29 + k + 5) * (1 - f) + hash01(t.seed * 0.29 + k + 6) * f) * 2 - 1;
+          yaw += 0.22 * v; lifeP = 0.06 * w;
+        }
         // idle moves in the seat (a phone check, a look round), from a seeded schedule
         let gest = 0, gk = 0;
         // (not in the two rows behind the close-up pair while a close shot is up: their low-poly arms read as shards)
@@ -599,7 +607,7 @@ export class InstancedCrowd {
         if (P.pst === undefined) { const u = hash01(t.seed * 1.91 + 7); P.pst = (u < 0.4 ? 0.05 : u < 0.75 ? -0.12 : 0.11) + (hash01(t.seed * 3.3 + 1) - 0.5) * 0.06; }
         const lean = P.slouch + (inSeat ? P.pst + noise(t.seed + 71, now * 0.025) * 0.04 : 0) + (leanFor[style] || 0) * overK * body + (attention - 0.55) * 0.18 + noise(t.seed + 1, now * 0.11 * speed) * 0.04 + S.vocal * 0.12;
         let pitch = P.pitch0 * 0.8 + (style === 'back' ? -0.22 : style === 'over' ? 0.25 * overK : 0) * body + noise(t.seed + 5, now * 0.2) * 0.05 + down * 0.5 + S.vocal * 0.15;
-        pitch += gest * (gk === 1 ? 0.5 : 0.1) + (chat ? 0.04 * noise(t.seed + 53, now * 1.6) : 0);
+        pitch += gest * (gk === 1 ? 0.5 : 0.1) + (chat ? 0.04 * noise(t.seed + 53, now * 1.6) : 0); pitch += lifeP;
         // heads up (down is +): within 15 degrees down and 20 up while they listen and laugh; a bored dead-air head and the
         // phone may drop further (stacked, the seat's tilt, a glance and the laugh sank heads into chests)
         pitch = Math.max(-0.35, Math.min(gk === 1 && gest > 0.1 ? 0.6 : room.murmur > 0.5 || (room.deadBits || 0) >= 2 ? 0.42 : room.mode === 'live' && body < 0.1 ? 0.15 : 0.26, pitch)); // (listening: the face up at the stage)
