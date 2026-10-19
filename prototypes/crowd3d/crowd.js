@@ -109,6 +109,9 @@ const num = (k, d) => (Q.has(k) && !isNaN(parseFloat(Q.get(k))) ? parseFloat(Q.g
 // A/B switches: each turns one GPU cost off, for the device tests (see the header)
 const AB = new Set((Q.get('ab') || '').split(',').map((s) => s.trim()).filter(Boolean));
 const ab = (k) => AB.has(k);
+// real-v1's rendering pass (real.js, the side key, candles, hand shadows) is off by default since 19 Oct (TV round 10: it
+// cost 2-5 fps on the Mali-G31 for a small judge gain); &ab=real turns it on (&ab=noreal still wins)
+const REAL_ON = ab('real') && !ab('noreal');
 const FALSE_COLOUR = Q.get('false') === '1';
 const MIRROR = Q.get('mirror') !== '0';
 const FPS_CAP = Math.max(0, num('fps', P.fps || 0));
@@ -379,7 +382,7 @@ const key = new THREE.SpotLight(K.color || 0xffc48a, KEY, 0, K.angle, K.penumbra
 // (real-v1: the stage spill comes from house left of the camera and a little higher, so the faces have a lit and a shadow
 // side, a source a viewer can place, instead of a flat light from the lens's own direction; &ab=nosidekey; &keypos=x,y,z
 // is a test knob)
-const KEY_POS = Q.has('keypos') ? Q.get('keypos').split(',').map(Number) : !ab('noreal') && !ab('nosidekey') && P.frontMat === 'lambert' && VENUE_ID !== 'arena' ? [K.pos[0] - (VENUE_ID === 'theatre' ? 1.2 : 2.4), K.pos[1] + 0.4, K.pos[2] + 0.2] : K.pos; // (the theatre's house-left block sat near the moved key's axis and ran hot: half the shift there)
+const KEY_POS = Q.has('keypos') ? Q.get('keypos').split(',').map(Number) : REAL_ON && !ab('nosidekey') && P.frontMat === 'lambert' && VENUE_ID !== 'arena' ? [K.pos[0] - (VENUE_ID === 'theatre' ? 1.2 : 2.4), K.pos[1] + 0.4, K.pos[2] + 0.2] : K.pos; // (the theatre's house-left block sat near the moved key's axis and ran hot: half the shift there)
 key.position.set(...KEY_POS);
 key.target.position.set(...K.target);
 scene.add(key, key.target);
@@ -638,9 +641,9 @@ const SKIN_DIRECT = [
 	float skinWrap = saturate( ( skinNL + 0.35 ) / 1.35 );
 	vec3 irradiance = ( dotNL + ( skinWrap - dotNL ) * vec3( 0.85, 0.36, 0.22 ) ) * directLight.color;`,
 ];
-// real-v1 (real.js): the front people's skin, eyes and hands, the tv default (&ab=noreal turns it off, &ab=nospec drops
-// only the specular lobes)
-const REAL = !ab('noreal') && P.frontMat === 'lambert';
+// real-v1 (real.js): the front people's skin, eyes and hands, with &ab=real (REAL_ON above; &ab=nospec drops only the
+// specular lobes)
+const REAL = REAL_ON && P.frontMat === 'lambert';
 realOptions({ nospec: ab('nospec'), nosheen: ab('nosheen'), nopores: ab('nopores'), pores: num('pores', 0), fill: !!PEOPLE_LIGHT, fillK: num('frontfill', 0.6), wrap: num('wrap', 0.15) }); // (the front people's fill and house light at 0.6, the skin's wrap 0.15 (was 0.35, which flattened the faces); &frontfill= and &wrap= are test knobs)
 const catchlights = REAL && !ab('nocatch') ? new Catchlights(scene, key) : null; // (&ab=nocatch: none)
 let candles = null, candlePoolTime = null; // (real.js Candles: the club's table candles on the front people; their pools on the tops)
