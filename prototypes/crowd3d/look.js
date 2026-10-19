@@ -43,7 +43,11 @@ const VENUES = {
   },
   openmic: {
     key: { pos: [0.2, 2.5, -0.6], target: [0, 0.5, 1.8], intensity: 70, angle: 0.42, penumbra: 0.4 }, // (the back arc at 24° off: outside)
-    fog: { color: 0x161009, wide: [3, 14] }, haze: [0.12, 0.08, 0.05], phones: 2, exits: [], fogClose: [4, 18], closeDim: 0.35, // (round 08: the rows behind in the mids)
+    fog: { color: 0x161009, wide: [4, 24] }, haze: [0.12, 0.08, 0.05], phones: 2, exits: [], fogClose: [4, 18], closeDim: 0.35, // (round 08: the rows behind in the mids)
+    // (round 09: "muddy and underexposed": the pub's warm house glow, a gentler fall with depth, thinner haze and the
+    // wide at full exposure (expoWide, was 0.8); &look=stagedark keeps the old one)
+    depthSlope: 0.25, depthFloor: 0.6, hemi: 20, sky: 0x6a4a36, expoWide: 1.0,
+    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, sky: null, expoWide: null, fogClose: null, closeDim: 0.12, fog: { color: 0x161009, wide: [3, 14] } },
   },
   // the arena: only the rail is lit (its skinned people, and the instanced places in row 0); behind it the key falls
   // with row depth too (keyDepth), since a spot 14 m away can't end its pool at the rail
@@ -70,7 +74,7 @@ export function applyLook(name, V, venueId, P) {
   if (L.cam) V.cam = L.cam;
   V.fog = { ...V.fog, color: L.fog.color, ...(L.fog.wide ? { wide: L.fog.wide } : {}), close: L.fogClose || [3.5, 12], heckler: L.fogClose || [3.5, 12] }; // (a venue may thin the close-ups' haze too: fogClose)
   Object.assign(V, { closeKeyWiden: L.closeKeyWiden, keyDepth: !!L.keyDepth, depthFrom: L.depthFrom, depthSlope: L.depthSlope, depthFloor: L.depthFloor, wallScale: L.wallScale, closeDim: L.closeDim, midShots: L.midShots, rimFlat: L.rimFlat });
-  if (V.exposure) V.exposure = { ...V.exposure, close: 1, heckler: 1 };
+  if (V.exposure) V.exposure = { ...V.exposure, close: 1, heckler: 1, ...(L.expoWide ? { wide: L.expoWide } : {}) };
   if (L.spriteFall) V.stageLook = { spriteFall: L.spriteFall, spriteGain: L.spriteGain, spriteWash: L.spriteWash, phonesOn: L.phonesOn, spriteRim: L.spriteRim, spriteNear: L.spriteNear };
   // skinned people (front, and the merged middle rows on low/high) only where faces are lit: rows 0-1; the instanced
   // bands start where the merged rows end

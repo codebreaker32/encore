@@ -94,6 +94,7 @@ if (LOOK && Q.has('depthslope')) V.depthSlope = parseFloat(Q.get('depthslope'));
 if (LOOK && Q.has('hemik')) V.light.hemi *= parseFloat(Q.get('hemik'));
 if (LOOK && Q.has('sky')) V.light.sky = parseInt(Q.get('sky'), 16);
 if (LOOK && Q.has('fogwide')) V.fog = { ...V.fog, wide: Q.get('fogwide').split(',').map(Number) };
+if (Q.has('expo')) V.exposure = { ...(V.exposure || {}), wide: parseFloat(Q.get('expo')) };
 if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows3')) P.rows = 3; // (the arena's old three 3D rows)
 if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows4')) P.rows = 4; // (round 7: between the two)
 // &ab=types4: at most four avatar types per instanced band (fewer draws: a page-JS diagnostic for the TV)
