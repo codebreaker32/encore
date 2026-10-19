@@ -1,9 +1,9 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status:** done. Tree \`99a5956\`+docs on branch \`real-v1\`, fully gated and packed; the TV and emulator APKs are built and the emulator checked. New features stopped at 10:27 UTC (freeze 16:30): judge scores were flat for 5+ rounds (stop rule), so further changes weren't worth re-gating and rebuilding.
+**Status:** done. Tree `99a5956`+docs on branch `real-v1`, fully gated and packed; the TV and emulator APKs are built and the emulator checked. New features stopped at 10:27 UTC (freeze 16:30): judge scores were flat for 5+ rounds (stop rule), so further changes weren't worth re-gating and rebuilding.
 **Last result:** final judge round 15 (seed 1015): overall club 4–5, theatre 3–4, open mic 4–5 (min of three judges); nothing passes the 7/10 bar. Verdict below: a lively, well-lit game crowd, not yet real people.
-**Next (for the user):** install \`~/apk-out/encore-release-2026-10-19-real-arm.apk\` on the TV and run tv-sweep round 10 (\`prototypes/crowd3d/tools/render/tv-sweep.md\`); look at \`docs/mockups/real-v1-<venue>.png\` and \`life-v1-<venue>.mp4\`.
-**Needs the user:** (1) the TV check (fps on the Mali-G31 decides whether DOF/hair2/bloom stay on in close-ups); (2) whether \`real-v1\` merges to main (nothing pushed); (3) the theatre's raked rows still read as standing: needs a seat or camera decision, not tuning.
+**Next (for the user):** install `~/apk-out/encore-release-2026-10-19-real-arm.apk` on the TV and run tv-sweep round 10 (`prototypes/crowd3d/tools/render/tv-sweep.md`); look at `docs/mockups/real-v1-<venue>.png` and `life-v1-<venue>.mp4`.
+**Needs the user:** (1) the TV check (fps on the Mali-G31 decides whether DOF/hair2/bloom stay on in close-ups); (2) whether `real-v1` merges to main (nothing pushed); (3) the theatre's raked rows still read as standing: needs a seat or camera decision, not tuning.
 **Updated:** 2026-10-19 10:27 UTC.
 
 ## Decisions
@@ -265,6 +265,6 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck 
 anatomy TOTAL 0; handsweep 0; bindcheck clean; handocc 0 flickers in all four venues; pack 20.2 MB; packcheck ready ×4; brightness gate pass ×4; edge bands 0 at 962×541 and 1018×541 in all four venues (the arena's 1018 run rerun alone after an empty result under load). Textures: club 29.5, theatre 28.6, open mic 29.8, arena 25.7 MB (≤ 30).
 
 ### 2026-10-19 10:27 UTC: final APKs and emulator check (tree 99a5956)
-- TV: \`~/apk-out/encore-release-2026-10-19-real-arm.apk\` (armeabi-v7a, 128 MB; the packed crowd page carries real.js, the AO files and the candle pools). Emulator: \`~/apk-out/encore-release-2026-10-19-real-emu.apk\` (x86/x86_64).
-- Emulator (720p, -gpu host), crowdtest cycle per venue: steady 30 fps (the cap) in club, theatre and open mic, with dips to 26–29 at cuts and one 14–17 during load; frames \`docs/android-emu/real-v1-2026-10-19/final-crowdtest-3venues.png\`. The emulator box is stopped.
-- Branch \`real-v1\` is local only (never pushed); \`real-v1-life\` (the motion agent's) is fully merged into it. Worktrees on the box: \`~/strumble-base\` (baseline), \`~/strumble-life\`, \`~/strumble-gate\` (frozen gate copy); servers on 8091/8092/8093/8191 (and the motion agent's dev copy on 8094) can be stopped.
+- TV: `~/apk-out/encore-release-2026-10-19-real-arm.apk` (armeabi-v7a, 128 MB; the packed crowd page carries real.js, the AO files and the candle pools). Emulator: `~/apk-out/encore-release-2026-10-19-real-emu.apk` (x86/x86_64).
+- Emulator (720p, -gpu host), crowdtest cycle per venue: steady 30 fps (the cap) in club, theatre and open mic, with dips to 26–29 at cuts and one 14–17 during load; frames `docs/android-emu/real-v1-2026-10-19/final-crowdtest-3venues.png`. The emulator box is stopped.
+- Branch `real-v1` is local only (never pushed); `real-v1-life` (the motion agent's) is fully merged into it. Worktrees on the box: `~/strumble-base` (baseline), `~/strumble-life`, `~/strumble-gate` (frozen gate copy); servers on 8091/8092/8093/8191 (and the motion agent's dev copy on 8094) can be stopped.
