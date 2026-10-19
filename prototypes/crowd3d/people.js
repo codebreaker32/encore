@@ -1643,6 +1643,7 @@ export class Person {
     const sp = laughSeed(id), dx = this.o.x - sp.x, dr = (this.o.row - sp.row) * 0.95, dist = Math.sqrt(dx * dx + dr * dr);
     let style = T.style;
     if (kind === 'laugh' && style === 'over' && !(reach > 0.72 && s > 0.62)) style = 'back'; // doubled over only on a big laugh
+    if (kind === 'laugh' && style === 'over' && this.o.table && this.o.neighbour && !LIFE_OFF.laugh) style = jitter > 0.5 ? 'back' : 'shake'; // (never folded over a two-top: the head went down into the arms, 'passed out', round 14)
     // (a breath through the nose or a giggle can't carry a big laugh: most of them laugh with the head back, or fold over)
     if (kind === 'laugh' && s > 0.75 && (style === 'nose' || style === 'giggle') && jitter > 0.3) style = jitter > 0.7 ? 'over' : 'back';
     // (and never the style they laughed in last time: when the rules above land on it, the next one their repertoire
@@ -1650,7 +1651,7 @@ export class Person {
     if (kind === 'laugh') {
       if (this._effId !== id) this._effPrev = this._effStyle;
       if (this._effPrev && style === this._effPrev) {
-        const ok = (st) => st !== this._effPrev && !(st === 'over' && !(reach > 0.72 && s > 0.62)) && !(s > 0.75 && (st === 'nose' || st === 'giggle'));
+        const ok = (st) => st !== this._effPrev && !(st === 'over' && (!(reach > 0.72 && s > 0.62) || (this.o.table && this.o.neighbour && !LIFE_OFF.laugh))) && !(s > 0.75 && (st === 'nose' || st === 'giggle'));
         const alt = this.repertoire().map(([st]) => st).find(ok) || ['back', 'shake', 'turn', 'giggle'].find(ok);
         if (alt) style = alt;
       }
@@ -2658,7 +2659,7 @@ export class Person {
       const fr = xp.frown + M.frown, frTV = face.slots.mouthFrownLeft.length ? 0 : fr * 0.4;
       face.set('mouthSmileLeft', 1.85 * sm + 0.35 * g + 0.1 + (sk > 0 ? sk * 1.3 : 0) - frTV); face.set('mouthSmileRight', 1.8 * sm + 0.35 * g + 0.1 + (sk < 0 ? -sk * 1.3 : 0) - frTV);
       face.set('mouthUpperUpLeft', 0.6 * g + M.upper); face.set('mouthUpperUpRight', 0.56 * g + M.upper);
-      face.set('jawOpen', Math.min((LIFE_OFF.face ? 0.15 + 0.62 * sm : 0.2 + 0.8 * sm) + speaking * 0.3, Math.max(jaw * fk.jaw + (this._mkJaw || 0), g * (LIFE_OFF.face ? (0.45 + 0.25 * ha) * fk.jaw : (0.45 + 0.6 * ha) * fk.jaw))));  // (life-v1: the mouth opens wider on each "ha", closes a little between) // (a big laugh's mouth visibly open, within the smile)
+      face.set('jawOpen', Math.min((LIFE_OFF.face ? 0.15 + 0.62 * sm : 0.2 + 0.8 * sm) + speaking * 0.3, Math.max(jaw * fk.jaw + (this._mkJaw || 0), g * (LIFE_OFF.face ? (0.45 + 0.25 * ha) * fk.jaw : (0.45 + 0.6 * ha) * fk.jaw * (L ? 0.6 + 0.75 * hash(this.seed * 0.71 + (L.id | 0) * 3.3) : 1)))));  // (life-v1: the mouth opens wider on each "ha", closes a little between) // (a big laugh's mouth visibly open, within the smile)
       face.set('eyeLookDownLeft', phone * 0.7 + (xp.down + M.down) * 0.5); face.set('eyeLookDownRight', phone * 0.7 + (xp.down + M.down) * 0.5);
       const surprise = Math.max(L && L.t > -0.1 && L.t < 0.35 && st === 'back' ? Math.sin(((L.t + 0.1) / 0.45) * Math.PI) * 0.6 : 0, xp.wide);
       face.set('eyeWideLeft', surprise + vocal * 0.3); face.set('eyeWideRight', surprise + vocal * 0.3);
