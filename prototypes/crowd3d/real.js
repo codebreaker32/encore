@@ -75,7 +75,8 @@ export function realLit(m, kind) {
 	vec3 irradiance = ( dotNL + ( skinWrap - dotNL ) * vec3( 0.85, 0.36, 0.22 ) * skinK ) * directLight.color;
 	reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );${spec}`;
     // (the teeth, on the head: white, inside the closed lips in the bind pose, so the bake blacks them out; a laughing
-    // mouth shows them, so they keep at least 0.6 of the light)
+    // mouth shows them, so they keep at least 0.6 of the light; and no cavity of the head below 0.3: a laughing mouth
+    // read as a black hole, "pain" to the judges)
     // the table candle (club): a warm point a few tens of centimetres below the face, wrapped, inverse square; its
     // strength (uCandle.w) is 0 for anyone without a candle
     const CANDLE = /* glsl */ `
@@ -112,7 +113,7 @@ float realH( vec2 p ) { vec2 i = floor( p ), f = fract( p ); f = f * f * ( 3.0 -
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>${PORES ? PORE_N : ''}`)
       // the baked AO (open above 0.92, cavities under 0.12 black): all of the fill and house light, most of the key (a person's own small shadows, which the TV
       // can't draw: the mouth's inside, under the chin, inside a collar)
-      .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>' + fillEye + CANDLE + `\n\t{ float aoK = smoothstep( 0.12, 0.92, vAO );${kind === 'head' ? ' vec3 tw = material.diffuseColor; aoK = max( aoK, 0.6 * smoothstep( 0.42, 0.62, min( tw.r, min( tw.g, tw.b ) ) ) * ( 1.0 - vReal.x ) );' : ''} reflectedLight.indirectDiffuse *= aoK * ${NOSPEC.fillK.toFixed(3)}; reflectedLight.directDiffuse *= mix( 1.0, aoK, 0.85 ); }`)
+      .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>' + fillEye + CANDLE + `\n\t{ float aoK = smoothstep( 0.12, 0.92, vAO );${kind === 'head' ? ' vec3 tw = material.diffuseColor; aoK = max( aoK, 0.6 * smoothstep( 0.42, 0.62, min( tw.r, min( tw.g, tw.b ) ) ) * ( 1.0 - vReal.x ) ); aoK = max( aoK, 0.3 );' : ''} reflectedLight.indirectDiffuse *= aoK * ${NOSPEC.fillK.toFixed(3)}; reflectedLight.directDiffuse *= mix( 1.0, aoK, 0.85 ); }`)
       .replace(`#include <${c}>`, out)
       // the hands: their albedo a little darker and warmer, towards the face (the texture's hands are pale)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${kind === 'body' ? `diffuseColor.rgb *= mix( vec3( 1.0 ), vec3( 0.8, 0.72, 0.66 ), vReal.y );

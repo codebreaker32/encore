@@ -89,6 +89,11 @@ const V = VENUES[VENUE_ID];
 { const el = document.querySelector('.lower-third .venue'); if (el) el.innerHTML = V.title; }
 const P = { ...PRESETS[PRESET_NAME], ...(V.presets[PRESET_NAME] || {}) };
 const LOOK = applyLook(Q.get('look') || 'stage', V, VENUE_ID, P); // the stage's-eye look (look.js); &look=classic: the old one
+if (LOOK && Q.has('depthfloor')) V.depthFloor = parseFloat(Q.get('depthfloor')); // (test knobs: the house behind the spill)
+if (LOOK && Q.has('depthslope')) V.depthSlope = parseFloat(Q.get('depthslope'));
+if (LOOK && Q.has('hemik')) V.light.hemi *= parseFloat(Q.get('hemik'));
+if (LOOK && Q.has('sky')) V.light.sky = parseInt(Q.get('sky'), 16);
+if (LOOK && Q.has('fogwide')) V.fog = { ...V.fog, wide: Q.get('fogwide').split(',').map(Number) };
 if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows3')) P.rows = 3; // (the arena's old three 3D rows)
 if (VENUE_ID === 'arena' && new Set((Q.get('ab') || '').split(',')).has('rows4')) P.rows = 4; // (round 7: between the two)
 // &ab=types4: at most four avatar types per instanced band (fewer draws: a page-JS diagnostic for the TV)
@@ -371,7 +376,7 @@ const key = new THREE.SpotLight(K.color || 0xffc48a, KEY, 0, K.angle, K.penumbra
 // (real-v1: the stage spill comes from house left of the camera and a little higher, so the faces have a lit and a shadow
 // side, a source a viewer can place, instead of a flat light from the lens's own direction; &ab=nosidekey; &keypos=x,y,z
 // is a test knob)
-const KEY_POS = Q.has('keypos') ? Q.get('keypos').split(',').map(Number) : !ab('noreal') && !ab('nosidekey') && P.frontMat === 'lambert' && VENUE_ID !== 'arena' ? [K.pos[0] - 2.4, K.pos[1] + 0.4, K.pos[2] + 0.2] : K.pos;
+const KEY_POS = Q.has('keypos') ? Q.get('keypos').split(',').map(Number) : !ab('noreal') && !ab('nosidekey') && P.frontMat === 'lambert' && VENUE_ID !== 'arena' ? [K.pos[0] - (VENUE_ID === 'theatre' ? 1.2 : 2.4), K.pos[1] + 0.4, K.pos[2] + 0.2] : K.pos; // (the theatre's house-left block sat near the moved key's axis and ran hot: half the shift there)
 key.position.set(...KEY_POS);
 key.target.position.set(...K.target);
 scene.add(key, key.target);

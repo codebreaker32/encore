@@ -16,8 +16,14 @@ const COMMON = { closeKeyWiden: 2.0, hemi: 0.35, fill: 0.35, rim: 1.0, depthFrom
 const VENUES = {
   club: {
     key: { pos: [0.3, 3.3, -0.4], target: [0.1, 0.5, 2.4], intensity: 95, angle: 0.42, penumbra: 0.45 },
-    fog: { color: 0x1a120d, wide: [3, 20] }, haze: [0.14, 0.09, 0.06], phones: 4,
+    fog: { color: 0x1a120d, wide: [4, 34] }, haze: [0.14, 0.09, 0.06], phones: 4,
     exits: [[-4.4, 2.45, 12.55], [5.15, 2.4, 9.5]],
+    // (the house lifted, real-v1 2026-10-19: the judges read the back of the club as flat cardboard cut-outs. They were
+    // the haze: at 3-20 m it painted everyone behind row 2 its own colour. Thinner haze (4-34 m), a warm, low house glow
+    // and a gentler fall with depth (0.3 a row to 0.45), so the rows behind read as people in a dim room, with faces and
+    // volume, and the bar's crowd stays a silhouette. &look=stagedark keeps the old club.)
+    depthSlope: 0.3, depthFloor: 0.45, hemi: 21, sky: 0x6a4a36,
+    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, sky: null, fog: { color: 0x1a120d, wide: [3, 20] } },
   },
   theatre: {
     key: { pos: [0.3, 4.6, -0.3], target: [0.2, 0.6, 2.8], intensity: 200, angle: 0.36, penumbra: 0.4 }, // (row 1 at 12° off its axis, row 2 at 21°: outside)
