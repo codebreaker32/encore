@@ -866,26 +866,42 @@ describe('MC moments', () => {
   });
 
   it('holds words while the performer speaks, shows them when they stop, drops them when the moment passes', () => {
+    const at = apply(playBitOne(createSetState(config('club'))), { type: 'tick', now: 9.8 });
+    expect(at.moments.find((m) => m.id === 2)?.kind).toBe('between');
+    let s = apply(
+      at,
+      { type: 'tick', now: 11.0 },
+      { type: 'voice', at: 11.1, speaking: true, level: 0.2 },
+      { type: 'mc-line', momentId: 2, text: '[model] between' },
+    );
+    expect(s.shot.kind).toBe('wide');
+    expect(s.book.waiting).toHaveLength(1);
+    const stops = apply(s, { type: 'voice', at: 12.0, speaking: false, level: 0 }, { type: 'tick', now: 12.1 });
+    expect(stops.shot).toMatchObject({ kind: 'card', from: 12.1, text: '[model] between' });
+    expect(stops.momentOutcomes[2]).toBe('shown');
+    const talks = apply(s, { type: 'tick', now: 14.5 });
+    expect(talks.momentOutcomes[2]).toBe('late');
+    expect(talks.book.waiting).toHaveLength(0);
+    expect(talks.shot.kind).toBe('wide');
+  });
+
+  it("puts a heckle's words up at once, even while the performer talks: a heckler doesn't wait for a pause", () => {
     const base = toHeckle();
     const id = base.moments[base.moments.length - 1].id;
+    expect(base.moments[base.moments.length - 1].kind).toBe('heckle');
     expect(base.shot).toMatchObject({ kind: 'wide', from: 19.6 });
-    let s = apply(
+    const s = apply(
       base,
       { type: 'voice', at: 26.0, speaking: true, level: 0.2 },
       { type: 'mc-line', momentId: id, text: '[model] heckle' },
     );
-    expect(s.shot.kind).toBe('wide');
-    expect(s.book.waiting).toHaveLength(1);
-    // While words wait, the director holds the angle, though this wide is past eight seconds.
-    s = apply(s, { type: 'tick', now: 27.8 });
-    expect(s.shot).toMatchObject({ kind: 'wide', from: 19.6 });
-    const stops = apply(s, { type: 'voice', at: 28.0, speaking: false, level: 0 }, { type: 'tick', now: 28.1 });
-    expect(stops.shot).toMatchObject({ kind: 'card', from: 28.1, to: 30.1, text: '[model] heckle' });
-    expect(stops.momentOutcomes[id]).toBe('shown');
-    const talks = apply(s, { type: 'tick', now: 29.6 });
-    expect(talks.momentOutcomes[id]).toBe('late');
-    expect(talks.book.waiting).toHaveLength(0);
-    expect(talks.shot).toMatchObject({ kind: 'wide', from: 29.6 });
+    expect(s.shot).toMatchObject({
+      kind: 'card',
+      text: '[model] heckle',
+      caption: expect.stringMatching(/^HECKLE · /),
+    });
+    expect(s.momentOutcomes[id]).toBe('shown');
+    expect(s.book.waiting).toHaveLength(0);
   });
 
   it('shows the words verbatim, cut defensively on a word boundary past 140 characters', () => {

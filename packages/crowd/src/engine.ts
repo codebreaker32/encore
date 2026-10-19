@@ -666,7 +666,8 @@ const JUDGE_HEARD: Record<ActId, string> = {
 
 function judgeClause(act: ActId, judge: number | 'late' | 'unavailable' | 'early', bonus: number): string {
   if (judge === 'late') return "the MC's model was too late (timing and patterns only)";
-  if (judge === 'early') return "the room decided before the MC's model answered (your next line or the set's end came first; timing and patterns only)";
+  if (judge === 'early')
+    return "the room decided before the MC's model answered (your next line or the set's end came first; timing and patterns only)";
   if (judge === 'unavailable') return "the MC's model was unavailable (timing and patterns only)";
   return bonus > 0
     ? `${JUDGE_HEARD[act]} (the MC's model, an estimate)`
@@ -1197,10 +1198,14 @@ function showWaiting(state: SetState, at: number): SetState {
   return settle(cutTo(rest, card), next.momentId, 'shown');
 }
 
-/** Drop words that missed their moment; put the first waiting words on screen if the wide is up and the performer is quiet. */
+/** Drop words that missed their moment; put the first waiting words on screen if the wide is up and the performer is quiet (a heckle's even while they talk). */
 function deliver(state: SetState): SetState {
   const s = expireMoments(state, false);
-  if (s.phase !== 'live' || s.book.waiting.length === 0 || s.shot.kind !== 'wide' || s.speaking) return s;
+  if (s.phase !== 'live' || s.book.waiting.length === 0 || s.shot.kind !== 'wide') return s;
+  // A heckle interrupts: a heckler doesn't wait for a pause, so its words go up while the performer talks (they were
+  // dropped as late when the next bit began at once, demo-video takes 2026-10-19). Other cards wait for quiet.
+  const first = s.moments.find((m) => m.id === s.book.waiting[0].momentId);
+  if (s.speaking && !(first && first.kind === 'heckle')) return s;
   return showWaiting(s, s.now);
 }
 
