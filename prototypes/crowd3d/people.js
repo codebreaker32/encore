@@ -677,12 +677,12 @@ const RAW = typeof location !== 'undefined' && new URLSearchParams(location.sear
 const OFF = Object.fromEntries((typeof location !== 'undefined' ? new URLSearchParams(location.search).get('off') || '' : '').split(',').filter(Boolean).map((k) => [k, true]));
 // &restpose=thighs|clasped|folded|chin|chairBack|tableOne|glass|forearmsTable: every resting person in that pose (the sheets)
 // life-v1 switches: &life=off turns every life-v1 layer off (the baseline's motion, the WIP's blinks and looks kept);
-// &lifeoff=breath,drift,look,whisper,onset,comp,hands,face,fidget one at a time
+// &lifeoff=breath,drift,look,whisper,onset,comp,hands,face,fidget,rest one at a time (hands also: roll,fingers,edge,restvar,bake)
 const BAKE_FAR_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('bake') === 'old';
 const LIFE_OFF = (() => {
   const q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null, all = !!q && q.get('life') === 'off';
   const o = Object.fromEntries((q ? q.get('lifeoff') || '' : '').split(',').filter(Boolean).map((k) => [k, true]));
-  if (all) for (const k of ['breath', 'drift', 'look', 'whisper', 'onset', 'comp', 'hands', 'face', 'fidget']) o[k] = true;
+  if (all) for (const k of ['breath', 'drift', 'look', 'whisper', 'onset', 'comp', 'hands', 'face', 'fidget', 'rest']) o[k] = true;
   return o;
 })();
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
@@ -716,7 +716,10 @@ const GESTURE_FORCE = typeof location !== 'undefined' ? new URLSearchParams(loca
 // each hand on its own thigh, each on its own knee, one of each, or (rarely) clasped well forward on the lap; every
 // seat's schedule is drawn with its row (assignRest): no two neighbours in the same pose, at most a third of a row in one
 // (mostly on the thighs, elbows bent and relaxed; both hands out on the knees, arms near straight, read stiff in a row)
-const REST_SEAT = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
+const REST_SEAT_OLD = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
+// (life-v1: fewer hands out on the knees, more clasped in the lap; one hand over the other's wrist was tried: its crossing
+// arm tucked the elbow behind the body)
+const REST_SEAT = LIFE_OFF.rest ? REST_SEAT_OLD : [['thighs', 2.4], ['knees', 0.35], ['thighKnee', 1.2], ['clasped', 1.4]];
 // A cabaret table stands in front of its pair, off to one side of each of them: only the close-up pair knows which side
 // (o.neighbour), so only they use the table, with the hand on its side (both forearms on it would leave one in the air)
 // (the glass: nobody holds one yet, so it's out until there is a glass to hold)
