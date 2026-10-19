@@ -152,3 +152,6 @@ Changes:
 | openmic | 5 | 5 | 4 | 5 | 5 | 5 | 4 | 1 | no |
 
 Top tells: laughs carried by one to three people while the rest hold their pose (motion agent); clasped-hands-round-the-candle now the repeated club pose; theatre front rows "a police line-up" and row 2 sitting so high it reads as standing; the theatre held frame's low-LOD bodies (white chest panels, untextured grey arms on the far left); open mic bodies colliding and a face blob in row 2; the open mic's hoodie woman hanging her head "asleep"; the dark halo at DOF edges; the same avatars twice in a theatre row. Held-out: club "tables: over…" t ~; theatre "along the front row"; open mic "the chairs: …".
+
+### 2026-10-19 05:25 UTC: gates on 61986f3 (life step 3 + the round-07 house changes before the second club step)
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edges 0 in club/open mic/theatre at both viewports and the arena at 962×541; the arena's 1018×541 edge run errored (an empty result under load: rerun on the final tree). The scratch-vector warning is fixed in life step 4 (pool 144). Merged life-v1 step 4 (9bc4307: laughs 40% more in the body, shoulders up at onset, theatre heads back not down, hands over faces front row only, more varied resting hands; the agent's gates all 0). Round 08 frames (seed 1008) being judged.
