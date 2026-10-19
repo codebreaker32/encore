@@ -1,0 +1,15 @@
+FINAL WORK PLAN from the user (19 Oct, about 18:15 UTC). This replaces the earlier 03:30 UTC end time.
+- Keep working until the FINAL DEADLINE: 20 Oct 23:59 IST = 18:29 UTC on 20 Oct. Check `date -u`. After that the user makes the demo video (with voiceover) on the emulator and submits, so at the deadline the tree must be clean, gated, packed, committed on real-v1, with a final emulator APK (~/apk-out/encore-final-emu.apk) and TV APK (~/apk-out/encore-final-arm.apk) built and the emulator box stopped.
+- Stay on Claude Opus 5.5, medium effort.
+- Way of working: you are the lead. Use worker subagents for parallel fixes (each in its own worktree, merged only when gates pass) and keep the strict judge panel (three fresh judges, min score, held-out pick, no gaming) after each merge. The judge also watches emulator clips: any visible glitch (pose jump, pop, snap, flicker, black frame) is an automatic fail for that venue.
+- Focus on LOW-HANGING FRUIT: the cheapest changes that remove the most obvious tells. In order:
+  1. laugh motion unreal and glitchy (in progress: smooth, capture-led, eased);
+  2. theatre rows behind the front two read as standing mannequins (seated posture, visible seats, rake);
+  3. open mic bodies interpenetrating and the broken back-row face;
+  4. club back-of-house reads as cardboard silhouettes;
+  5. identical repeated rest poses;
+  6. the full app flow on the emulator with sound (bill, live set with the scripted phone, cut sheet, green room): no black screens, the MC voice plays, the crowd sound plays, and nothing glitches. That's what the demo video will show, so it must be solid.
+  Skip anything that needs new assets or big rewrites.
+- The arena: don't remove it and don't work on it; the user decides later.
+- Gates at 0 after every merge. Log every round (scores, clips, what changed) in docs/handoff/box-progress.md. Do not stop to ask the user anything; if blocked, note it and move on. If the usage limit pauses you, continue when it resets.
+- Two hours before the deadline (16:30 UTC on 20 Oct) stop new work, run the final gates and the final judge round, build both final APKs, record final emulator clips of each venue (docs/mockups/final-<venue>.mp4), write a short "ready for the video" summary at the top of box-progress.md, and stop the emulator box.

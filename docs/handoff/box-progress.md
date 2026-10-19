@@ -1,9 +1,23 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status (2026-10-19 12:52 UTC):** working to the user's final plan (`~/final-plan.txt`, read 12:50 UTC; it replaces `~/laughfix.txt`'s 03:30 end). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct for the final gates, the final judge round, `~/apk-out/encore-final-{emu,arm}.apk`, final emulator clips `docs/mockups/final-<venue>.mp4` and a "ready for the video" summary here. Order: (1) laugh motion smooth and capture-led, (2) theatre rows seated, (3) open mic interpenetration and the broken back-row face, (4) club back-of-house cut-outs, (5) repeated rest poses, (6) the full app flow on the emulator with sound. The Google TV is retired: every video and audio check is on the Android TV emulator. `noreal` becomes the default (TV round 10: real-v1 cost 2–5 fps). The arena is left alone.
-**Previous session's result:** final judge round 15 (seed 1015): overall club 4–5, theatre 3–4, open mic 4–5; nothing passes the 7/10 bar.
-**Needs the user:** whether `real-v1` merges to main (nothing pushed).
-**Updated:** 2026-10-19 12:52 UTC.
+**Status (2026-10-19 17:30 UTC):** working to the user's final plan (`docs/handoff/box-final-plan.txt`, `box-win-plan.txt`, `box-laughfix.txt`). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct.
+- Done:
+  - `noreal` is the default (`b8e44ff`).
+  - The submission docs are merged (`1ad9212`): demo-video shot list and voiceover, devpost, friction log, product feedback.
+  - Three crowd fixes are merged, each gated clean in its worktree:
+    - open mic chairs spaced apart, which also clears the "broken face" (a bun over a face; `4feea37`);
+    - theatre rows seated, with taller lit seat backs and a row falloff (`0e47978`);
+    - club back-of-house shaped by house, sconce and candle light (`4f772d6`).
+  - laugh-v2 is committed (`4e1a145`): smooth, capture-led laughs.
+  - "Before" emulator clips are recorded: `docs/mockups/laugh-fix-v1-<venue>-before.mp4`.
+- In progress: laugh-v2's arm and torso smoothing broke gates (anatomy 66, bindcheck 2, handocc club 9); I'm reworking where the smoothing sits. "After" clips are recorded with the first laugh-v2 build and wait on the gate fix.
+- Next:
+  - the judge round on the merged tree;
+  - the full app flow on the emulator with sound (the box's checkout is old and still has the "Prithvi" MC name: sync it first);
+  - repeated rest poses.
+- **Needs the user:** whether `real-v1` merges to main (nothing pushed). The demo video uses the scripted phone, disclosed on screen and in the voiceover (honesty rule 6; `docs/demo-video.md`).
+
+**Updated:** 2026-10-19 17:30 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -319,3 +333,8 @@ Outright glitches:
 | theatre | 73 | 33 (worst 20°) |
 
 Turns over 8° also fell by two thirds or more. What's left is mostly two people's clasped hands, still flipping now and then.
+
+### 2026-10-19 17:30 UTC: workers merged; laugh-v2 gates
+- Merged `fix-openmic` (chairs 0.56 m apart on the arcs, `&ab=omtight`; the "broken back-row face" was a front woman's hair bun over the mouth of the man behind), `fix-theatre` (seat backs 0.17 m taller from row 1, lit top rolls, falloff 0.1 a row to 0.45; `&ab=lowbacks,nocaps,oldfall`), `fix-club` (per-vertex house, sconce and candle light on the instanced back-of-house, per-person variation, falloff to 11.5 m; `&ab=flatback`). Each worker's gates: all 0 / pass (two arena edge runs timed out under load and passed re-run alone). Draw calls equal or lower.
+- The gates on laugh-v2 (`4e1a145`) failed: anatomy 66 findings, bindcheck 2 runs, handocc club 9 flickers. Cause: the arm and torso rate limits ran after the anatomy fixes and undid them. Reworking.
+- The user's note: the session sat for hours on a permission prompt for a file outside the repo. From now on every file I use lives in `~/strumble` (`.box/` for scratch, git-ignored), and the plans are read from `docs/handoff/box-*.txt`.

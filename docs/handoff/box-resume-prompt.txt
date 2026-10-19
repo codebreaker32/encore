@@ -1,0 +1,7 @@
+You were paused by the usage limit and the box was restarted (19 Oct, about 04:20 UTC). Continue the brief in docs/handoff/box-session.md from round 06, with the retuned judge. Fix the round-06 top tells first, in this order:
+1. club back-of-house reads as flat cardboard silhouettes (add rim and volume, or bring more of it into light);
+2. laughs too small: most people hold their rest pose through a laugh (more people visibly laughing, shoulders, torsos, mouths);
+3. theatre rows behind the front two read as standing mannequins with no seats or rake (seated posture, visible seat backs, depth falloff);
+4. open mic bodies interpenetrate in packed rows, plus a broken back-row face;
+5. repeated identical rest poses.
+Re-judge after each fix round. NEW FREEZE: stop new features at 16:30 UTC on 19 Oct (22:00 IST), then leave a clean, gated, packed tree with the TV and emulator APKs built (~/apk-out/encore-release-2026-10-19-real-arm.apk and -emu.apk) and the final judge round logged. Keep docs/handoff/box-progress.md updated after every step. Commit on branch real-v1. Do not stop to ask me anything.
