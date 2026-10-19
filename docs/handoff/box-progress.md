@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 05:45 UTC.
+**Updated:** 2026-10-19 06:05 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -166,3 +166,12 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck 
 Flat against round 07 (overall 4 / 3–4 / 4). Top tells: the club laugh still "never builds" in the strip (a sip, a hand, head turns); the wide and the held frame near-identical in pose; the theatre's back half still read as cut-outs and its front row bolt upright; the DOF's dark halos round every in-focus person and comb streaks in hair (named by all three judges, every round); open mic bodies packed and overlapping.
 - **Decision:** the DOF blur is off by default (`&ab=dofblur` restores it). With it off the halos and the hair streaks are gone and the faces behind read as people (compared on the open mic's held and face frames); it was also the lens's main TV cost. Bloom still uses the mips in close and mid shots.
 - judgeset: the strip now holds its shot with one cut (a probe showed the camera static either way; no change in the frames).
+
+### 2026-10-19 06:05 UTC: round 09 (seed 1009): DOF blur off, theatre and open mic close-ups keep the rows behind
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 4 | 5 | 5 | 6 | 5 | 4 | 2 | no |
+| theatre | 4 | 4 | 3 | 4 | 4 | 4 | 3 | 1 | no |
+| openmic | 4 | 5 | 4 | 5 | 4 | 4 | 3 | 2 | no |
+
+Halos are no longer a top tell; hair edges in the open mic face close still are. Top tells: laughs carried by one to three people (the rest hold one pose); listening life too still (the open mic's held frame at t 10.7 "pixel-identical" to the wide at 11.8); everyone front-on and upright; the theatre's front rows under a flat flood dropping to black silhouettes behind; the open mic muddy and underexposed; blue "sparkles" (the phone glints) read as artefacts in close shots; a smeared hand near the lens in face closes. Sent the motion tells (1, 2, posture, open mic knees) to the motion agent.
