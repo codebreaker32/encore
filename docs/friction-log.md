@@ -427,3 +427,16 @@ Severity: **Blocker** (no workaround) · **Major** (costly workaround) · **Mino
 - **Severity:** Minor (it's documented STS behaviour), but it surprises people who use `aws login` with the root user on a personal or hackathon account.
 - **Workaround:** use an IAM principal, such as the build box's instance role, to assume the role.
 - **Suggestion:** have `aws login` warn when the signed-in principal is root, and point to creating an IAM identity.
+
+## 2026-10-19: The AWS account is blocked mid-run with an "account verification" error
+- **Tool:** Amazon EC2 `StartInstances` (AWS CLI v2, the build box's instance role, account 695019458661, us-west-2).
+- **Task:** start the Android TV emulator box, a stopped instance started and stopped about ten times that day, for the final demo-video recordings.
+- **Actual:**
+  - At about 23:17 UTC, `start-instances` failed with *"An error occurred (Blocked) when calling the StartInstances operation: This account is currently blocked and not recognized as a valid account"*, plus a link to an account-verification support case.
+  - Read-only calls (`sts get-caller-identity`, `describe-instances`) still worked.
+  - No warning email or console banner came before it (as far as the session could see); the box had started normally 3 hours earlier.
+- **Severity:** Blocking for anything that needs a new instance start (the demo-video recordings), four days before the deadline.
+- **Workaround:** none from the CLI. It needs a support case from the account owner.
+- **Suggestion:**
+  - warn the account owner ahead (email and console banner) with the reason before blocking starts;
+  - say in the API error which check failed (payment, identity, or a credits or plan change) instead of only "not recognized as a valid account".
