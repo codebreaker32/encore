@@ -26,6 +26,10 @@ const WEBGL2 = typeof WebGL2RenderingContext !== 'undefined';
 export const BAKE_REPORT = [];
 if (typeof window !== 'undefined') window.__bakeAnatomy = () => BAKE_REPORT;
 // &moves=off|nogest|nowalk: switch the captured moves off, or one part of them (for A/B checks)
+// laugh-v2 (people.js): the instanced laugh without the bob on each "ha" (a quarter of it, the shoulders' shake), its
+// level eased, its baked take kept for the whole laugh and the head's roll no longer re-seeded per laugh; &laugh=old
+const LAUGH_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('laugh') === 'old';
+const HA_K = LAUGH_OLD ? '1.0' : '0.25';
 const MOVES_Q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('moves') || '' : '';
 // (life-v1: seated low-detail people sit a little forward, so the hands reach the thighs with the elbows bent (sitting
 // back, -0.1, was tried: on the coarse levels the bent forearms broke into flesh shards beside the body, round 10); upright,
@@ -249,6 +253,7 @@ void crowdPose(inout vec3 p, inout vec3 n){
   // laughter comes in bouts: a few "ha"s, a gasp, again (each person their own bout rhythm)
   float boutEnv = smoothstep(-0.35, 0.35, sin(uTime * (0.9 + 0.5 * fract(ph * 0.53)) * 6.2832 + ph * 2.1));
   ha = 0.3 + (ha - 0.3) * (0.35 + 0.65 * boutEnv);
+  ha = 0.5 + (ha - 0.5) * ${HA_K};
   float clapOsc = 0.5 + 0.5 * sin(uTime * rate * 6.2832 + ph); // their own clap rate and phase
   vec3 mv = dS * stand;
   vec3 neckP = uNeck, hipP = uHip;
@@ -553,6 +558,10 @@ export class InstancedCrowd {
           if (sc > bestScore) { bestScore = sc; best = r; }
           body = Math.max(body, r.body);
         }
+        if (!LAUGH_OLD) { // (laugh-v2: the level eases in over ~0.3 s and out over ~0.5 s, as the front people's)
+          const dtb = now - (P.lbT ?? -1e9), b0 = P.lbS ?? 0;
+          P.lbT = now; P.lbS = dtb > 0 && dtb < 0.5 ? b0 + (body - b0) * (1 - Math.exp(-dtb / (body > b0 ? 0.3 : 0.5))) : body; body = P.lbS;
+        }
         const S = Person.summary(best, SUM);
         const turn = best && best.style === 'turn' ? t.side * 0.7 * body : 0;
         // a glance at a friend comes and goes (5–20 s at a time) instead of holding for the whole show
@@ -599,6 +608,7 @@ export class InstancedCrowd {
         st[k + 1] = gest > 0.001 ? -gest : Math.max(S.clap * (S.low ? 0.6 : 1), S.cheer * 0.8);
         // the laugh's take (instanced): which of the three baked laughs, how big (no arms: see MOVES)
         st[k + 2] = G.mv && body > 0.01 && best && best.kind === 'laugh' ? S.variant + 0.02 + 0.97 * Math.min(1, S.amp) : 0;
+        if (!LAUGH_OLD && G.mv) { if (st[k + 2] > 0 && !(P.lzOn && body > 0.03)) P.lz = st[k + 2]; P.lzOn = body > 0.03 && (st[k + 2] > 0 || P.lzOn); if (P.lzOn) st[k + 2] = P.lz; } // (laugh-v2: one baked take for the whole laugh, held while it fades: a switch of take mid-laugh popped the torso)
         // (with a baked laugh playing, the capture already bends them: doubled over, the lean and the head's drop are
         // mostly the capture's, or the head ends up in the chest)
         const baked = st[k + 2] > 0, overK = baked && style === 'over' ? 0.35 : 1;
@@ -625,7 +635,7 @@ export class InstancedCrowd {
         st[k + 3] = Math.max(inSeat ? -0.15 : -0.25, Math.min(0.38, P.sLean)); // (never far enough to look like sliding off the seat, or lying back on it)
         po[k] = P.sYaw;
         po[k + 1] = P.sPitch;
-        po[k + 2] = (t.seed % 997) * 0.37 + (best && best.kind === 'laugh' ? S.phase : 0); // each laugh its own rhythm
+        po[k + 2] = (t.seed % 997) * 0.37 + (!LAUGH_OLD ? 0 : best && best.kind === 'laugh' ? S.phase : 0); // each laugh its own rhythm (laugh-v2: not any more: the phase also seeds the head's roll and sway, which snapped at each laugh's start and end)
         po[k + 3] = S.rate;
       }
       if (touched) { G.st.needsUpdate = true; G.po.needsUpdate = true; }
