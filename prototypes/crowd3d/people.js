@@ -2902,7 +2902,10 @@ export class Person {
     if (a < 0 || a > ev.dur) return X;
     const dead = room.murmur > 0.5 || (room.deadBits || 0) >= 2;
     const fire = room.mode === 'live' ? (dead ? 0.85 : 0.5) : 0.7;
-    if (ev.u > fire) return X;
+    // (decided once, as the expression starts: re-deciding each frame cut it off in one frame when the room's murmur
+    // crossed its line, an eye roll snapping straight back, round 16; and no eye roll while the room reacts)
+    if (this._xLo !== lo) { this._xLo = lo; this._xOk = ev.u <= fire; this._xQuiet = !room.events.length; }
+    if (!this._xOk) return X;
     const L = {
       sceptic: [['smirk', 3], ['browOne', 2.5], ['press', 1.5], ['frown', 1], ['roll', dead ? 4 : 0.3]],
       laugher: [['smile', 3], ['brows', 1.5], ['smirk', 1]],
@@ -2910,7 +2913,8 @@ export class Person {
       talker: [['brows', 2], ['smile', 2], ['wide', 1], ['smirk', 0.8]],
       plain: [['brows', 1], ['smirk', 1], ['press', 1], ['smile', 1], ['down', 0.5]],
     }[this.temper] || [['brows', 1]];
-    const kind = pick(L, ev.k);
+    let kind = pick(L, ev.k);
+    if (kind === 'roll' && !this._xQuiet) kind = 'press';
     const w = smooth(a / 0.25) * smooth((ev.dur - a) / 0.4), side = this.smirkSide;
     if (kind === 'smirk') X.smirk = side * 0.55 * w;
     else if (kind === 'smile') X.smile = 0.3 * w;
@@ -2923,7 +2927,7 @@ export class Person {
     else if (kind === 'down') X.down = 0.7 * w;
     else if (kind === 'roll') { // the eyes go up and across, then down again
       const k = clamp01(a / Math.min(1.1, ev.dur));
-      X.rollY = -0.42 * Math.sin(Math.PI * k); X.rollX = 0.3 * side * Math.sin(Math.PI * 2 * k) * 0.6; X.press = 0.3 * w; X.smirk = side * 0.25 * w;
+      X.rollY = -0.26 * Math.sin(Math.PI * k); // (0.42 rolled the irises under the lids: blank white eyes at TV distance, round 16) X.rollX = 0.3 * side * Math.sin(Math.PI * 2 * k) * 0.6; X.press = 0.3 * w; X.smirk = side * 0.25 * w;
     }
     return X;
   }

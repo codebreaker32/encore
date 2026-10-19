@@ -15,6 +15,8 @@
 // to the same top laugher). It changes the shot size from the last cut, and on a big laugh it leans to the wider
 // setups. A deterministic jitter breaks ties.
 import * as THREE from 'three';
+// (&laugh=old: the theatre's fly-gallery wide at its old height too; laugh-v2 lowered it 0.5 m)
+const Q_LAUGH_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('laugh') === 'old';
 
 /** The minimum hold of a reaction shot and of the wide, in seconds. The heckler cuts at once and is exempt. */
 export const PACE = {
@@ -90,7 +92,7 @@ export function buildSetups(ctx) {
     fromPair(pair(front, 30, 1.7, 'stalls: the front from house left', -1), 'mid', { w: 0.9 });
     fromPair(pair(P0, 65, 1.1, 'stalls: two-shot, centre', 1), 'close', { w: 0.8 });
     // the high wide down the rake: the laugh travels back through the rows (spread 0.4 s front to back)
-    pose('high wide from the fly gallery: the ripple', 'wide', 'close', [-1.0, 3.4, 0.2], [0.2, 1.1, 4.6], 30, [], { w: 1.3, keyWiden: 2.8 });
+    pose('high wide from the fly gallery: the ripple', 'wide', 'close', [-1.0, Q_LAUGH_OLD ? 3.4 : 2.9, 0.2], [0.2, 1.1, 4.6], 30, [], { w: 1.3, keyWiden: 2.8 });
     // from the stage box, house left, high: the stalls on the diagonal
     pose('high wide from the stage box', 'wide', 'close', [-6.0, 3.6, 0.8], [0.4, 1.15, 3.3], 55, [], { w: 1.2, keyWiden: 2.8 });
     // row-length side angles: from the apron's corners along the front rows
