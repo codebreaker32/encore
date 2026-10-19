@@ -186,3 +186,6 @@ Changes: the open mic's house (warm glow hemi ×20, haze 4–24 m, depth fall 0.
 | openmic | 5 | 5 | 4 | 5 | 5 | 3 | 4 | 2 | no |
 
 **Regression:** step 5's bent-elbow bake leaves detached flesh-coloured shards beside the theatre's rows 1–2 (all three judges; artefacts 2–3). `&bake=old` removes them (checked on theatre-3-mid). Sent to the motion agent as the first fix; if it isn't fixed by the final merge, I set the old bake as the default. Other tells: laughs read as turning to talk rather than laughing at the stage; front rows one pose; forearms into club tables; open mic hair stipple in the face close and a pale floating hand.
+
+### 2026-10-19 06:22 UTC: gates on a440a7c (lighting through the open mic's house; life step 4)
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edge bands 0 at both viewports in all four venues.
