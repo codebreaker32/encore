@@ -27,7 +27,8 @@ export const BAKE_REPORT = [];
 if (typeof window !== 'undefined') window.__bakeAnatomy = () => BAKE_REPORT;
 // &moves=off|nogest|nowalk: switch the captured moves off, or one part of them (for A/B checks)
 const MOVES_Q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('moves') || '' : '';
-// (life-v1: seated low-detail people sit a little forward, so the hands reach the thighs with the elbows bent; upright,
+// (life-v1: seated low-detail people sit back in the seat, the hips forward (the rows behind read as standing
+// mannequins, round 06); the hands on the thighs with the elbows bent, the elbows down and a little out; upright,
 // a short arm reached them straight, diagonally out past the seat in front: &bake=old for the old pose)
 const BAKE_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('bake') === 'old';
 const smooth01 = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
@@ -48,7 +49,7 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
   seat.updateMatrixWorld(true);
   const rig = new Rig(seat, model);
   const p = new Person(rig, null, { seed: 11, row: 3, x: 0, table: false, seatH, idle: 'still', stand, standHands, noParty: true });
-  Object.assign(p, { handsOn: 'lap', feet: 0.12, footFwd: 0.4, slouch: stand || BAKE_OLD ? 0 : 0.2, headTilt: 0, cheerer: 0.9, style: 'giggle', gaze: { x: 0, y: 0 }, glance: 0 });
+  Object.assign(p, { handsOn: 'lap', feet: 0.12, footFwd: 0.4, slouch: stand || BAKE_OLD ? 0 : -0.1, headTilt: 0, cheerer: 0.9, style: 'giggle', gaze: { x: 0, y: 0 }, glance: 0 });
   const room = { events: [], murmur: 0, murmurId: 0, performer: new THREE.Vector3(0, seatH + 0.75, 60) };
   let sk = null;
   model.traverse((o) => { if (o.isSkinnedMesh) sk = o; });
