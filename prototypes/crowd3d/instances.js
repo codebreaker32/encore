@@ -228,6 +228,9 @@ attribute vec3 dA; attribute vec3 dB; attribute vec3 dC; attribute vec3 dD; attr
 attribute vec4 aState; attribute vec4 aPose; attribute vec4 aVar; attribute vec4 aXform; attribute vec4 aShape;
 uniform float uTime; uniform vec3 uHip; uniform vec3 uNeck; uniform float uBeat;
 varying vec4 vCrowd; varying vec4 vTint;
+#ifdef BACK_CANDLE
+attribute vec4 aLamp; // the table candle in front of this person (world xyz; w its share, 0 for none)
+#endif
 #ifdef CROWD_MOVES
 // captured moves (instances.js MOVES): frames 0-7 a walk cycle, 8-13 sitting down (standing … seated), 14 the phone,
 // 15-17 three laughs. aShape.w: 0…1 the old stand amount, 2…3 walking (the cycle's phase), 4…5 sitting (0 standing … 1 seated).
@@ -344,21 +347,22 @@ export function crowdMaterial(params, shared, hip, neck) {
  * 0 drops the alpha mask and its discard.
  */
 export function crowdMaterialVlit(params, shared, hip, neck) {
-  const L = shared.light, VL = shared.vlit;
+  const L = shared.light, VL = shared.vlit, B = shared.back; // (B: look.js back, the back of house's volume; null elsewhere)
   const alpha = !!(params.alphaMap && params.alphaTest);
   const uniforms = {
     uTime: shared.uTime, uBeat: shared.uBeat, uHip: { value: hip.clone() }, uNeck: { value: neck.clone() }, uMaskOut: shared.uMaskOut || { value: 0 },
     map: { value: params.map }, alphaMap: { value: params.alphaMap || null }, diffuse: { value: new THREE.Color(1, 1, 1) },
-    ...THREE.UniformsLib.fog, ...(L ? L.uniforms : {}), ...VL,
+    ...THREE.UniformsLib.fog, ...(L ? L.uniforms : {}), ...VL, ...(B ? B.uniforms : {}),
   };
   const m = new THREE.ShaderMaterial({
     uniforms, fog: true, side: params.side ?? THREE.DoubleSide,
-    defines: { ...(alpha ? { CROWD_ALPHA: 1 } : {}), ...(shared.clothFix ? { CLOTH_FIX: 1 } : {}), ...(shared.rimFlat ? { RIM_FLAT: 1 } : {}), ...(shared.rimFlat && params.rimSoft ? { RIM_SOFT: 1 } : {}), ...(shared.keyDepth ? { KEY_DEPTH: 1 } : {}) },
+    defines: { ...(alpha ? { CROWD_ALPHA: 1 } : {}), ...(shared.clothFix ? { CLOTH_FIX: 1 } : {}), ...(shared.rimFlat ? { RIM_FLAT: 1 } : {}), ...(shared.rimFlat && params.rimSoft ? { RIM_SOFT: 1 } : {}), ...(shared.keyDepth ? { KEY_DEPTH: 1 } : {}), ...(B ? B.defines : {}) },
     vertexShader: `#include <common>
 #include <fog_pars_vertex>
 ${VERT_HEAD}
 uniform vec3 uKeyPos, uKeyDir, uKeyColor, uSky, uGround, uUp; uniform float uKeyCos, uKeyPen;
 ${L ? L.pars : 'uniform vec3 uRimColor; uniform vec3 uRimDir; uniform vec3 uFillColor; uniform vec3 uFillDir;'}
+${B ? 'uniform float uBackVary; uniform vec3 uBackShapeDir, uBackShapeColor, uBackWallColor, uBackCandleColor; uniform vec4 uBackWall; uniform vec3 uBackFar;' : ''}
 varying vec2 vUv; varying vec3 vLit; varying vec3 vLitB; varying vec3 vNv; varying vec3 vPv; varying float vRimK; varying float vMir;
 void main() {
   vec3 p = position, n = normal;
@@ -373,6 +377,18 @@ void main() {
   #endif
   vec3 irr = uKeyColor * (max(dot(N, Lk), 0.0) * spot / max(d * d, 0.01));
   float depth2 = aVar.w * aVar.w; // the row-depth falloff on the house light and the fill
+  #ifdef BACK_LOOK
+  vec3 pW = (modelMatrix * vec4(p, 1.0)).xyz, nW = normalize(mat3(modelMatrix) * n);
+  #endif
+  #ifdef BACK_FAR
+  // (look.js back) the house light keeps falling with distance behind the rows the row depth floors (uBackFar: from
+  // z, to z, the share left there), so each row stands a little lighter than the one behind it
+  depth2 *= mix(1.0, uBackFar.z, smoothstep(uBackFar.x, uBackFar.y, pW.z));
+  #endif
+  #ifdef BACK_VARY
+  // (look.js back) each person their own share of the house light, static (from aVar's random parts): a pool, a shadow
+  depth2 *= 1.0 + uBackVary * (2.0 * fract(aVar.w * 97.0 + aVar.z * 13.0) - 1.0);
+  #endif
   irr += mix(uGround, uSky, 0.5 + 0.5 * dot(N, uUp)) * depth2;
   irr += uFillColor * (0.5 + 0.5 * dot(N, uFillDir)) * depth2;
   vLit = irr * RECIPROCAL_PI;
@@ -381,6 +397,37 @@ void main() {
   vec3 irrB = uKeyColor * (max(dot(-N, Lk), 0.0) * spot / max(d * d, 0.01));
   irrB += mix(uGround, uSky, 0.5 - 0.5 * dot(N, uUp)) * depth2;
   irrB += uFillColor * (0.5 - 0.5 * dot(N, uFillDir)) * depth2;
+  #ifdef BACK_LOOK
+  // the back of house (look.js back, the club): volume for the rows behind the spill, per vertex and without a light
+  // per person. The house light (hemisphere and fill) is all wrap, so a whole body took one level: a cut-out.
+  // A soft directional house light from house right (+x) with plain Lambert (a lit and a shadow side), the wall sconces
+  // on the people nearest the walls, the table candle from below on the face and hands, and each person their
+  // own share of the house light (BACK_VARY, above). In world space (the crowd mesh sits at the origin).
+  {
+    vec3 add = vec3(0.0), addB = vec3(0.0);
+    #ifdef BACK_SHAPE
+    float sh = dot(nW, uBackShapeDir);
+    add += uBackShapeColor * max(sh, 0.0) * depth2; addB += uBackShapeColor * max(-sh, 0.0) * depth2;
+    #endif
+    #ifdef BACK_WALL
+    // the nearest sconce on this person's side wall (uBackWall: x of the wall, y, z of the first, spacing; three a side)
+    float zs = uBackWall.z + uBackWall.w * clamp(floor((pW.z - uBackWall.z) / uBackWall.w + 0.5), 0.0, 2.0);
+    vec3 Ls = vec3(sign(pW.x) * uBackWall.x, uBackWall.y, zs) - pW; float ds2 = dot(Ls, Ls); Ls *= inversesqrt(ds2);
+    float sw = dot(nW, Ls), sa = 1.0 / (ds2 + 0.6);
+    add += uBackWallColor * max(sw, 0.0) * sa; addB += uBackWallColor * max(-sw, 0.0) * sa;
+    #endif
+    #ifdef BACK_CANDLE
+    // the candle: from below and in front, only on what's above the table top (no light through the table)
+    vec3 Lc = aLamp.xyz - pW; float dc2 = dot(Lc, Lc); Lc *= inversesqrt(dc2);
+    float ph = aLamp.x * 3.1 + aLamp.z;
+    float ca = aLamp.w * (0.82 + 0.18 * sin(uTime * 11.0 + ph) * sin(uTime * 7.3 + ph * 1.7)) * smoothstep(aLamp.y - 0.12, aLamp.y - 0.02, pW.y) / (dc2 + 0.08);
+    float cw = dot(nW, Lc);
+    add += uBackCandleColor * max(cw, 0.0) * ca; addB += uBackCandleColor * max(-cw, 0.0) * ca;
+    #endif
+    irr += add; irrB += addB;
+    vLit = irr * RECIPROCAL_PI;
+  }
+  #endif
   vLitB = irrB * RECIPROCAL_PI;
   vMir = aShape.x;
   // the rim is evaluated per fragment: per vertex, on the coarse far levels, it flooded whole triangles (white kites)
@@ -452,6 +499,7 @@ export class InstancedCrowd {
       g.instanceCount = n;
       const attr = (name, dyn) => { const a = new THREE.InstancedBufferAttribute(new Float32Array(n * 4), 4); if (dyn) a.setUsage(THREE.DynamicDrawUsage); g.setAttribute(name, a); return a; };
       const st = attr('aState', true), po = attr('aPose', true), va = attr('aVar', false), xf = attr('aXform', true), sh = attr('aShape', true);
+      const lamp = opts.lamp ? attr('aLamp', false) : null; // (look.js back: the table candle's place, static)
       const mp = t.matParams || matParams; // (a type may carry its own: the far bands drop the alpha mask on tv)
       const make = (params) => { const m = (shared.vlit ? crowdMaterialVlit : crowdMaterial)({ ...params, rimSoft: !!t.rimSoft }, shared, t.baked.hip, t.baked.neck); if (t.baked.moves) withMoves(m, t.baked.moves); return m; };
       let material = null;
@@ -481,6 +529,7 @@ export class InstancedCrowd {
       const people = list.map((s, i) => {
         const V = opts.variety ? opts.variety(s.src) : { hue: 0, sat: 1, val: 1, depth: 1, fold: 0, mirror: false, sx: 1, sy: 1, yaw: 0, tilt: 0, dx: 0, dz: 0 };
         va.setXYZW(i, V.hue, V.fold && !t.baked.standing ? -V.sat : V.sat, V.val, V.depth); // fold rides on the sign of saturation
+        if (lamp) { const c = opts.lamp(s.src); if (c) lamp.setXYZW(i, c[0], c[1], c[2], c[3]); }
         // home: the seat frame shifted a little in the seat and turned by the body yaw
         const home = new THREE.Vector3(V.dx, 0, V.dz).applyMatrix4(s.seat.matrixWorld);
         const yaw = s.seat.rotation.y + V.yaw;
