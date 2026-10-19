@@ -347,7 +347,7 @@ Turns over 8° also fell by two thirds or more. What's left is mostly two people
 5. `docs/handoff/box-video-capture.txt`: record the capture plan in `docs/demo-video.md` on the final emulator APK into `docs/android-emu/2026-10-20-final/`, with stats.txt per take, and fill R1, R2, R3 and R5. **E2 first** (the stand-up hero set at the comedy club, sarcastic MC, words on, through the finale, debrief and green room, 2–3 takes), then E1 (the bill and venue tour, 2 takes), E3 (poetry at the theatre, 1 take) and the stills. Watch each take for glitches and mark the best take in a README there. Never use the emulator box while the video agent does (`pgrep -f emu720` on the box).
 6. A "ready for the video" summary at the top of this file. Stop the emulator box (only when the video agent isn't using it).
 
-### 2026-10-19 18:20 UTC: round 16 (seed 1016)
+### 2026-10-19 17:55 UTC: round 16 (seed 1016)
 Frames are the merged tree (`e9eb261`: laugh-v2 with the gated arm easing, and the open mic, theatre and club fixes). The clips are the emulator recordings: before = the 19 Oct real APK, after = the first laugh-v2 build (`4e1a145`). Clip strips (45 consecutive frames after each cut) are in `round-16/clips/`. Minimum of three fresh judges (VFX, DoP, animator):
 
 | Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
