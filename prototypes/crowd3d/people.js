@@ -1630,6 +1630,7 @@ export class Person {
       const f = castShare(s, venue), u = this.castU(id, ev.t, VL);
       reach = u < f ? clamp01(0.35 + ((f - u) / Math.max(0.15, f)) * 0.75 + (this.eager - 0.5) * 0.15 - this.o.row * 0.025) : 0;
       if (!reach && u < f + 0.3) smileOnly = 1 - (u - f) / 0.3;
+      if (reach && this.kind === 'front' && !LIFE_OFF.laugh) reach = Math.max(reach, 0.55); // (round 10: a front-row laugh reads at TV distance: no one in it at a third of a laugh)
       if (reach > 0.75) this._bigAt = ev.t;
       if (this._tallied !== id) { this._tallied = id; castTally(id, reach > 0.02); }
     } else {
@@ -2054,11 +2055,12 @@ export class Person {
       // lets go; a small laugh, a small heave; a smile alone, a silent chuckle in the shoulders
       if (!LIFE_OFF.comp && isLaugh) {
         const bt = L.bout ?? 1, hv = Math.min(1, LIFE_OFF.laugh ? lb * 1.6 : Math.sqrt(lb) * 1.25) * (0.6 + 0.4 * big) * bt + (lb < 0.05 ? 0.5 * (L.smileOnly || 0) * clamp01(L.smile * 2.5) : 0);
-        const LB = LIFE_OFF.laugh ? 1 : 1.4; // (round 06: the laugh too small at TV distance: the body's share up by 40%)
+        const LB = LIFE_OFF.laugh ? 1 : 1.7; // (round 06: the laugh too small at TV distance: the body's share up by 40%)
         comp = hv * (ha - 0.3) * LB; heaveS = hv * (0.04 + 0.08 * ha) * LB; headPitch -= (st === 'over' || st === 'nose' ? -0.02 : 0.03) * hv * ha; // (the head goes back on each "ha", not down: a head dropping with an open mouth read as pain)
         if (!LIFE_OFF.laugh) lean += lb * (st === 'back' ? -0.08 : st === 'over' ? 0.06 : st === 'turn' ? -0.03 : 0); // (the torso goes with the take: back, or forward on a doubled-over one)
         // (round 09: everyone the laugh reaches shows it in the body, not one to three per strip: the shoulders up and the
         // weight back, a little, a smile's worth for those who only smile)
+        if (!LIFE_OFF.laugh) headPitch -= lb * (st === 'back' || st === 'shake' || st === 'turn' ? 0.09 : st === 'giggle' ? 0.04 : 0) * (0.75 + 0.25 * ha); // (the head goes back with the laugh, at the stage: round 10)
         if (!LIFE_OFF.laugh) { const rc = Math.max(clamp01(Math.sqrt(lb) * 1.2), 0.7 * (L.smileOnly || 0) * clamp01(L.smile * 2.5)); heaveS += 0.06 * rc; if (st !== 'over') lean -= 0.05 * rc; }
         lean += lb * (0.03 + 0.04 * big) * LB * Math.sin(now * (0.7 + 0.4 * hash(lsd + 61)) * 6.283 + lsd); // (and the body rocks, forward and back, on its own slow rhythm)
       }
@@ -2139,7 +2141,7 @@ export class Person {
     // shoulders: a shrug bounce with the laugh, up with the arms
     let shrug = lb * (st === 'shake' ? 0.26 : 0.13 + 0.08 * clamp01((lb - 0.5) / 0.4)) * ha + 0.14 * (this._laughBig || 0) + 0.08 * ha * (isLaugh ? lb : 0) + (this._chuck || 0) * (0.06 + 0.08 * ha) + clapW * 0.03 + Math.sin(Math.PI * coat) * 0.12 + (tk ? tk.laugh : 0) * W.talk * 0.08 * ha + breathS + heaveS + 0.14 * onsetUp;
     // (at a two-top the forearms are on its top: the shoulders shake with the laugh, a third as far, not up and back off them)
-    const shrugK = o.table && o.neighbour && stand < 0.3 && this._planted ? 0.5 : 1;
+    const shrugK = o.table && o.neighbour && stand < 0.3 && this._planted ? (LIFE_OFF.laugh ? 0.5 : 0.75) : 1;
     if (OFF.shrug) shrug = 0;
     rig.euler(b.lClav, 0, -0.12 * clapW, shrug * shrugK - 0.1 + 0.14 * upW);
     rig.euler(b.rClav, 0, 0.12 * clapW, -shrug * shrugK + 0.1 - 0.14 * upW);
@@ -2176,7 +2178,7 @@ export class Person {
     if (rig.fit && rig.fit.ok && !ANATOMY_OFF && !OFF.clamps && !(W.phone > 0.2 || W.drink > 0.2 || walk > 0.05 || coat > 0 || (T && !T.hidden))) {
       const social = room.mode === 'preview' || room.mode === 'after';
       const lo = (lb > 0.4 && (st === 'over' || st === 'nose') ? -25 : lb > 0.15 && !LIFE_OFF.laugh ? -10 : mur > 0.5 || idle === 'chin' ? -28 : social ? -20 : lb > 0.3 ? -20 : -9) * DEG; // (listening: the face up at the stage, a little down at most)
-      clampHead(this, lo, (lb > 0.5 && st === 'back' ? 16 : 12) * DEG); // (a big laugh tips the head back a little, never a stare at the ceiling)
+      clampHead(this, lo, (lb > 0.5 && st === 'back' ? (LIFE_OFF.laugh ? 16 : 20) : lb > 0.3 && !LIFE_OFF.laugh ? 15 : 12) * DEG); // (a big laugh tips the head back a little, never a stare at the ceiling)
       clampRoll(this, 16 * DEG); // (and never laid over on a shoulder: a tilt of 16° at most, eased back)
     }
     // the head clear of the neighbours' heads and shoulders (a laugh thrown back into someone who leans in yields)
