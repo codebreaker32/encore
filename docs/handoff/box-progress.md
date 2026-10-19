@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 04:20 UTC.
+**Updated:** 2026-10-19 05:05 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -136,3 +136,19 @@ Frames from the tree at 9139949 (rendering through round 05 plus life-v1 step 2)
 Top tells: the club's back of house as flat black cut-outs; laughs too small (most people hold their rest pose through the laugh, mostly heads and jaws); the theatre's rows behind the front two as standing mannequins with no seats or rake; the theatre laugh's black "hole" mouths reading as pain; open mic bodies interpenetrating in the packed rows and a back-row face smeared; identical hands-on-knees and forearms-on-table rest poses; a dark outline where the DOF meets clothing; the theatre's left block hot red under the side key. Held-out: club "tables: group house right" t 15.5; theatre "track along the front row" t 12.0; open mic "the chairs: the front from house left" t 10.8.
 
 The box was stopped by the usage limit at about 17:00 UTC on 18 Oct (the motion agent mid step 3, uncommitted) and restarted at 04:15 UTC on 19 Oct; the user set a new freeze, 16:30 UTC 19 Oct, and the order of fixes above.
+
+### 2026-10-19 05:05 UTC: round 07 (seed 1007): the club's house, the theatre's depth, mouths; life-v1 step 3
+Changes:
+- **Club back of house (the user's item 1).** The cut-outs were the haze: at 3–20 m (and 3.5–12 m in close-ups) it painted everyone behind row 2 its own colour, and no rim or house-light setting reached them through it (tested: `&rim=10`, `&hemik=40`, depth floors: no change until the fog went). Now (look.js club): haze 4–34 m wide and 4–24 m in close-ups (`fogClose`, new per-venue), a warm low house glow (hemi 21, sky 0x6a4a36), the rows falling 0.2 a row to 0.65, and the close-ups' crowd dim 0.4 (was 0.12). The rows behind read as a full room of dimly lit people in the wide and the mids; the bar crowd stays backlit. `&look=stagedark` gives the old club. (Round 07 had the first step, 0.3 / 0.45, which still left the far band black; the second step came after the round.)
+- **Theatre depth (item 3, the light half):** the rows fall 0.25 a row to 0.35 (was 0.12 to 0.7, the flat lifted house) under haze at 6–32 m. The side key's shift is halved in the theatre (its house-left block ran hot red).
+- Head cavities never below 0.3 of the light (laughing mouths read as black holes: "pain").
+- Merged life-v1 step 3 (9bed258, the motion agent: fewer hands on the knees, more clasped; life-v1 strips).
+- Test knobs (crowd.js, after the look): `&depthfloor=`, `&depthslope=`, `&hemik=`, `&sky=`, `&fogwide=`, `&fstop=`.
+
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 4 | 3 | 5 | 4 | 6 | 5 | 4 | 1 | no |
+| theatre | 3 | 3 | 3 | 3 | 5 | 4 | 3 | 1 | no |
+| openmic | 5 | 5 | 4 | 5 | 5 | 5 | 4 | 1 | no |
+
+Top tells: laughs carried by one to three people while the rest hold their pose (motion agent); clasped-hands-round-the-candle now the repeated club pose; theatre front rows "a police line-up" and row 2 sitting so high it reads as standing; the theatre held frame's low-LOD bodies (white chest panels, untextured grey arms on the far left); open mic bodies colliding and a face blob in row 2; the open mic's hoodie woman hanging her head "asleep"; the dark halo at DOF edges; the same avatars twice in a theatre row. Held-out: club "tables: over…" t ~; theatre "along the front row"; open mic "the chairs: …".

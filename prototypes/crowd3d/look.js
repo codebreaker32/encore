@@ -22,8 +22,8 @@ const VENUES = {
     // the haze: at 3-20 m it painted everyone behind row 2 its own colour. Thinner haze (4-34 m), a warm, low house glow
     // and a gentler fall with depth (0.3 a row to 0.45), so the rows behind read as people in a dim room, with faces and
     // volume, and the bar's crowd stays a silhouette. &look=stagedark keeps the old club.)
-    depthSlope: 0.3, depthFloor: 0.45, hemi: 21, sky: 0x6a4a36,
-    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, sky: null, fog: { color: 0x1a120d, wide: [3, 20] } },
+    depthSlope: 0.2, depthFloor: 0.65, hemi: 21, sky: 0x6a4a36, closeDim: 0.4, fogClose: [4, 24], // (round 07: still cut-outs at 0.3 / 0.45, and the close-ups' dim of 0.12 made them black again behind the subjects)
+    dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, sky: null, closeDim: 0.12, fogClose: null, fog: { color: 0x1a120d, wide: [3, 20] } },
   },
   theatre: {
     key: { pos: [0.3, 4.6, -0.3], target: [0.2, 0.6, 2.8], intensity: 200, angle: 0.36, penumbra: 0.4 }, // (row 1 at 12° off its axis, row 2 at 21°: outside)
@@ -68,7 +68,7 @@ export function applyLook(name, V, venueId, P) {
   if (lt.rim) lt.rim = { ...lt.rim, k: (lt.rim.k ?? 1) * L.rim };
   if (L.key) lt.key = { ...lt.key, ...L.key };
   if (L.cam) V.cam = L.cam;
-  V.fog = { ...V.fog, color: L.fog.color, ...(L.fog.wide ? { wide: L.fog.wide } : {}), close: [3.5, 12], heckler: [3.5, 12] };
+  V.fog = { ...V.fog, color: L.fog.color, ...(L.fog.wide ? { wide: L.fog.wide } : {}), close: L.fogClose || [3.5, 12], heckler: L.fogClose || [3.5, 12] }; // (a venue may thin the close-ups' haze too: fogClose)
   Object.assign(V, { closeKeyWiden: L.closeKeyWiden, keyDepth: !!L.keyDepth, depthFrom: L.depthFrom, depthSlope: L.depthSlope, depthFloor: L.depthFloor, wallScale: L.wallScale, closeDim: L.closeDim, midShots: L.midShots, rimFlat: L.rimFlat });
   if (V.exposure) V.exposure = { ...V.exposure, close: 1, heckler: 1 };
   if (L.spriteFall) V.stageLook = { spriteFall: L.spriteFall, spriteGain: L.spriteGain, spriteWash: L.spriteWash, phonesOn: L.phonesOn, spriteRim: L.spriteRim, spriteNear: L.spriteNear };
