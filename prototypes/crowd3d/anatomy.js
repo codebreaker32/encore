@@ -289,7 +289,7 @@ function elbowCost(person, side, E, H, F, clapping, inOnly = false) {
     const dd = Math.min(segDist(E, S2, E2), segDist(E, E2, H2)); if (dd < 0.07) c += 0.07 - dd; }
   return c;
 }
-function elbowBad(person, side, clapping, inOnly = false) {
+export function elbowBad(person, side, clapping, inOnly = false) {
   const rig = person.rig, b = rig.b, F = chestFrame(rig, side);
   return elbowCost(person, side, wpos(side ? b.rFore : b.lFore, _ev[6]), wpos(side ? b.rHand : b.lHand, _ev[7]), F, clapping, inOnly) > 0;
 }
@@ -327,9 +327,10 @@ const _gq = [0, 1, 2].map(() => new THREE.Quaternion()), _gW = new THREE.Vector3
 export function guardElbows(person, clapping = false) {
   const rig = person.rig, b = rig.b;
   if (!rig.fit || !rig.fit.ok) return 0;
-  let n = 0;
+  let n = 0; guardElbows.tried = '';
   for (let side = 0; side < 2; side++) {
     if (!elbowBad(person, side, clapping)) continue;
+    guardElbows.tried += side ? 'R' : 'L';
     const up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
     _gq[0].copy(up.quaternion); _gq[1].copy(fo.quaternion); _gq[2].copy(ha.quaternion);
     const before = armCollisions(person) + joints(person, false) + (person.o.stand ? 0 : posture(person, null, { resting: !!person._resting }));
@@ -593,7 +594,7 @@ export function joints(person, fix = false, out = null) {
  * the turn towards a friend add up), and, when the person is at rest, the shoulders brought within 8° of level.
  * Counter-rotates the lowest spine bone about the seat's up (twist) or forward (lean) axis.
  */
-export function clampSpine(person, resting) {
+export function clampSpine(person, resting, ease = 1) { // (ease 0-1: how far the resting limits have come in, from none; arm-v2)
   const rig = person.rig, fit = rig.fit, b = rig.b;
   if (!fit || !fit.ok) return 0;
   let n = 0;
@@ -622,13 +623,13 @@ export function clampSpine(person, resting) {
     const h0 = wpos(b.lThigh, _v[4]).applyMatrix4(inv), h1 = wpos(b.rThigh, _v[5]).applyMatrix4(inv);
     let y = Math.atan2(-(a.z - d.z), a.x - d.x) - Math.atan2(-(h0.z - h1.z), h0.x - h1.x);
     y = Math.atan2(Math.sin(y), Math.cos(y));
-    const lim = 13 * DEG; // (a resting chest turns and settles a little against the hips: 13°, not square)
+    const lim = (13 + 29 * (1 - ease)) * DEG; // (a resting chest turns and settles a little against the hips: 13°, not square)
     if (Math.abs(y) <= lim) break;
     turnTo(_v[1].set(0, 1, 0), -(y - Math.sign(y) * (lim - 0.01)));
   }
   if (resting) for (let i = 0; i < 3; i++) { // (Spine1 sits higher than Spine: a few steps to level the shoulders)
     const inv = rig.inv, a = wpos(b.lUpper, _v[2]).applyMatrix4(inv), d = wpos(b.rUpper, _v[3]).applyMatrix4(inv);
-    const roll = Math.atan2(a.y - d.y, Math.hypot(a.x - d.x, a.z - d.z)), lim = 13 * DEG; // (13: the check allows 15, and the arms' own pass can tip them a little after)
+    const roll = Math.atan2(a.y - d.y, Math.hypot(a.x - d.x, a.z - d.z)), lim = (13 + 29 * (1 - ease)) * DEG; // (13: the check allows 15, and the arms' own pass can tip them a little after)
     if (Math.abs(roll) <= lim) break;
     // (about the axis across the shoulder line, whichever way the chest faces: a turned chest has no 'forward' roll)
     const sl = _v[4].copy(a).sub(d), hz = Math.hypot(sl.x, sl.z) || 1e-6, sn = _v[5].copy(sl).normalize();
