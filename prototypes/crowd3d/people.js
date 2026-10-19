@@ -496,11 +496,11 @@ const FACE_TAKE = { none: { jaw: 1, sq: 0 }, back: { jaw: 1.25, sq: 0 }, over: {
 // row, and whether people laugh in pairs.
 export const VENUE_LAUGH = {
   // sparse and personal: few at once, often a pair, a friend's look, a few claps, the lone loud laugher
-  openmic: { share: 0.62, rowRipple: 1, pair: 0.22, styles: { turn: 1.9, giggle: 1.3, nose: 1.4, back: 0.8, over: 0.6, shake: 1 }, gestures: { clapShort: 1.7, mouth: 1.2, chest: 1.2, slap: 0.6, knee: 0.6, none: 1.2, wipe: 0.6 } },
+  openmic: { share: 0.62, rowRipple: 1, pair: 0.22, styles: { turn: 1.0, giggle: 1.3, nose: 1.2, back: 1.4, over: 0.6, shake: 1 }, gestures: { clapShort: 1.7, mouth: 1.2, chest: 1.2, slap: 0.6, knee: 0.6, none: 1.2, wipe: 0.6 } },
   // rowdy and close: table slaps, leaning in, head-back roars, loud cackles
-  club: { share: 1.05, rowRipple: 1, pair: 0.1, styles: { back: 1.7, over: 1.4, turn: 1.1, shake: 1.2, giggle: 0.7, nose: 0.6 }, gestures: { slap: 1.9, knee: 1.3, wipe: 1.2, clapShort: 0.8, mouth: 0.7 } },
+  club: { share: 1.05, rowRipple: 1, pair: 0.1, styles: { back: 2.0, over: 1.4, turn: 0.6, shake: 1.2, giggle: 0.7, nose: 0.6 }, gestures: { slap: 1.9, knee: 1.3, wipe: 1.2, clapShort: 0.8, mouth: 0.7 } },
   // a polite ripple back through the rows: chuckles, a hand over the mouth, a look to the companion, applause
-  theatre: { share: 0.95, rowRipple: 2.4, pair: 0.12, styles: { giggle: 1.1, nose: 0.7, shake: 1.3, turn: 1.8, back: 1.6, over: 0.15 }, stylesOld: { giggle: 1.7, nose: 1.6, shake: 1.3, turn: 1.4, back: 0.6, over: 0.35 }, // (life-v1: heads back or to a neighbour: dropped heads with open mouths read as pain)
+  theatre: { share: 0.95, rowRipple: 2.4, pair: 0.12, styles: { giggle: 1.1, nose: 0.7, shake: 1.8, turn: 0.7, back: 2.2, over: 0.15 }, stylesOld: { giggle: 1.7, nose: 1.6, shake: 1.3, turn: 1.4, back: 0.6, over: 0.35 }, // (life-v1: heads back or to a neighbour: dropped heads with open mouths read as pain)
     gestures: { mouth: 2.1, clapShort: 1.7, chest: 1.3, slap: 0.35, knee: 0.4, wipe: 0.8, none: 1.3 } },
   // a mass roar: most of the room, turning to friends, arms up and whistles on the big ones, little single detail
   arena: { share: 1.18, rowRipple: 0.7, pair: 0.05, styles: { back: 1.6, turn: 1.5, over: 1.1, shake: 1, giggle: 0.5, nose: 0.35 }, gestures: { clapShort: 1.3, slap: 0.7, knee: 0.6, mouth: 0.6 }, bigExtra: [['armsUp', 1.1], ['whistle', 0.7]] },
@@ -683,7 +683,7 @@ const BAKE_FAR_OLD = typeof location !== 'undefined' && new URLSearchParams(loca
 const LIFE_OFF = (() => {
   const q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null, all = !!q && q.get('life') === 'off';
   const o = Object.fromEntries((q ? q.get('lifeoff') || '' : '').split(',').filter(Boolean).map((k) => [k, true]));
-  if (all) for (const k of ['breath', 'drift', 'look', 'whisper', 'onset', 'comp', 'hands', 'face', 'fidget', 'rest', 'laugh']) o[k] = true;
+  if (all) for (const k of ['breath', 'drift', 'look', 'whisper', 'onset', 'comp', 'hands', 'face', 'fidget', 'rest', 'laugh', 'busy']) o[k] = true;
   return o;
 })();
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
@@ -1995,7 +1995,7 @@ export class Person {
     // ---- life-v1: breathing, slow drift and weight shifts, a look between friends in a laugh, a rare whisper while
     // listening; a laugh's intake of breath at its start and the chest's heave with each "ha" (small layers on top of the
     // captures, each fading in and out, each person on their own phase: never in step with a neighbour) ----
-    let breathC = 0, breathS = 0, lifeLook = 0, whisper = 0, onsetUp = 0, comp = 0, heaveS = 0;
+    let breathC = 0, breathS = 0, lifeLook = 0, whisper = 0, onsetUp = 0, comp = 0, heaveS = 0, lifeT = 0;
     const lsd = this.lifeSeed || 0, sitting = !o.stand && stand < 0.3 && !(T && !T.hidden) && walk < 0.05, pq = this.partner;
     if (clip && calm) {
       if (!LIFE_OFF.breath) { // (in through the chest and shoulders, about 0.22-0.3 Hz, deeper for a while after a laugh; a laugh's own heave takes over)
@@ -2004,7 +2004,8 @@ export class Person {
         breathC = 0.012 * deep * (inb - 0.5) * 2; breathS = 0.022 * deep * inb;
       }
       if (!LIFE_OFF.drift && sitting) { // (a slow drift, and a weight shift every 12-35 s eased over 1.6 s, never a pop)
-        const per = 12 + 23 * hash(lsd + 0.5), u = now + lsd * 3.1, k = Math.floor(u / per), f = smooth((u - k * per) / 1.6);
+        const per = LIFE_OFF.busy || LIFE_OFF.shift || room.mode !== 'live' ? 12 + 23 * hash(lsd + 0.5) : 5 + 9 * hash(lsd + 0.5), u = now + lsd * 3.1, k = Math.floor(u / per), f = smooth((u - k * per) / 1.3);
+        if (f > 0 && f < 1) lifeT = 1;
         const ws = lerp(hash(lsd + k), hash(lsd + k + 1), f) * 2 - 1, wt = lerp(hash(lsd * 1.3 + k + 7), hash(lsd * 1.3 + k + 8), f) * 2 - 1;
         const dk = 1 - clamp01(lb * 2);
         side += (0.022 * noise(lsd + 1, now * 0.045) + 0.035 * ws) * dk;
@@ -2013,11 +2014,19 @@ export class Person {
         headRoll += (0.03 * noise(lsd + 3, now * 0.06) - 0.02 * ws) * dk;
         headYaw += 0.035 * noise(lsd + 4, now * 0.08) * dk;
         headPitch += 0.02 * noise(lsd + 6, now * 0.11) * dk; // (the head never quite still: small nods of attention)
+        // (round 09: over any one second while listening, more of the room visibly moves: a small turn or tilt of the head
+        // every 2.5-6 s, eased over 0.45 s, each person on their own clock; &lifeoff=busy for the slower life)
+        if (!LIFE_OFF.busy && !LIFE_OFF.heads && room.mode === 'live') { // (the set's listening: before and after it, the chat has the heads)
+          const hp = 2.5 + 3.5 * hash(lsd + 9.1), hu = now + lsd * 1.7, hk2 = Math.floor(hu / hp), hf = smooth((hu - hk2 * hp) / 0.45);
+          const hy = lerp(hash(lsd * 0.7 + hk2), hash(lsd * 0.7 + hk2 + 1), hf) * 2 - 1, hpz = lerp(hash(lsd * 0.9 + hk2 + 3), hash(lsd * 0.9 + hk2 + 4), hf) * 2 - 1;
+          headYaw += 0.2 * hy * dk; headPitch += 0.05 * hpz * dk; headRoll += 0.04 * hy * dk;
+          if (hf > 0 && hf < 1) lifeT = 1;
+        }
       }
       // a look to the friend beside them, 1.6-3.4 s into a laugh (the pair's own draw, so the two look at once)
       if (!LIFE_OFF.look && isLaugh && pq && pq.rig && L.t > 1.2) {
         const key = Math.min(this.seed, pq.seed) * 0.013 + (L.id | 0) * 1.77, VL = VENUE_LAUGH[this._venue] || VENUE_LAUGH.club;
-        if (hash(key) < 0.45 + VL.pair) {
+        if (hash(key) < (LIFE_OFF.laugh ? 0.45 : 0.25) + VL.pair) { // (round 10: too many turned heads read as conversation, not laughing at the stage)
           const t1 = 1.6 + 1.8 * hash(key + 3.1), dur = 0.9 + 0.8 * hash(key + 5.3), a = L.t - t1;
           if (a > 0 && a < dur) lifeLook = smooth(a / 0.3) * smooth((dur - a) / 0.45) * clamp01(L.body * 2 + L.smile);
         }
@@ -2044,14 +2053,17 @@ export class Person {
       // and the heave: the belly and chest contract on each "ha" (the shoulders come up with it), the gasp between bouts
       // lets go; a small laugh, a small heave; a smile alone, a silent chuckle in the shoulders
       if (!LIFE_OFF.comp && isLaugh) {
-        const bt = L.bout ?? 1, hv = Math.min(1, lb * 1.6) * (0.6 + 0.4 * big) * bt + (lb < 0.05 ? 0.5 * (L.smileOnly || 0) * clamp01(L.smile * 2.5) : 0);
+        const bt = L.bout ?? 1, hv = Math.min(1, LIFE_OFF.laugh ? lb * 1.6 : Math.sqrt(lb) * 1.25) * (0.6 + 0.4 * big) * bt + (lb < 0.05 ? 0.5 * (L.smileOnly || 0) * clamp01(L.smile * 2.5) : 0);
         const LB = LIFE_OFF.laugh ? 1 : 1.4; // (round 06: the laugh too small at TV distance: the body's share up by 40%)
         comp = hv * (ha - 0.3) * LB; heaveS = hv * (0.04 + 0.08 * ha) * LB; headPitch -= (st === 'over' || st === 'nose' ? -0.02 : 0.03) * hv * ha; // (the head goes back on each "ha", not down: a head dropping with an open mouth read as pain)
         if (!LIFE_OFF.laugh) lean += lb * (st === 'back' ? -0.08 : st === 'over' ? 0.06 : st === 'turn' ? -0.03 : 0); // (the torso goes with the take: back, or forward on a doubled-over one)
+        // (round 09: everyone the laugh reaches shows it in the body, not one to three per strip: the shoulders up and the
+        // weight back, a little, a smile's worth for those who only smile)
+        if (!LIFE_OFF.laugh) { const rc = Math.max(clamp01(Math.sqrt(lb) * 1.2), 0.7 * (L.smileOnly || 0) * clamp01(L.smile * 2.5)); heaveS += 0.06 * rc; if (st !== 'over') lean -= 0.05 * rc; }
         lean += lb * (0.03 + 0.04 * big) * LB * Math.sin(now * (0.7 + 0.4 * hash(lsd + 61)) * 6.283 + lsd); // (and the body rocks, forward and back, on its own slow rhythm)
       }
     }
-    this._lifeAct = Math.max(lifeLook, Math.abs(whisper), onsetUp);
+    this._lifeAct = Math.max(lifeLook, Math.abs(whisper), onsetUp, lifeT); // (a head turn or a shift under way: posed every frame, not held at 5 Hz: no steps)
     this._lookE = (this.side || 1) * (0.3 * lifeLook + 0.2 * Math.max(0, whisper));
     this._whisper = whisper;
     lean -= 0.05 * upW;
@@ -2245,6 +2257,8 @@ export class Person {
         restKind = RS.k > 0.5 ? RS.kind : RS.prev;
         plantFrom = o.table && o.neighbour && restW > 0.85 && /^(tableBoth|forearmsTable)$/.test(restKind);
         if (restKind === 'chairBack') this._intentBack = A.back;
+        // (a resting hand shifting now and then, along the leg, was tried: the arm passes then slid a hand off a narrow
+        // thigh, the posture rule's floating hand)
         if (restKind === 'glass') glassSide = A.roll > 0 ? 0 : 1;
       }
     }

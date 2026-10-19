@@ -3,6 +3,7 @@
 //  - listen: over 9-12 s, each part's range (cm) — breathing, drift; "frozen" = head and chest both under 0.5 cm
 //  - onset: the time each person's chest or head first moves 1.5 cm from where it was at t=12 (the laugh's measured moment)
 //  - laugh: the chest's and shoulders' range over 12-15 s (cm): the heave
+//  - moved1s: how many moved visibly (head 1.5 cm, a hand 1 cm) between t 10.7 and 11.8, listening
 // Prints a JSON summary: counts of people reacting within 0.5 / 1.0 s, the median onset, mean ranges.
 //   node liveprobe.mjs <page url without query> <venue> [extra query]
 import os from 'node:os';
@@ -25,7 +26,7 @@ try {
         const inv = new T.Matrix4().copy(p.rig.seat.matrixWorld).invert(), b = p.rig.b;
         const P = (bn) => (bn ? new T.Vector3().setFromMatrixPosition(bn.matrixWorld).applyMatrix4(inv).toArray().map((v) => +(v * 100).toFixed(2)) : null);
         const c = p._rc && p._rc.get(41);
-        o[p.name + '@' + p.o.x.toFixed(1)] = { h: P(b.head), c: P(b.spine2), l: P(b.lUpper), r: P(b.rUpper), plan: c ? [+c.reach.toFixed(2), +c.smileOnly.toFixed(2), c.style, +c.delay.toFixed(2)] : null };
+        o[p.name + '@' + p.o.x.toFixed(1)] = { h: P(b.head), c: P(b.spine2), hl: P(b.lHand), hr: P(b.rHand), l: P(b.lUpper), r: P(b.rUpper), plan: c ? [+c.reach.toFixed(2), +c.smileOnly.toFixed(2), c.style, +c.delay.toFixed(2)] : null };
       }
       return o;
     }, { t, d: drive(t) });
@@ -41,8 +42,11 @@ try {
     const sh = (S2, t0, t1) => (range(S2, 'l', t0, t1) + range(S2, 'r', t0, t1)) / 2;
     per.push({ who: k, plan: (S.find((s) => s.plan) || {}).plan || null, listen: { h: +range(S, 'h', 9, 12).toFixed(2), c: +range(S, 'c', 9, 12).toFixed(2), sh: +sh(S, 9, 12).toFixed(2) }, onset, laugh: { c: +range(S, 'c', 12, 15).toFixed(2), sh: +sh(S, 12, 15).toFixed(2) } });
   }
+  // (between the judge's held frame at 10.7 and the wide at 11.8: who visibly moved, head 1.5 cm or a hand 1 cm, or turned)
+  let moved = 0;
+  for (const S of Object.values(tr)) { const a = S.find((s) => Math.abs(s.t - 10.7) < 1e-6), b = S.find((s) => Math.abs(s.t - 11.8) < 1e-6); if (a && b && (d(a.h, b.h) > 1.5 || d(a.hl, b.hl) > 1 || d(a.hr, b.hr) > 1)) moved++; }
   const on = per.map((p) => p.onset).filter((x) => x !== null).sort((a, b) => a - b), n = per.length;
   const mean = (f) => +(per.reduce((a, p) => a + f(p), 0) / n).toFixed(2);
-  console.log(JSON.stringify({ venue, n, frozen: per.filter((p) => p.listen.h < 0.5 && p.listen.c < 0.5).length, within05: on.filter((x) => x <= 0.5).length, within1: on.filter((x) => x <= 1.0).length, medianOnset: on.length ? on[Math.floor(on.length / 2)] : null, listenH: mean((p) => p.listen.h), listenC: mean((p) => p.listen.c), listenSh: mean((p) => p.listen.sh), laughC: mean((p) => p.laugh.c), laughSh: mean((p) => p.laugh.sh) }));
+  console.log(JSON.stringify({ venue, n, moved1s: moved, frozen: per.filter((p) => p.listen.h < 0.5 && p.listen.c < 0.5).length, within05: on.filter((x) => x <= 0.5).length, within1: on.filter((x) => x <= 1.0).length, medianOnset: on.length ? on[Math.floor(on.length / 2)] : null, listenH: mean((p) => p.listen.h), listenC: mean((p) => p.listen.c), listenSh: mean((p) => p.listen.sh), laughC: mean((p) => p.laugh.c), laughSh: mean((p) => p.laugh.sh) }));
   if (process.env.PER) for (const p of per) console.log(JSON.stringify(p));
 } finally { await browser.close(); }
