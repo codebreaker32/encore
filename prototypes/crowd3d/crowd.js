@@ -699,7 +699,7 @@ function prepFront(gltf, ao = null) {
     gltf.scene.traverse((o) => { if (o.isSkinnedMesh && o.material.alphaTest && !/_fringe$/.test(o.name)) hairs.push(o); });
     for (const h of hairs) {
       h.material.alphaTest = 0.55;
-      const fm = new THREE.MeshLambertMaterial({ map: h.material.map, alphaTest: 0.02, transparent: true, depthWrite: true, side: h.material.side, name: h.material.name + '_fringe' }); // (depth written: the lens's DOF reads the strands as hair, not as the background behind them)
+      const fm = new THREE.MeshLambertMaterial({ map: h.material.map, alphaTest: 0.15, transparent: true, depthWrite: true, side: h.material.side, name: h.material.name + '_fringe' }); // (depth written: the lens's DOF reads the strands as hair, not as the background behind them)
       if (!ab('nohairspec')) realHair(fm);
       peopleLit(fm); fm.userData.people = true;
       const f = new THREE.SkinnedMesh(h.geometry, fm);
@@ -1773,7 +1773,7 @@ function finalPass() {
         // grain: light in the middle of the frame, where the faces are (at 540p, upscaled on the TV, full-strength grain
         // turned skin blotchy), full towards the edges
         float gr = length( ( vUv - vec2( 0.5, 0.52 ) ) * vec2( 1.6, 1.0 ) );
-        float g = ${ab('nograin') ? '0.0' : '( hash( gl_FragCoord.xy + fract( uTime ) * 91.0 ) - 0.5 ) * mix( 0.016, 0.05, smoothstep( 0.35, 0.95, gr ) )'};
+        float g = ${ab('nograin') ? '0.0' : '( hash( gl_FragCoord.xy + fract( uTime ) * 91.0 ) - 0.5 ) * mix( 0.012, 0.022, smoothstep( 0.35, 0.95, gr ) )'};
         gl_FragColor = vec4( vec3( 0.5 * vig * low + g ), 1.0 );
       }`,
     transparent: true, depthTest: false, depthWrite: false,
@@ -1851,7 +1851,7 @@ const FXAA = VIEW !== 'avatar' && (ab('fxaa') || (P.fast && !ab('nofxaa') && !ab
         float vig = 1.0 - 0.66 * clamp( ( length( ( vUv - vec2( 0.5, 0.54 ) ) / vec2( 0.78, 0.72 ) ) - 0.58 ) / 0.42, 0.0, 1.0 );
         float low = 1.0 - 0.6 * clamp( ( 0.28 - vUv.y ) / 0.28, 0.0, 1.0 );
         float gr = length( ( vUv - vec2( 0.5, 0.52 ) ) * vec2( 1.6, 1.0 ) );
-        float g = ${ab('nograin') ? '0.0' : '( hash( gl_FragCoord.xy + fract( uTime ) * 91.0 ) - 0.5 ) * mix( 0.016, 0.05, smoothstep( 0.35, 0.95, gr ) )'};
+        float g = ${ab('nograin') ? '0.0' : '( hash( gl_FragCoord.xy + fract( uTime ) * 91.0 ) - 0.5 ) * mix( 0.012, 0.022, smoothstep( 0.35, 0.95, gr ) )'};
         ${DOF ? `// the lens: depth of field from the autofocus distance (uDof: focus m, the circle at infinity in px, near, far)
         if ( uDof.y > 0.0 ) {
           float zb = texture2D( tDepth, vUv ).x;
