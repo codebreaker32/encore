@@ -407,7 +407,8 @@ export function buildVenue(scene, rows, P, visible = () => true, depthFor = () =
       const t = 1 - (pos.getY(i) - (barY + 1.3)) / 0.9;
       let k = 0; while (k < ramp.length - 2 && t > ramp[k + 1][0]) k++;
       const [t0, r0, g0, b0] = ramp[k], [t1, r1, g1, b1] = ramp[k + 1], u = THREE.MathUtils.clamp((t - t0) / (t1 - t0), 0, 1);
-      col.set([r0 + (r1 - r0) * u, g0 + (g1 - g0) * u, b0 + (b1 - b0) * u], i * 3);
+      const kb = 0.6; // (real-v1 round 12: the shelf's glow clipped flat as the brightest thing in the club's frames)
+      col.set([(r0 + (r1 - r0) * u) * kb, (g0 + (g1 - g0) * u) * kb, (b0 + (b1 - b0) * u) * kb], i * 3);
     }
     shelf.setAttribute('color', new THREE.BufferAttribute(col, 3));
     shelf.deleteAttribute('uv');
