@@ -736,6 +736,8 @@ const ARM_OLD = typeof location !== 'undefined' && new URLSearchParams(location.
 // Now the elbow is held for any seated arm not in a clap or a raised arm (the wrist free to follow the capture or the
 // gesture), and a person held at 5 Hz whose arms are still catching up is not calm. &armsold=1: the arm-v2 hold only.
 const ARMS_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('armsold') === '1';
+// (&armsoff=free,ein,lag,fid: one arms-v3 part at a time off, for bisecting a gate)
+const ARMS_OFF = new Set((typeof location !== 'undefined' ? new URLSearchParams(location.search).get('armsoff') || '' : '').split(',').filter(Boolean));
 const REST_FORCE = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('restpose') || '' : '';
 // (a check view's one gesture for every response: &gesture=clap)
 // (&reuse=0: every arm gets the full anatomy pass every frame, for A/B checks)
@@ -1499,7 +1501,7 @@ export class Person {
       if (!ARMS_OLD) { // (arms-v3: a laugh or a clap coming in took a fidget's arms in two frames: its hands let go over 0.35 s, as they take hold)
         const dtF = now - (this._frT ?? -1e9), fo = this._frE;
         this._frT = now;
-        if (fo !== undefined && dtF > 0 && dtF < 0.5) free = Math.max(free, fo - dtF / 0.35);
+        if (fo !== undefined && dtF > 0 && dtF < 0.5 && !ARMS_OFF.has('fid')) free = Math.max(free, fo - dtF / 0.35);
         this._frE = free;
       }
       this._fidW = f && free > 0 ? f.w * free : 0;
@@ -2620,7 +2622,7 @@ export class Person {
     // each frame near their last answer instead of choosing afresh, and a hand by the hip no longer flips its elbow from
     // one side of the body to the other and back)
     let elbowIn = false;
-    if (!ARMS_OLD && !ARM_OLD && fitted && clip && seatedNow && clapW < 0.02 && upW < 0.02 && !coat && !(T && !T.hidden) && !this._planted && this._eh && now - this._eh.at > 0 && now - this._eh.at <= 0.1 && !(restOn && restW > 0.5 && !(L && L.gestures.length) && W.talk < 0.1 && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle')) {
+    if (!ARMS_OLD && !ARM_OLD && !ARMS_OFF.has('ein') && fitted && clip && seatedNow && clapW < 0.02 && upW < 0.02 && !coat && !(T && !T.hidden) && !this._planted && this._eh && now - this._eh.at > 0 && now - this._eh.at <= 0.1 && !(restOn && restW > 0.5 && !(L && L.gestures.length) && W.talk < 0.1 && W.phone < 0.05 && W.drink < 0.05 && idle !== 'heckle')) {
       const H = this._eh, k = 1 - Math.exp(-(now - H.at) / 0.12), q = worldQuat(b.spine2, _hq[0]);
       for (let side = 0; side < 2; side++) {
         const up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
@@ -2753,7 +2755,7 @@ export class Person {
       // The elbow and the hand turn towards their answer at most 180 degrees a second and the wrist moves at most 1 m a
       // second, each kept only if the arm then hits nothing more than the passes' answer does)
       if (!ARM_OLD && fitted && clip && seatedNow && restHold) this.holdElbows(now);
-      else if (!ARM_OLD && !ARMS_OLD && fitted && clip && seatedNow && clapW < 0.02 && upW < 0.02 && !coat && !(T && !T.hidden) && !this._planted) this.holdElbows(now, true); // (arms-v3: any seated arm's elbow, the wrist where the passes put it)
+      else if (!ARM_OLD && !ARMS_OLD && !ARMS_OFF.has('free') && fitted && clip && seatedNow && clapW < 0.02 && upW < 0.02 && !coat && !(T && !T.hidden) && !this._planted) this.holdElbows(now, true); // (arms-v3: any seated arm's elbow, the wrist where the passes put it)
       for (let i = 0; i < 6; i++) AQ.out[i].copy(AB[i].quaternion);
       AQ.n = 0;
     }
@@ -2888,7 +2890,7 @@ export class Person {
       const TRe = typeof window !== 'undefined' && window.__armTrace && window.__armTrace.includes(this.name) ? this._tr : null; // (tools: what the easing did)
       const AB = (Person._armB ||= ['lClav', 'rClav', 'lUpper', 'rUpper', 'lFore', 'rFore', 'lHand', 'rHand']), AQ0 = (this._am ||= AB.map(() => new THREE.Quaternion()));
       const AQ1 = (this._am1 ||= AB.map(() => new THREE.Quaternion()));
-      const ok = !this.fresh && this._amOk && dtA > 0 && dtA < 0.5, lim = 5.76 * (ARMS_OLD ? dtA : Math.min(dtA, 0.07)); // (330 degrees a second, in radians) (arms-v3: a held person's step no bigger than one frame's at 15 fps)
+      const ok = !this.fresh && this._amOk && dtA > 0 && dtA < 0.5, lim = 5.76 * (ARMS_OLD || ARMS_OFF.has('lag') ? dtA : Math.min(dtA, 0.07)); // (330 degrees a second, in radians) (arms-v3: a held person's step no bigger than one frame's at 15 fps)
       let moved = false;
       if (ok) {
         const bind0 = this._nearBind(), before = armCollisions(this) + limbs(this), hL = NV().setFromMatrixPosition(b.lHand.matrixWorld), hR = NV().setFromMatrixPosition(b.rHand.matrixWorld);
@@ -2997,8 +2999,8 @@ export class Person {
     const dt = now - (H ? H.at : -9);
     const TR = typeof window !== 'undefined' && window.__armTrace && window.__armTrace.includes(this.name) ? this._tr : null;
     if (TR) TR.push('H:' + (H ? H.key + '/' + dt.toFixed(3) : 'none'));
-    if (!H || dt <= 0 || dt > (ARMS_OLD ? 0.1 : 0.4)) return; // (from whatever the arms did last frame: a gesture handing them back to the rest too) (arms-v3: and from a calm person's last held pose, 0.2 or 0.33 s ago)
-    const dtL = ARMS_OLD ? dt : Math.min(dt, 0.07); // (arms-v3: a held person's step no bigger than one frame's at 15 fps; the rest next frame, see _armLag)
+    if (!H || dt <= 0 || dt > (ARMS_OLD || ARMS_OFF.has('lag') ? 0.1 : 0.4)) return; // (from whatever the arms did last frame: a gesture handing them back to the rest too) (arms-v3: and from a calm person's last held pose, 0.2 or 0.33 s ago)
+    const dtL = ARMS_OLD || ARMS_OFF.has('lag') ? dt : Math.min(dt, 0.07); // (arms-v3: a held person's step no bigger than one frame's at 15 fps; the rest next frame, see _armLag)
     const lim = 3.14 * dtL, q = worldQuat(b.spine2, _hq[0]);
     for (let side = 0; side < 2; side++) {
       const up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
@@ -3020,7 +3022,7 @@ export class Person {
       if (ang <= lim && !moveW) continue;
       this._armLag = true;
       const want = ang <= lim ? _hv[7].copy(dNow) : _hv[7].copy(dPrev).applyQuaternion(_hq[1].identity().slerp(_hq[2].setFromUnitVectors(dPrev, dNow), lim / ang)); // (towards this frame's answer, lim of the way)
-      const keep = [up.quaternion.clone(), fo.quaternion.clone(), ha.quaternion.clone()], before = armCollisions(this) + (free ? limbs(this) : 0), inBefore = elbowBad(this, side, false, true); // (arms-v3: free, the posture rules too)
+      const keep = [up.quaternion.clone(), fo.quaternion.clone(), ha.quaternion.clone()], LST = free ? { seated: true, resting: !!this._resting, rest: this._restKind || '', asym: this.posture === 'shoulder' || this.posture === 'turnIn' } : null, before = armCollisions(this) + (free ? limbs(this, null, LST) : 0), inBefore = elbowBad(this, side, false, true); // (arms-v3: free, the posture rules too)
       const Wg = _hv[0], wg = _hv[4]; // (S is not needed past here)
       // (held where it was; if that hits something new or puts the elbow into the body, a quarter, a half, three
       // quarters of the way to the passes' answer: rather a few large steps than one jump)
@@ -3028,8 +3030,8 @@ export class Person {
         Wg.lerpVectors(W, W0, g); wg.copy(want).lerp(dNow, g).normalize();
         rig.solve(up, fo, ha, Wg, wg, side ? rig.bend.rArm : rig.bend.lArm, rig.len.arm);
         rig.upd(up);
-        const bad = (!inBefore && elbowBad(this, side, false, true)) || armCollisions(this) + (free ? limbs(this) : 0) > before;
-        if (TR) { const lo = []; if (free) limbs(this, lo); TR.push('g' + side + ':' + g + (bad ? 'x' : '') + (bad && lo.length ? '[' + lo.map((x) => x.what + x.side).join(',') + ']' : '') + (bad ? 'c' + armCollisions(this) + '/' + before + (!inBefore && elbowBad(this, side, false, true) ? 'E' : '') : '')); }
+        const bad = (!inBefore && elbowBad(this, side, false, true)) || armCollisions(this) + (free ? limbs(this, null, LST) : 0) > before; // (the posture rules as the anatomy check has them for a seated person)
+        if (TR) { const lo = []; if (free) limbs(this, lo, LST); TR.push('g' + side + ':' + g + (bad ? 'x' : '') + (bad && lo.length ? '[' + lo.map((x) => x.what + x.side).join(',') + ']' : '') + (bad ? 'c' + armCollisions(this) + '/' + before + (!inBefore && elbowBad(this, side, false, true) ? 'E' : '') : '')); }
         if (!bad) break;
         up.quaternion.copy(keep[0]); fo.quaternion.copy(keep[1]); ha.quaternion.copy(keep[2]); rig.upd(up);
       }
