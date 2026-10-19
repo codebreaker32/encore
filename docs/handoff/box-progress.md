@@ -408,3 +408,21 @@ Frames are `e558dd5`. The clips are the emulator recordings: before = the 19 Oct
 
   Turns over 15° in one frame, 20 s at 15 fps, new vs `&laugh=old`: club 63 vs 148, open mic 177 vs 474, theatre 139 vs 360 (most of what's left is resting hands flipping between two IK answers; the rest-pose worker is on that).
 - **Other tells, unchanged:** waxy faces; the laugh too small at TV distance (2–3 people move); the theatre's high "floor" shot showing mostly the tops of heads; identical rest poses; low-detail second rows in mids.
+
+### 2026-10-19 21:50 UTC: the rest-pose worker (`fix-rest`), trial merge
+- **The worker's causes for the resting arms flipping** (found with its `armtrace.mjs`):
+  - the two fall-backs of a rest pose were decided afresh each frame, and their answers differ by 15–35° at the elbow;
+  - `guardElbows` kept or undid its fix on alternate passes;
+  - wrist limits turned hands 15–20° in a frame;
+  - the resting spine clamp switched on in one frame at a laugh's end;
+  - the planted solve took over in one frame when a gesture ended at a two-top.
+- **arm-v2** (`&armold=1`):
+  - the fall-backs hold for the rest;
+  - resting arms follow the passes' answer at limited speed (elbow and hand 180°/s, wrist 1 m/s), checked against collisions and the body;
+  - the resting spine clamp eases over 0.3 s.
+- **rest-v2** (`&restold=1`):
+  - each rest gets a seeded variant (which hand on top when clasped, the clasp's place, which hand to the knee, a small weight shift);
+  - a neighbour's kind counts as taken first, so at two-tops the pair always differ (club pairs sharing a kind: 0.39 → 0);
+  - fewer hands on thighs.
+- **Trial merge** `merge-rest` (`3d2748c`, conflicts only at the flag block and the arm easing's end; both kept): jumps over 15° in 20 s at 15 fps with live holds go from club 63 → 59 (worst 89° → 32°), open mic 177 → 140, theatre 139 → 92. Gates (g7) running on the frozen merge tree.
+- **Next fix found:** people held at 5 Hz while "calm" move their hands to a new rest pose in 5 Hz steps (open mic jumps of 90–107° exactly 0.2 s apart). A rest change in progress should count as not calm.
