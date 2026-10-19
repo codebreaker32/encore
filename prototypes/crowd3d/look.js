@@ -29,14 +29,16 @@ const VENUES = {
     key: { pos: [0.3, 4.6, -0.3], target: [0.2, 0.6, 2.8], intensity: 200, angle: 0.36, penumbra: 0.4 }, // (row 1 at 12° off its axis, row 2 at 21°: outside)
     // (the back rows read as cardboard: a rim from the spill again now the far level's flecks are gone, and haze
     // between the rows, thicker towards the back, so each row stands against a lighter one)
-    fog: { color: 0x10121a, wide: [6, 40] }, haze: [0.08, 0.09, 0.13], hazeRows: [0.035, 0.04, 0.06], phones: 6, rim: 0.85,
+    fog: { color: 0x10121a, wide: [6, 32] }, haze: [0.08, 0.09, 0.13], hazeRows: [0.035, 0.04, 0.06], phones: 6, rim: 0.85,
     exits: [[-7.55, 2.6, 1.6], [7.55, 2.6, 1.6]],
     // (the house lifted, 2026-10-14: the TV's theatre wide was 70-80% near-black and the mid rows read as cut-outs. A
     // warm, low house light from above, and the rows behind the spill falling off gently to 0.7 instead of 0.1, so they
     // read as people in the dark; the spill still lights the front rows and the haze stays behind. The hemisphere
     // needs a large multiplier, since its colour is dim against the key's 200 at a few metres.
     // &look=stagedark keeps the old theatre.)
-    depthSlope: 0.12, depthFloor: 0.7, hemi: 14, fill: 1.2, sky: 0x7a6a5e, // (a warm, low house light from above)
+    // (real-v1, 2026-10-19: the judges read the lifted, flat house as a grid of standing mannequins with no depth; the
+    // rows now fall off 0.25 a row to 0.35 under a slightly thicker haze, still people, not cut-outs)
+    depthSlope: 0.25, depthFloor: 0.35, hemi: 14, fill: 1.2, sky: 0x7a6a5e, // (a warm, low house light from above)
     dark: { depthSlope: 0.85, depthFloor: 0.1, hemi: 0.35, fill: 0.35, sky: null, fog: { color: 0x10121a, wide: [4, 30] } },
   },
   openmic: {
