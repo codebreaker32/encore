@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 07:54 UTC.
+**Updated:** 2026-10-19 08:28 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -226,3 +226,14 @@ APK `~/apk-out/encore-real-v1-pre-emu.apk` (x86) on the Android TV emulator box 
 | openmic | 6 | 6 | 5 | 4 | 4 | 4 | 4 | 2 | no |
 
 The club's reactions rose to 5 (3 for six rounds) and its life to 6; club light 6–7. Top tells: the club's laugh gestures read as distress (hand over an eye, hand to the temple) rather than amusement; the theatre still the weakest (a step-like laugh at t 12.6, the class-photo front row, the house as cut-outs); open mic hair dither and teeth "like braces"; a red bokeh dot and a hard diagonal line at the right edge of the club's "from the stage wing" setup. Gesture and theatre notes sent to the motion agent.
+
+### 2026-10-19 08:28 UTC: round 14 (seed 1014): life-v1 step 9 (harder front-table laughs, no facepalms, a rippling theatre laugh); the theatre's house softened
+Changes: the theatre's house (rim 0.4, was 0.85, which haloed the rows into cut-outs; falloff 0.15 a row to 0.55; haze 6–40 m); merged life-v1 step 9.
+
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 5 | 5 | 4 | 5 | 5 | 5 | 2 | no |
+| theatre | 4 | 4 | 4 | 4 | 5 | 4 | 4 | 1 | no |
+| openmic | 6 | 6 | 5 | 5 | 5 | 5 | 5 | 2 | no |
+
+Top tells: a club man doubled over face-down on a table ("passed out"; a two-top laugh take, sent to the motion agent); theatre mouths opening in the same shape in the same frame; a row-2 instanced head reading as a flat card between front people (a LOD limit); open mic hair hatching in the face close; waxy faces; front rows square to camera.
