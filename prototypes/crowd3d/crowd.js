@@ -293,7 +293,9 @@ function applyShotLight() {
   const dim = wideLit ? 1 : V.closeDim ?? 0.25;
   // (the near rows sit beside the subjects in a mid shot: they keep most of their light, or large bodies read as
   // faceless dummies; everyone else stays above pure black)
-  for (const m of crowdMats) m.color.setScalar(wideLit ? 1 : m.userData.near ? Math.max(dim, 0.85) : Math.max(dim, 0.2));
+  // (the near instanced rows in a close-up at 0.6, was 0.85: their low-detail bodies read as panels beside the full front
+  // people, real-v1 round 07; &neardim=)
+  for (const m of crowdMats) m.color.setScalar(wideLit ? 1 : m.userData.near ? Math.max(dim, num('neardim', 0.6)) : Math.max(dim, 0.2));
   // the front people behind the subject too (the pair in a close-up, the heckler in theirs)
   for (const [m, who] of frontBgMats) m.color.setScalar(wideLit || (lit === 'heckler' && who.heckler) || (lit === 'close' && who.focus) ? 1 : dim);
   // (a close-up or mid shot: the stage spill opens wider, so the front rows beside and in front of the subjects are lit
