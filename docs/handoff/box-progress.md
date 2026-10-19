@@ -4,7 +4,7 @@
 **Last result:** round 06: overall club 4, theatre 3, open mic 4 (nothing passes; light 4–6, reactions 3–5, posture 3–5).
 **Next:** the user's order: (1) club back-of-house cut-outs, (2) bigger laughs, (3) theatre back rows as seated people, (4) open mic interpenetration and the broken face, (5) repeated rest poses; re-judge after each round.
 **Needs the user:** nothing.
-**Updated:** 2026-10-19 07:20 UTC.
+**Updated:** 2026-10-19 07:05 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
@@ -190,7 +190,7 @@ Changes: the open mic's house (warm glow hemi ×20, haze 4–24 m, depth fall 0.
 ### 2026-10-19 06:22 UTC: gates on a440a7c (lighting through the open mic's house; life step 4)
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edge bands 0 at both viewports in all four venues.
 
-### 2026-10-19 07:20 UTC: round 11 (seed 1011): life-v1 step 6 (shards fixed, livelier listening, laughs at the stage); edge grain lowered
+### 2026-10-19 07:05 UTC: round 11 (seed 1011): life-v1 step 6 (shards fixed, livelier listening, laughs at the stage); edge grain lowered
 | Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
 |---|---|---|---|---|---|---|---|---|---|
 | club | 4 | 3 | 5 | 4 | 5 | 4 | 4 | 1 | no |
