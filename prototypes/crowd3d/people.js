@@ -762,7 +762,7 @@ const GESTURE_FORCE = typeof location !== 'undefined' ? new URLSearchParams(loca
 // (mostly on the thighs, elbows bent and relaxed; both hands out on the knees, arms near straight, read stiff in a row)
 // (round 11: at the club's tables a laugh was nearly all 'none', the hands kept on the top: a hand to the face or the chest,
 // a short clap, for more of them)
-const TABLE_LAUGH_G = SMOOTH ? { none: 0.6, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 0 } : { none: 0.12, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 2.2 }; // (laugh-v2: no short clap at a two-top: the arm flicked between the clap and the planted top every few frames on the emulator, round 17) // (round 13: a hand at the eye read as a facepalm, a headache)
+const TABLE_LAUGH_G = SMOOTH ? { none: 2.2, chest: 0.8, mouth: 0.3, wipe: 0, clapShort: 0 } : { none: 0.12, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 2.2 }; // (laugh-v2: no short clap at a two-top: the arm flicked between the clap and the planted top every few frames on the emulator, round 17; and mostly the hands kept on the top, the body laughing: a hand to the chest crosses the candle, handocc) // (round 13: a hand at the eye read as a facepalm, a headache)
 const CLAP_W = LIFE_OFF.hands ? 0.042 : 0.047; // (the wrists a little further apart at the clap's contact: the forearms crossed by a centimetre in a packed row; life-v1)
 const REST_SEAT_OLD = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
 // (life-v1: fewer hands out on the knees, more clasped in the lap; one hand over the other's wrist was tried: its crossing
@@ -2898,7 +2898,8 @@ export class Person {
     }
     const S = (this.state ||= {});
     SEC && SEC.mark('face'); this._off = !inShot(NV().setFromMatrixPosition(b.pelvis.matrixWorld));
-    this._calm = !L && clapW < 0.03 && upW < 0.03 && lb < 0.05 && W.talk < 0.05 && (this._fidW || 0) < 0.05 && (this._lifeAct || 0) < 0.02 && !OV && !(T && !T.hidden) && (o.stand || stand < 0.05);
+    // (laugh-v2: not while the hands move to a new rest: held at 5 Hz, that move went in steps of up to 100 degrees)
+    this._calm = !(SMOOTH && this._rso && this._rso.k > 0 && this._rso.k < 1) && !L && clapW < 0.03 && upW < 0.03 && lb < 0.05 && W.talk < 0.05 && (this._fidW || 0) < 0.05 && (this._lifeAct || 0) < 0.02 && !OV && !(T && !T.hidden) && (o.stand || stand < 0.05);
     S.lb = lb; S.ls = ls; S.clap = clapW; S.up = upW; S.vocal = vocal; S.idle = idle; S.busy = busy; S.style = st; S.take = L && L.take ? L.take.sig : null; S.gestures = L ? L.gestures : NONE;
     // this person's matrices, up to date for the renderer (three's traversal skips the seat: see the Rig). Everything
     // posed after the full pass above refreshed its own subtree (the IK, rolls, aims, clamps), except the eyes.
