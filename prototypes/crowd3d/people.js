@@ -2897,7 +2897,7 @@ export class Person {
     if (SMOOTH && !LV2_OFF.has('arm') && !this.force && b.lUpper && !(T && !T.hidden) && walk < 0.05 && stand < 0.05 && !coat && !o.stand && !(this._planted || this._onTop)) { // (nor for hands on a table top: eased, a planted hand turned in and out behind the candle, handocc) // (not while getting up, sitting down or walking: the captures have the arms)
       const dtA = now - (this._amT ?? -1e9); this._amT = now;
       const TRe = typeof window !== 'undefined' && window.__armTrace && window.__armTrace.includes(this.name) ? this._tr : null; // (tools: what the easing did)
-      const AB = (Person._armB ||= ['lClav', 'rClav', 'lUpper', 'rUpper', 'lFore', 'rFore', 'lHand', 'rHand']), AQ0 = (this._am ||= AB.map(() => new THREE.Quaternion()));
+      const AB = (Person._armB ||= ['lUpper', 'rUpper', 'lFore', 'rFore', 'lHand', 'rHand']) /* (not the clavicles: their shrug is low-passed already, and eased here they stepped between the eased and the solved pose: a hoodie's drawstrings jumped on a still body, round 25) */, AQ0 = (this._am ||= AB.map(() => new THREE.Quaternion()));
       const AQ1 = (this._am1 ||= AB.map(() => new THREE.Quaternion()));
       const ok = !this.fresh && this._amOk && dtA > 0 && dtA < 0.5, lim = 5.76 * (ARMS_OLD || ARMS_OFF.has('lag') ? dtA : Math.min(dtA, 0.07)); // (330 degrees a second, in radians) (arms-v3: a held person's step no bigger than one frame's at 15 fps)
       let moved = false;
@@ -2929,9 +2929,9 @@ export class Person {
             }
             if (TRe) TRe.push('E:' + (done ? 'step' : 'solved'));
             if (!done) {
-              for (let i = 0; i < 6; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]);
+              for (let i = 0; i < 4; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]);
               b.lClav.updateMatrixWorld(true); b.rClav.updateMatrixWorld(true);
-              if (armCollisions(this) + limbs(this) > before) { for (let i = 6; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]); b.lHand.updateMatrixWorld(true); b.rHand.updateMatrixWorld(true); }
+              if (armCollisions(this) + limbs(this) > before) { for (let i = 4; i < AB.length; i++) if (b[AB[i]]) b[AB[i]].quaternion.copy(AQ1[i]); b.lHand.updateMatrixWorld(true); b.rHand.updateMatrixWorld(true); }
             }
           }
         }
