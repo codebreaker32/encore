@@ -609,3 +609,6 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4 (the
   | open mic | 5 | 4 | 5 | 4 |
 
   Every venue meets the rule, so the improvement rounds stop here. Remaining time goes to the end-of-run checklist (gates, the final judge round, APKs, the emulator items when the account block lifts) and only to glitch fixes.
+
+### 2026-10-20 04:54 UTC: gates on `5d798b5` (frozen copy), all pass
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4, brightness pass ×4, edges 0. Candidate APKs from it are building (`~/apk-out/encore-candidate-5d798b5-{emu,arm}.apk`). This is the code the finals will use unless a glitch fix lands before 16:30. The account is still blocked (last retry 04:34 UTC).
