@@ -80,7 +80,7 @@ Times are positions in the finished video. "Real time" means one continuous piec
 
 | # | Time | Src | Picture | Sound |
 |---|---|---|---|---|
-| 5 | 0:30–0:38 | EMU | The bill. The D-pad steps the venue Open Mic → Comedy Club → Theatre → Arena, and the room behind changes each time (30 seats to 20,000). Then back to the Comedy Club; the MC row set to Sarcastic. Label: "Android TV emulator · 720p". | **V3**, first half. |
+| 5 | 0:30–0:38 | EMU | The bill. The D-pad steps the venue Open Mic → Comedy Club → Theatre, and the room behind changes each time (30 seats to 800). Never the Arena: it's cut from the video (user decision, 20 Oct). Then back to the Comedy Club; the MC row set to Sarcastic. Label: "Android TV emulator · 720p". | **V3**, first half. |
 | 6 | 0:38–0:44 | EMU | The bill's foot: the QR code and room code, then the phone joins: "Aman's phone is on the table and listening · Press OK to go live". | **V3**, second half. |
 | 7 | 0:44–0:47 | PHONE (optional) | The phone page on a real phone: "Start listening", the words toggle, and "Your audio never leaves this phone…". **If it isn't filmed, drop this shot** and hold shot 6. The scripted phone has no screen to show. | No VO. |
 | 8 | 0:47–0:50 | EMU | OK. | Room tone. |
@@ -121,7 +121,7 @@ If a take doesn't heckle, keep its real silence in shot 12 and drop shot 13. Nev
 | # | Time | Src | Picture | Super |
 |---|---|---|---|---|
 | 19 | 2:08–2:18 | GFX | The architecture from `README.md`'s Mermaid diagram, built up in three steps: **(1)** the phone → "events, never audio" → the couch-link relay → the TV; **(2)** the crowd engine (pure TypeScript) → the screens, plus `crowdDrive()` at 10 Hz → the live 3D room in the WebView; **(3)** the TV → the MC service (Strands) → Amazon Bedrock (GLM-5) → the honesty guard → Amazon Polly (a presigned URL the TV streams). Side branch: the content judge (Ministral 3 8B on Bedrock plus a CPU humour model). | "One pure engine decides every reaction." · "The MC is the model, or it's silent." |
-| 20 | 2:18–2:25 | GFX | The venue ladder, each room's bar: Open Mic 0.42 → Club 0.55 → Theatre 0.66 → Arena 0.75. One flat line across all four: "house standard 0.55". | "A tougher venue changes the crowd, never the score." |
+| 20 | 2:18–2:25 | GFX | The venue ladder, each room's bar: Open Mic 0.42 → Club 0.55 → Theatre 0.66 (the three rooms the video shows; the Arena is cut from the video). One flat line across all three: "house standard 0.55". | "A tougher venue changes the crowd, never the score." |
 | 21 | 2:25–2:34 | GFX | The judge chart: Spearman ρ against human ratings on 1,000 held-out jokes. Fast LLMs alone: −0.02 to 0.05 (chance). The "longer punchline" baseline: 0.10. Our mix: 0.34. Small line: "verdict on the TV in about 0.25–0.3 s (p50)". | "We measured our joke judge. Fast models alone were at chance." |
 
 V8 runs across 19–21.
@@ -227,7 +227,7 @@ Use the final emulator APK on the 720p AVD (`~/emu/emu720.sh up`, `wm size` 1280
 
 | Clip | What | How | Takes |
 |---|---|---|---|
-| **E1** | The bill: a fresh launch, the phone joining, then the D-pad over all four venues (about 2 s each) and back to Comedy Club / Sarcastic. | Launch, then `bash ~/emu/qa.sh phone p Aman scripts/standup-demo.json`. Keys: `DPAD_DOWN` to the venue row, `RIGHT` ×3 with 2 s gaps, `LEFT` ×3, `DPAD_DOWN` to the MC row (it's already Sarcastic). Record with `~/emu/bk/brec.sh`. | 2 |
+| **E1** | The bill: a fresh launch, the phone joining, then the D-pad over the Open Mic, the Comedy Club and the Theatre only, never the Arena (about 2 s each), and back to Comedy Club / Sarcastic. | Launch, then `bash ~/emu/qa.sh phone p Aman scripts/standup-demo.json`. Keys: `DPAD_DOWN` to the venue row, from the default Comedy Club: `LEFT` (Open Mic), `RIGHT` ×2 (Club, Theatre), `LEFT` (Club), 2 s gaps; never a third `RIGHT` (the Arena), `DPAD_DOWN` to the MC row (it's already Sarcastic). Record with `~/emu/bk/brec.sh`. | 2 |
 | **E2** | **The hero take:** a full stand-up set at the Comedy Club, sarcastic MC, words on, from OK through the finale and the debrief to the green room. | `docs/android-emu/black-2026-10-13/tools/setrun.sh <outdir> standup club standup-demo`. It records the screen and sound, the logcat and the phone log, and walks cut sheet ⇄ green room. Keep the fake phone's default dead bits (3,4) so the heckle can happen. | 2–3 |
 | **E3** (optional) | Poetry at the Theatre, for a 3 s "SNAP · … rhymes" cutaway. | `setrun.sh <outdir> poetry theatre poetry-demo`. | 1 |
 | **Stills** | The bill, a laugh with its caption, the heckle, the cut sheet, the green room, for the gallery (`docs/submission/gallery.md`). | `adb exec-out screencap -p` during E2. The captions say "scripted test set". | |
