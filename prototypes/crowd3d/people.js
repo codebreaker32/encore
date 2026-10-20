@@ -712,6 +712,9 @@ const LIFE_OFF = (() => {
 // &laugh=old brings back life-v1's layers and the unsmoothed blends (the A/B)
 const LAUGH_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('laugh') === 'old';
 const SMOOTH = !LAUGH_OLD;
+// (laugh-v2: no cough fidget: by the hip its elbow flips from one side of the body to the other between frames, an 87
+// degree snap at 15 fps, round 21)
+if (SMOOTH) for (const k in FIDGETS) FIDGETS[k] = FIDGETS[k].filter(([n]) => n !== 'sit_chair_idle_cough');
 // (&lv2off=lb,hold,xfade,post,arm,torso,boost: one laugh-v2 part at a time off, for bisecting a gate)
 const LV2_OFF = new Set((typeof location !== 'undefined' ? new URLSearchParams(location.search).get('lv2off') || '' : '').split(',').filter(Boolean));
 // rest-v2 (19 Oct; the judges: "the front people share the same resting pose, side by side"): each rest the schedule
@@ -1679,7 +1682,8 @@ export class Person {
       if (G.g === 'none') continue;
       const a = t - G.on;
       let w = this.envAt(c, ev, a) * G.amp * (c.together ? 1 : Math.min(1, reach * 1.3));
-      if (G.dur !== Infinity) w *= clamp01(1 - (a - G.dur) / 0.35);
+      if (G.dur !== Infinity) w *= clamp01(1 - (a - G.dur) / (SMOOTH ? 0.6 : 0.35));
+      if (SMOOTH) w *= smooth(a / 0.5); // (laugh-v2: a gesture eases in over half a second from its start: hands to the mouth or a short clap swung 15-35 degrees a frame at 15 fps, round 21)
       if (w > 0.01) { const o = c.go[i]; o.w = w; o.a = a; gs.push(o); }
     }
     // the bouts: 4–5 "ha"s, a gasp, the next bout a little slower and smaller
