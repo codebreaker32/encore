@@ -104,7 +104,8 @@ export function buildSetups(ctx) {
     pose('along the front row from house right', 'mid', 'close', [4.4, 2.15, 1.0], [-1.4, 1.1, 4.3], 38, front, { w: 1.1, keyWiden: 2.8 });
     pose('along the front row from house left', 'mid', 'close', [-4.2, 2.1, 1.0], [1.6, 1.1, 4.3], 38, front, { w: 1.1, keyWiden: 2.8 });
     // a composed mid of the stalls, centred, from the stage
-    pose('a composed mid of the stalls', 'mid', 'close', [0.25, 3.0, -1.2], [0.25, 1.1, 4.2], 40, [], { w: 1.1, keyWiden: 2.4 });
+    // (laugh-v2: from 2.0 m, not 3.0: from above, the stalls' faces read as heads bowed to their laps, round 23)
+    pose('a composed mid of the stalls', 'mid', 'close', [0.25, Q_LAUGH_OLD ? 3.0 : 2.0, -1.2], [0.25, Q_LAUGH_OLD ? 1.1 : 1.25, 4.2], 40, [], { w: 1.1, keyWiden: 2.4 });
     // a slow lateral track along the front row
     const tk = pair(front, 38, 1.7, 'track along the front row', 1);
     fromPair(tk, 'mid', { track: new THREE.Vector3(0.07, 0, 0), pos: tk.pos.clone().add(new THREE.Vector3(-0.3, 0, 0)), look: tk.look.clone().add(new THREE.Vector3(-0.3, 0, 0)) });
