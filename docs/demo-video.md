@@ -210,6 +210,14 @@ Why each claim is true:
 
 ## Capture plan for the lead (EMU)
 
+**App changes since this plan was written** (`real-v1`, 19–20 Oct; all in the final APK):
+- The heckle's MC line now shows. Before, the engine dropped it every time the next bit began at once.
+- The LIVE line at the top right wraps within 520 units and no longer runs into the end card.
+- No gold flash over the room on a laugh cut (`LightPulse` is off over the 3D room).
+- The emulator box's own checkout is synced to `real-v1`: the MC no longer says "Prithvi". The old local changes are stashed (`stash@{0}`, `stash@{1}`).
+
+**Blocker (since 23:17 UTC on 19 Oct):** the AWS account refuses `StartInstances` ("account blocked … account-verification"), so none of E1–E3 or R1/R2/R3/R5 can be captured until the account block is cleared (see the top of `docs/handoff/box-progress.md`).
+
 Use the final emulator APK on the 720p AVD (`~/emu/emu720.sh up`, `wm size` 1280×720, `-gpu host`). Services on the box:
 - the relay with `RELAY_DEBUG_ROOMS=1`;
 - the MC with the humour model;
