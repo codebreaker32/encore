@@ -585,3 +585,6 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4, bri
   - the side blocks' first three rows leave their outer seats (|x| > 5 m) unsold (`&laugh=old` fills them);
   - the front people's hair cards cut at 0.55 instead of 0.4 without real-v1 (`&ab=hairold`).
 - This round judged `641f8b3`, which already had the quicker, bigger laugh (attack 0.3–0.55 s, capture 1.3× off two-tops): reactions 4–5, up from 3–4.
+
+### 2026-10-20 04:13 UTC: gates on `db135d5` (frozen copy), all pass
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4 (the theatre 53.2k tris, was 68.2k, with the side blocks' edge seats empty), brightness pass ×4, edges 0.
