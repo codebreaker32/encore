@@ -714,7 +714,7 @@ const LAUGH_OLD = typeof location !== 'undefined' && new URLSearchParams(locatio
 const SMOOTH = !LAUGH_OLD;
 // (laugh-v2: no cough fidget: by the hip its elbow flips from one side of the body to the other between frames, an 87
 // degree snap at 15 fps, round 21)
-if (SMOOTH) for (const k in FIDGETS) FIDGETS[k] = FIDGETS[k].filter(([n]) => n !== 'sit_chair_idle_cough');
+if (SMOOTH) for (const k in FIDGETS) FIDGETS[k] = FIDGETS[k].filter(([n]) => n !== 'sit_chair_idle_cough' && n !== 'sit_chair_idle_touch_face'); // (nor the touch to the face: a guard flipping the elbow for one frame swung an arm 70 degrees out and back, and fingers sank into a jaw, rounds 20-22)
 // (&lv2off=lb,hold,xfade,post,arm,torso,boost: one laugh-v2 part at a time off, for bisecting a gate)
 const LV2_OFF = new Set((typeof location !== 'undefined' ? new URLSearchParams(location.search).get('lv2off') || '' : '').split(',').filter(Boolean));
 // rest-v2 (19 Oct; the judges: "the front people share the same resting pose, side by side"): each rest the schedule
