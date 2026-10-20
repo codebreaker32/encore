@@ -545,3 +545,6 @@ Jump probe at 15 fps with live holds, turns over 15° (worst): club 29 (17.5°),
 - **Theatre:** one confirmed arm snap, a front-row man's forearm out and back over frames 288–290 (my trace: 70° then 62°). Cause: a touch-to-face fidget where the elbow guard fired for one frame and every eased step broke the "elbow winged out" rule, so the solved flip showed. Fix (`004e114`): no touch-to-face fidget (judges also saw fingers sink into a jaw from it). The trace now shows 12–21° per frame there.
 - **Still below 7 everywhere:** faces (waxy, the Rocketbox asset limit), the laugh's size, and the theatre's low-detail second row.
 - **Probe on `004e114`**, 15 fps with live holds, turns over 15° (worst): club 29 (17.5°), open mic 41 (36°), theatre 32 (36°).
+
+### 2026-10-20 03:14 UTC: gates on `004e114` (frozen copy), all pass; candidate APKs from `93dc39e` built
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4, brightness pass ×4, edges 0. Candidates: `~/apk-out/encore-candidate-93dc39e-{emu,arm}.apk`.
