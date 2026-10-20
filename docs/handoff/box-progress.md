@@ -462,3 +462,21 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB (bundle 1.0
   One big snap remains: the open mic cough by the hip, 87°.
 - **Gates on `7b5677b`, all pass:** anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready, brightness pass ×4, edges 0.
 - **Round 18** is judged on headless stand-in clips: `tools/render/video.mjs` at 15 fps with `&livehold=1` and the director cycling through laughs, since the emulator box can't start (account blocked; the retry log is in `.box/aws-check.log`).
+
+### 2026-10-20 00:50 UTC: round 18 (seed 1018; headless stand-in clips, the emulator box is blocked)
+Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were rendered frame by frame at 15 fps with the live page's held poses (`&livehold=1`) and the director cycling through laughs. Minimum of three fresh judges:
+
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 4 | 5 | 4 | 7 | 4 | 3 | 2 | no |
+| theatre | 4 | 3 | 3 | 4 | 5 | 2 | 2 | 1 | no |
+| openmic | 5 | 4 | 5 | 5 | 6 | 6 | 4 | 2 | no |
+
+- **Glitches:**
+  - Open mic: none (all three judges). Its artefacts are up to 6.
+  - Club: one judge saw a hand dropping from chest to table in about 2 frames; the animator read it as eased over 3–4 frames.
+  - Theatre: "triangular shards" in the high setups. These turned out not to be broken meshes but the low-detail instanced rows seen close from the stage-box high wide, the same with every switch off. That setup is dropped. One judge also reported a head dropping 40° in a second-row person.
+- **The main tell, from all three:** in the laugh shots the room hunches forward with heads down together, reading as bowing, not laughing. Fixed after the round (`86cf7a8` and the commit after it):
+  - laughing faces lift 0.16 rad with the laugh (not in a doubled-over take);
+  - the capture plays 1.15× (it was 1.35×);
+  - the crowd rows' baked laughs keep less of the captures' forward bend (spine 0.6–0.8, head 0.3–0.45).
