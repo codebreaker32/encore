@@ -548,3 +548,22 @@ Jump probe at 15 fps with live holds, turns over 15° (worst): club 29 (17.5°),
 
 ### 2026-10-20 03:14 UTC: gates on `004e114` (frozen copy), all pass; candidate APKs from `93dc39e` built
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4, brightness pass ×4, edges 0. Candidates: `~/apk-out/encore-candidate-93dc39e-{emu,arm}.apk`.
+
+### 2026-10-20 03:27 UTC: round 23 (seed 1023; stand-in clips of `da7d27b`)
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 4 | 5 | 4 | 6 | 6 | 4 | 2 | no |
+| theatre | 5 | 3 | 4 | 4 | 5 | 5 | 3 | 2 | no |
+| openmic | 5 | 4 | 5 | 5 | 6 | 6 | 4 | 2 | no |
+
+- **No glitch in any clip, from any judge**, the first such round. Every frame-difference spike is a director cut or a caption change; there are no pops, flashes or black frames. The theatre's artefacts are up from 2–3 to 5–6.
+- **What fails now is realism:**
+  - the laugh is small;
+  - in the laugh shots people fold forward and look down ("bowing"), worst from the high cameras;
+  - waxy faces and dithered hair edges (asset limits);
+  - repeated hands-on-knees poses;
+  - the theatre's low-detail second row.
+- **Fixes** (`3849062`, `d98f3be`):
+  - the theatre's composed mid of the stalls from 2.0 m (was 3.0) and the club's high wide from 2.1 m (was 3.0), so faces read, not crowns;
+  - doubled-over laugh takes a quarter as likely;
+  - the theatre's close-up dim on the rows behind 0.25 (was 0.35).
