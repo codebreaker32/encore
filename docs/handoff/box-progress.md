@@ -509,7 +509,7 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
 - **Theatre:** front-row head snaps of 20–25° in one frame (my trace: about 10° a frame, within the 150°/s limit, which at 15 fps still reads as a snap); hand pops in the second row; the high laugh shot still bowing.
 - **Open mic:** a crowd-row arm pop; a back-row woman whose whole pose changes in one frame (a calm person re-posed at 5 Hz).
 - All three judges: the laugh is still small, and the crowd rows' heads sit low ("looking at their laps").
-- **Fixes** (`b0e7e14`):
+- **Fixes** (`9a6cd3b`):
   - the head's whole-chain limit lowered to 100°/s;
   - the crowd rows' clap and cheer weights eased (0.15 s);
   - the crowd rows' faces lifted a little always (0.08 rad) besides the laugh lift;
