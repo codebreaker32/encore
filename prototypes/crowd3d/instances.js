@@ -660,7 +660,13 @@ export class InstancedCrowd {
         const style = best ? best.style : t.style;
         st[k] = body;
         // no arm up for low-detail people: a cheer is a clap here (their raised arm reads as a flat paddle)
-        st[k + 1] = gest > 0.001 ? -gest : Math.max(S.clap * (S.low ? 0.6 : 1), S.cheer * 0.8);
+        let clapI = S.clap * (S.low ? 0.6 : 1), cheerI = S.cheer * 0.8;
+        if (!LAUGH_OLD) { // (laugh-v2: the arms' clap and cheer eased over 0.15 s: a switch of the leading reaction or a gesture's start moved a forearm 40 degrees in one frame, round 20)
+          const dtc = now - (P.cgT ?? -1e9), ec = dtc > 0 && dtc < 0.5 ? 1 - Math.exp(-dtc / 0.15) : 1; P.cgT = now;
+          P.clS = ec === 1 || P.clS === undefined ? clapI : P.clS + (clapI - P.clS) * ec; P.chS = ec === 1 || P.chS === undefined ? cheerI : P.chS + (cheerI - P.chS) * ec;
+          clapI = P.clS; cheerI = P.chS;
+        }
+        st[k + 1] = gest > 0.001 ? -gest : Math.max(clapI, cheerI);
         // the laugh's take (instanced): which of the three baked laughs, how big (no arms: see MOVES)
         st[k + 2] = G.mv && body > 0.01 && best && best.kind === 'laugh' ? S.variant + 0.02 + 0.97 * Math.min(1, S.amp) : 0;
         if (!LAUGH_OLD && G.mv) { if (st[k + 2] > 0 && !(P.lzOn && body > 0.03)) P.lz = st[k + 2]; P.lzOn = body > 0.03 && (st[k + 2] > 0 || P.lzOn); if (P.lzOn) st[k + 2] = P.lz; } // (laugh-v2: one baked take for the whole laugh, held while it fades: a switch of take mid-laugh popped the torso)
@@ -673,7 +679,7 @@ export class InstancedCrowd {
         const lean = P.slouch + (inSeat ? P.pst + noise(t.seed + 71, now * 0.025) * 0.04 : 0) + (leanFor[style] || 0) * overK * body + (attention - 0.55) * 0.18 + noise(t.seed + 1, now * 0.11 * speed) * 0.04 + S.vocal * 0.12;
         let pitch = P.pitch0 * 0.8 + (style === 'back' ? -0.22 : style === 'over' ? 0.25 * overK : 0) * body + noise(t.seed + 5, now * 0.2) * 0.05 + down * 0.5 + S.vocal * 0.15;
         pitch += gest * (gk === 1 ? 0.5 : 0.1) + (chat ? 0.04 * noise(t.seed + 53, now * 1.6) : 0); pitch += lifeP;
-        if (!LAUGH_OLD && style !== 'over') pitch -= 0.2 * body; // (laugh-v2: the face up towards the stage with the laugh: the baked laughs bend the head down, and a laughing house read as one bowing, rounds 18-19)
+        if (!LAUGH_OLD) pitch -= 0.08 + (style !== 'over' ? 0.2 * body : 0); // (and a little up always: with each seat's lean the faces sank towards the laps, 'half the house asleep', round 20) // (laugh-v2: the face up towards the stage with the laugh: the baked laughs bend the head down, and a laughing house read as one bowing, rounds 18-19)
         // heads up (down is +): within 15 degrees down and 20 up while they listen and laugh; a bored dead-air head and the
         // phone may drop further (stacked, the seat's tilt, a glance and the laugh sank heads into chests)
         pitch = Math.max(-0.35, Math.min(gk === 1 && gest > 0.1 ? 0.6 : room.murmur > 0.5 || (room.deadBits || 0) >= 2 ? 0.42 : room.mode === 'live' && body < 0.1 ? 0.15 : 0.26, pitch)); // (listening: the face up at the stage)

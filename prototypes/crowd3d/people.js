@@ -1817,7 +1817,7 @@ export class Person {
     let cut = false;
     if (SMOOTH && CAM) { const cp = (this._camP ||= new THREE.Vector3(1e9, 0, 0)); cut = cp.distanceToSquared(CAM.position) > 0.16; cp.copy(CAM.position); }
     if (!STEPPED && !this.fresh && !woke && !cut && !(this.src && this.src._loco)) {
-      const hz = this._off ? 3 : this._calm ? 5 : 0;
+      const hz = this._off ? 3 : this._calm ? (SMOOTH ? 10 : 5) : 0; // (laugh-v2: calm people in shot at 10 Hz, not 5: at the emulator's 15 fps the 5 Hz steps read as stop-motion, round 20)
       if (hz) { const k = Math.floor(now * hz + (this._ph ??= hash(this.seed * 0.37 + 5))); if (k === this._slot) { this.faceTick(now); return; } this._slot = k; }
     }
     SEC && SEC.start();
@@ -2332,12 +2332,12 @@ export class Person {
         TQ[i].copy(bn.quaternion);
       }
       if (moved) b.spine1.updateMatrixWorld(true);
-      // (and the head as a whole at most 150 degrees a second in the world: four bones each within their limit still
+      // (and the head as a whole at most 100 degrees a second in the world (150 still read as a snap at 15 fps, round 20): four bones each within their limit still
       // added up to a 35-40 degree turn between two frames at the emulator's 15 fps, round 17; the chain is pulled back
       // to its last pose by one common fraction)
       const HW = (this._hw ||= new THREE.Quaternion()), hq = b.head.getWorldQuaternion(Person._hq ||= new THREE.Quaternion());
       if (ok && this._hwOk) {
-        const d = 2 * Math.acos(Math.min(1, Math.abs(HW.dot(hq)))), limH = 2.62 * Math.min(dtT, 0.067); // (one 15 fps frame's worth even after a held pose: a cut woke a person held at 3 Hz and the head caught up a third of a second at once, round 19)
+        const d = 2 * Math.acos(Math.min(1, Math.abs(HW.dot(hq)))), limH = 1.75 * Math.min(dtT, 0.067); // (one 15 fps frame's worth even after a held pose: a cut woke a person held at 3 Hz and the head caught up a third of a second at once, round 19)
         this._headLag = d > limH;
         if (d > limH) {
           for (let i = 0; i < TB.length; i++) { const bn = b[TB[i]]; if (bn) { bn.quaternion.copy(TP[i]).slerp(TQ[i], limH / d); TQ[i].copy(bn.quaternion); } }
