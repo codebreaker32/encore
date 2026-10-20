@@ -771,7 +771,7 @@ const GESTURE_FORCE = typeof location !== 'undefined' ? new URLSearchParams(loca
 // (mostly on the thighs, elbows bent and relaxed; both hands out on the knees, arms near straight, read stiff in a row)
 // (round 11: at the club's tables a laugh was nearly all 'none', the hands kept on the top: a hand to the face or the chest,
 // a short clap, for more of them)
-const TABLE_LAUGH_G = SMOOTH ? { none: 2.2, chest: 0.8, mouth: 0.3, wipe: 0, clapShort: 0 } : { none: 0.12, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 2.2 }; // (laugh-v2: no short clap at a two-top: the arm flicked between the clap and the planted top every few frames on the emulator, round 17; and mostly the hands kept on the top, the body laughing: a hand to the chest crosses the candle, handocc) // (round 13: a hand at the eye read as a facepalm, a headache)
+const TABLE_LAUGH_G = SMOOTH ? { none: 2.2, chest: 0, mouth: 0.3, wipe: 0, clapShort: 0 } : { none: 0.12, chest: 2.4, mouth: 0.4, wipe: 0, clapShort: 2.2 }; // (laugh-v2: no short clap at a two-top: the arm flicked between the clap and the planted top every few frames on the emulator, round 17; and mostly the hands kept on the top, the body laughing: a hand to the chest crosses the candle, handocc) // (round 13: a hand at the eye read as a facepalm, a headache)
 const CLAP_W = LIFE_OFF.hands ? 0.042 : 0.047; // (the wrists a little further apart at the clap's contact: the forearms crossed by a centimetre in a packed row; life-v1)
 const REST_SEAT_OLD = [['thighs', 3], ['knees', 0.6], ['thighKnee', 1.2], ['clasped', 0.8]];
 // (life-v1: fewer hands out on the knees, more clasped in the lap; one hand over the other's wrist was tried: its crossing
@@ -3001,8 +3001,9 @@ export class Person {
     const dt = now - (H ? H.at : -9);
     const TR = typeof window !== 'undefined' && window.__armTrace && window.__armTrace.includes(this.name) ? this._tr : null;
     if (TR) TR.push('H:' + (H ? H.key + '/' + dt.toFixed(3) : 'none'));
-    if (!H || dt <= 0 || dt > (ARMS_OLD || ARMS_OFF.has('lag') ? 0.1 : 0.4)) return; // (from whatever the arms did last frame: a gesture handing them back to the rest too) (arms-v3: and from a calm person's last held pose, 0.2 or 0.33 s ago)
-    const dtL = ARMS_OLD || ARMS_OFF.has('lag') ? dt : Math.min(dt, 0.07); // (arms-v3: a held person's step no bigger than one frame's at 15 fps; the rest next frame, see _armLag)
+    const noLag = ARMS_OLD || ARMS_OFF.has('lag') || this._onTop || this._planted; // (laugh-v2: not for hands on a table top: lagged, a planted hand trailed across the candle, handocc club)
+    if (!H || dt <= 0 || dt > (noLag ? 0.1 : 0.4)) return; // (from whatever the arms did last frame: a gesture handing them back to the rest too) (arms-v3: and from a calm person's last held pose, 0.2 or 0.33 s ago)
+    const dtL = noLag ? dt : Math.min(dt, 0.07); // (arms-v3: a held person's step no bigger than one frame's at 15 fps; the rest next frame, see _armLag)
     const lim = 3.14 * dtL, q = worldQuat(b.spine2, _hq[0]);
     for (let side = 0; side < 2; side++) {
       const up = side ? b.rUpper : b.lUpper, fo = side ? b.rFore : b.lFore, ha = side ? b.rHand : b.lHand;
