@@ -480,3 +480,20 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
   - laughing faces lift 0.16 rad with the laugh (not in a doubled-over take);
   - the capture plays 1.15× (it was 1.35×);
   - the crowd rows' baked laughs keep less of the captures' forward bend (spine 0.6–0.8, head 0.3–0.45).
+
+### 2026-10-20 00:45 UTC: round 19 (seed 1019; stand-in clips of `b8454aa`)
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 3 | 4 | 4 | 6 | 3 | 3 | 2 | no |
+| theatre | 4 | 2 | 2 | 4 | 5 | 2 | 2 | 1 | no |
+| openmic | 5 | 3 | 4 | 5 | 6 | 3 | 3 | 2 | no |
+
+- **Club:** VFX and the animator found no glitch (VFX artefacts 7, overall 5). The DoP saw heads swinging 20–25° on alternate frames. I checked the bones' world matrices, the camera and the drawing size frame by frame, and a difference image of frames 175/176: only small continuous changes. I think it's a misread of 320-pixel crops, but under the minimum rule the venue fails.
+- **Open mic:** a head whip right after a cut (25° then 20° in two frames). Cause: a person held at 3 Hz out of shot caught up a third of a second of turn at once when the cut woke them.
+- **Theatre:** the low-detail rows bent hard in the laugh read as collapsed bodies; the DoP saw heads pitching on alternate frames in the high shot.
+- **All three judges:** a laughing house still reads as bowing (heads down together); the laugh is small at TV distance.
+- **Fixes** (`0da0755`):
+  - the head's catch-up after a held pose is at most one 15 fps frame's worth, and the person isn't calm until it has caught up;
+  - the crowd rows' faces lift with the laugh (0.2 rad) and their baked laugh plays at 0.6 of its bend;
+  - the theatre's laugh wide is at 1.95 m, about the performer's eye line (faces, not crowns).
+- Gates g10 on `0da0755` (frozen copy) running.
