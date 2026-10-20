@@ -702,7 +702,7 @@ function prepFront(gltf, ao = null) {
     const m = o.material;
     if (P.frontMat === 'lambert') {
       // (tv: the hair cards cut at 0.4, not 0.5: the GPU's mips thin the strands' alpha at a distance)
-      o.material = new THREE.MeshLambertMaterial({ map: m.map, alphaTest: m.alphaTest ? Math.min(m.alphaTest, 0.4) : 0, side: m.side, name: m.name });
+      o.material = new THREE.MeshLambertMaterial({ map: m.map, alphaTest: m.alphaTest ? (REAL || ab('hairold') ? Math.min(m.alphaTest, 0.4) : 0.55) : 0, side: m.side, name: m.name }); // (without real-v1's second hair pass: the cards cut at 0.55, not 0.4: the sparse low-alpha texels at a bun's edge read as dithered specks that crawled from frame to frame, round 24; &ab=hairold)
       m.dispose();
     } else {
       m.roughness = 0.75; m.metalness = 0;
@@ -1180,6 +1180,10 @@ async function buildRoom() {
   // (a full house, not a wall: two empty seats, more in a big room: the theatre's rows read as a grid without them)
   const nEmpty = Math.max(2, Math.round(backHalf.length * (V.emptyShare || 0)));
   const empty = new Set(Array.from({ length: backHalf.length ? nEmpty : 0 }, () => backHalf[Math.floor(eR() * backHalf.length)]));
+  // (laugh-v2: the theatre's side blocks leave their first three rows' outer seats unsold: nearest the wide's edges,
+  // the low-detail people there, with no row in front of them, read as figures standing in the aisles or as pale shards,
+  // rounds 17-24; &laugh=old fills them)
+  if (VENUE_ID === 'theatre' && Q.get('laugh') !== 'old') for (const st of instSeats) if (st.row <= 2 && !st.balcony && Math.abs(st.x) > 5) empty.add(st);
   // avatar types per band (R6): the near bands draw only avatars that are not in this front; far and xfar may use all
   // twelve. Each band takes its cheapest types with at least two women.
   const cheapest = (list, k, cost) => {
