@@ -567,3 +567,21 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4, bri
   - the theatre's composed mid of the stalls from 2.0 m (was 3.0) and the club's high wide from 2.1 m (was 3.0), so faces read, not crowns;
   - doubled-over laugh takes a quarter as likely;
   - the theatre's close-up dim on the rows behind 0.25 (was 0.35).
+
+### 2026-10-20 03:43 UTC: round 24 (seed 1024; stand-in clips of `641f8b3`)
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 6 | 5 | 6 | 5 | 7 | 7 | 5 | 2 | no |
+| theatre | 5 | 4 | 4 | 5 | 6 | 2 | 3 | 2 | no |
+| openmic | 6 | 5 | 5 | 6 | 6 | 6 | 5 | 2 | no |
+
+- **Club:** no glitch from any judge, and its artefacts and light both reach 7. Best venue so far.
+- **Open mic:** no glitch; faces up to 6 and overall 5.
+- **Theatre fails on two render tells, not motion:**
+  - low-detail people in the side blocks' first rows read as pale shards standing in the aisles at the wide's edges;
+  - the blonde buns' hair-card edges speckle and change from frame to frame in the close.
+- **The laugh** still reads small, and from some angles as bowing.
+- **Fixes** (`db135d5`):
+  - the side blocks' first three rows leave their outer seats (|x| > 5 m) unsold (`&laugh=old` fills them);
+  - the front people's hair cards cut at 0.55 instead of 0.4 without real-v1 (`&ab=hairold`).
+- Earlier, in `641f8b3`, not yet judged: a quicker, bigger laugh (attack 0.3–0.55 s, capture 1.3× off two-tops).
