@@ -1022,3 +1022,54 @@ Every step read: anatomy TOTAL 0, handsweep 0 invalid, bindcheck no one in the b
 - **Cost:** the same 38 draw calls; the wide goes from 97.3k to 98.7k triangles, mid A from 112.7k to 114.1k, mid B from 115.1k to 116.6k. Textures are unchanged at 28.6 MB.
 - **Sheet:** `docs/mockups/theatre-seated-v1.png`, with the before frames on top and the after frames below (wide, mid A, mid B, held).
 - **Not done:** at the edges of the side blocks, row 1 people still show their whole torso over row 0's standard backs. Row 0 keeps them because the skinned front row sits there.
+
+## laugh-v2 and the glitch work (box session 3, 19–20 Oct, branch `real-v1`)
+Prompted by the user's TV check of real-v1: "the movement while they laugh is way too unreal and glitchy". Everything below is the default; `&laugh=old` brings back life-v1's behaviour for an A/B, unless a line says otherwise.
+
+- **Defaults changed:** real-v1's rendering pass is off; `&ab=real` turns it on. On the TV it cost 2–5 fps (tv-sweep round 10).
+- **The laugh** (`people.js`, blocks marked `laugh-v2`):
+  - The Rocketbox captures carry it at 1.3× (1.0 at two-tops). The body no longer bobs, heaves or rocks on each "ha"; the mouth keeps the rhythm, eased at the bout edges, and the chest and shoulders heave once per bout (not at two-tops).
+  - No intake toss and no start nod.
+  - Faces lift a little with the laugh (towards the stage). Doubled-over takes are a quarter as likely.
+  - Front onsets: 0.1–0.65 s (theatre to 1.0 s), with attacks of 0.3–0.55 s.
+  - The laugh level eases (a 0.22 s filter up, 0.5 s down). A person keeps their laugh unless another is clearly bigger, and holds it while it fades. A new take's capture cross-fades over 0.8 s.
+  - Gestures ease in over 0.5 s and out over 0.6 s.
+  - At two-tops there's no short clap and no hand to the chest; the hands stay on the top.
+- **Smoothing that keeps poses valid:**
+  - **Posture:** angles (lean, turn, side, head pitch, yaw, roll, shrug) are low-passed over 0.1 s.
+  - **Upper torso (`spine1` to `head`):** at most 180°/s per bone, and the head as a whole at most 100°/s in the world. Even after a held pose the step is capped at one 15 fps frame, and the person stays awake until caught up.
+  - **Arms of seated people:**
+    - upper arm, forearm and hand: at most 330°/s and eased over 0.1 s outside claps and raised arms. Not the clavicles, and not hands lying on a table top.
+    - The eased arms are kept only if they add no arm collision or `limbs()` finding, keep resting hands within 2 cm of their rests, and bring no arm near the bind pose. Otherwise half and three-quarter steps are tried, then the solved arms.
+  - Bisect one part at a time with `&lv2off=lb,hold,xfade,post,arm,torso,boost`.
+- **Update rates:**
+  - A cut (the camera moving more than 0.4 m since the last call) wakes everyone.
+  - Calm people in shot are re-posed at 10 Hz, and every frame while the page draws under 20 fps; out of shot still 3 Hz.
+  - Not calm while the hands move to a new rest.
+  - The crowd rows alternate frames only at 20 fps and up.
+- **The crowd rows** (`instances.js`):
+  - a quarter of the "ha" bob;
+  - an eased laugh level, clap and cheer;
+  - one baked take held per laugh, and no per-laugh phase (it re-seeded each head's roll);
+  - baked laughs with less forward bend (spine 0.6–0.8, head 0.3–0.45) and played at 0.6;
+  - faces a little up (0.08 rad, plus 0.2 × the laugh).
+- **Fidgets:** no cough and no touch-to-face. Their elbows flipped from one side of the body to the other between frames.
+- **Cameras (`director.js`):**
+  - theatre: the stage-box and fly-gallery high wides are dropped, and the composed mid of the stalls is at 2.0 m;
+  - club: the high wide is at 2.1 m.
+  - From above, a laughing house read as bowing.
+- **Theatre seats:** the side blocks' first three rows leave their outer seats (|x| > 5 m) unsold. The low-detail people there read as standing shards at the wide's edges.
+- **Theatre close-ups:** the rows behind are dimmed to 0.25.
+- **Hair:** without real-v1, the front hair cards cut at 0.55 (`&ab=hairold`: 0.4).
+- **Rest and arms** (the rest-pose worker, `&restold=1`, `&armold=1`; the arm worker, `&armsold=1`, `&armsoff=free,ein,lag,fid`): seeded rest variants with neighbours kept apart; held rest fall-backs; seated arms followed at limited speed, with an eased elbow pre-pass, fidgets let go over 0.35 s, and held people catching up.
+- **The TV app** (`packages/shared-ui`, `packages/crowd`):
+  - `LightPulse` is off over the live 3D room (its full-screen gold wash read as a video fault);
+  - the LIVE line is at most 520 wide (it ran into the end card's caption);
+  - a heckle's MC line goes up even while the performer talks (the engine dropped it as late every time).
+- **Tools** (`prototypes/crowd3d/tools/render/`):
+  - `jumpprobe.mjs`: bone turns over 15° in one frame; `FPS=15` with `&livehold=1` reproduces the emulator's draw rate and held poses;
+  - `clipstrips.sh`: frame-by-frame strips after each cut;
+  - `video.mjs` with `state=cycle&livehold=1` at 15 fps: the stand-in clips the judges watched while the emulator box was blocked;
+  - `armtrace.mjs` and `restsurvey.mjs` (the workers').
+- **Cost:** page JS about 20% more than `&laugh=old` (`jsperf`, open mic, 16× throttle: p50 83.5 vs 70.4 ms), not yet measured on the emulator.
+- **Limits left (assets, not tuning):** waxy faces with no cheek or eye in the laugh; hair-card speckle; the same twelve avatars; low-detail second rows in close shots.
