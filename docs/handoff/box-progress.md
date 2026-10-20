@@ -588,3 +588,24 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4, bri
 
 ### 2026-10-20 04:13 UTC: gates on `db135d5` (frozen copy), all pass
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready ×4 (the theatre 53.2k tris, was 68.2k, with the side blocks' edge seats empty), brightness pass ×4, edges 0.
+
+### 2026-10-20 04:25 UTC: round 25 (seed 1025; stand-in clips of `db135d5`); the stop rule
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 4 | 5 | 4 | 7 | 6 | 4 | 2 | no |
+| theatre | 5 | 4 | 4 | 4 | 6 | 3 | 3 | 2 | no |
+| openmic | 5 | 4 | 5 | 5 | 5 | 5 | 4 | 2 | no |
+
+- **Glitches:**
+  - club and open mic: none from any judge;
+  - theatre: VFX and the animator found none (the animator's theatre artefacts reached 7). The DoP confirmed one: a hoodie's drawstrings jumping 10–20 px on a still body. Cause: the arm easing included the clavicles, which can step between the eased and the solved pose. Fixed in `5d798b5` (clavicles out of the easing); gates g20 running.
+- **Unchanged tells:** waxy faces with no cheek or eye in the laugh (the face rig's limit); the laugh small in bodies; repeated seated poses; low-detail second rows close to the camera; hair-card speckle.
+- **Stop rule** (the user's: stop for a venue after two rounds each gaining less than 0.5). Overall minimum, rounds 22–25:
+
+  | Venue | r22 | r23 | r24 | r25 |
+  |---|---|---|---|---|
+  | club | 5 | 4 | 5 | 4 |
+  | theatre | 4 | 3 | 3 | 3 |
+  | open mic | 5 | 4 | 5 | 4 |
+
+  Every venue meets the rule, so the improvement rounds stop here. Remaining time goes to the end-of-run checklist (gates, the final judge round, APKs, the emulator items when the account block lifts) and only to glitch fixes.
