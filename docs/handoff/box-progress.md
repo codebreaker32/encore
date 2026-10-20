@@ -498,7 +498,7 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
   - the theatre's laugh wide is at 1.95 m, about the performer's eye line (faces, not crowns).
 - Gates g10 on `0da0755` (frozen copy) running.
 
-### 2026-10-20 02:00 UTC: round 20 (seed 1020; stand-in clips of `8578cba`)
+### 2026-10-20 01:39 UTC: round 20 (seed 1020; stand-in clips of `8578cba`)
 | Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
 |---|---|---|---|---|---|---|---|---|---|
 | club | 5 | 4 | 5 | 4 | 6 | 5 | 4 | 2 | no |
