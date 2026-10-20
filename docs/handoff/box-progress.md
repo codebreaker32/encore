@@ -515,3 +515,6 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
   - the crowd rows' faces lifted a little always (0.08 rad) besides the laugh lift;
   - calm people in shot re-posed at 10 Hz instead of 5 (a CPU cost on the TV to check on the emulator once it's back).
 - Gates g12 on it running.
+
+### 2026-10-20 01:40 UTC: the cost of laugh-v2
+`tools/render/jsperf.mjs`, open mic listening, CPU throttled 16×, 90 frames: page JS p50 83.5 / p90 125.8 ms with laugh-v2, against 70.4 / 96.9 ms with `&laugh=old`; Person.update p50 46.1 against 36.4 ms. About 20% more page JS, roughly 0.8 ms per frame on an unthrottled core. On the Mali-G31 TV that may be 1–2 fps. To be measured on the emulator once the account block lifts (`&laugh=old` is the A/B).
