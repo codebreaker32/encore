@@ -439,3 +439,26 @@ anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB (bundle 1.0
   - `~/apk-out/encore-candidate-ef12b38-emu.apk`: x86/x86_64 libraries in full; the packed crowd has laugh-v2;
   - `~/apk-out/encore-candidate-ef12b38-arm.apk`: armeabi-v7a in full.
 - An E2 dry run on the emulator failed to start: `aws ec2 start-instances` returned *"This account is currently blocked and not recognized as a valid account"*. This is an AWS account issue, not ours. It's under "Needs the user" at the top.
+
+### 2026-10-20 00:15 UTC: arms-v3 merged (`6ed1a86`, code = the gated `7b5677b`)
+- **The arm worker's causes:**
+  - a fidget taking the arms switched off the rest hold and its fall-back in one frame, and the anatomy passes then flipped between two answers about 100° apart;
+  - a cough fidget by the hip flips the elbow side between frames;
+  - fidget weights were not eased;
+  - people held at 5 Hz never got the arm hold.
+- **Changes** (`&armsold=1`; `&armsoff=free,ein,lag,fid`):
+  - seated arms held at limited speed (elbow 180°/s, hand 360°/s, the wrist as fast as the capture's own plus 0.5 m/s), each step checked against collisions and the seated posture rules;
+  - a gesture's or fidget's elbow eased in from last frame's;
+  - fidgets let go over 0.35 s;
+  - held people keep updating until their arms catch up.
+- **Turns over 15° in one frame, 20 s:**
+
+  | Venue | 15 fps live holds, before → after | 30 fps, before → after |
+  |---|---|---|
+  | open mic | 140 → 79 | 35 → 10 |
+  | theatre | 92 → 44 | 14 → 6 |
+  | club | 31 → 29 | 0 → 0 |
+
+  One big snap remains: the open mic cough by the hip, 87°.
+- **Gates on `7b5677b`, all pass:** anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, packcheck ready, brightness pass ×4, edges 0.
+- **Round 18** is judged on headless stand-in clips: `tools/render/video.mjs` at 15 fps with `&livehold=1` and the director cycling through laughs, since the emulator box can't start (account blocked; the retry log is in `.box/aws-check.log`).
