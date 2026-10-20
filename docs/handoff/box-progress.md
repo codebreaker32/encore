@@ -1,21 +1,13 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status (2026-10-19 22:45 UTC):** working to the user's final plan (`docs/handoff/box-final-plan.txt`, `box-win-plan.txt`, `box-laughfix.txt`, `box-video-capture.txt`, `box-video-findings.txt`). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct (checklist below in the log).
-- **Merged on real-v1** (`ef12b38`):
-  - `noreal` as the default;
-  - the submission docs;
-  - the open mic, theatre and club fixes;
-  - laugh-v2 (smooth, capture-led laughs; posture low-pass; arm easing with validity checks; the head turn limited as a whole; a cut wakes everyone);
-  - rest-v2 and arm-v2 from the rest worker;
-  - the TV app fixes: no `LightPulse` over the 3D room, the heckle's MC line shown, the LIVE line kept clear of the end card;
-  - the emulator box's checkout synced to real-v1 (no more "Prithvi").
-- **Running:** gates g8 on the frozen copy of `ef12b38`; an arm worker (`fix-arms`) on the remaining arm snaps in the live build (worst in open mic and theatre: the solved/captured arm switch, report by 04:00 UTC).
-- **Judge:** round 17, overall 3/3/3; every venue fails on visible snaps in the emulator clips. The cut flashes are fixed; arm and head snaps are reduced but not gone.
-- **BLOCKER, needs the user (23:18 UTC):** AWS refused to start the emulator box. `StartInstances` (us-west-2, account 695019458661) returned: *"This account is currently blocked and not recognized as a valid account. Please contact … account-verification"*. Read-only calls still work (`sts get-caller-identity`, `describe-instances`: the box is stopped). Until AWS Support clears it, nothing on the emulator can run: the final clips, the video captures (E1–E3, stills), the R1/R2/R3/R5 measurements and the final emulator check. I retry the start about once an hour and keep working on what doesn't need the emulator.
-- **Risk, needs the user:** the build box is on the same account. All of tonight's work is committed on `real-v1`, but only on this box: nothing is pushed (`origin` = github.com/codebreaker32/encore). If the block reaches the build box, it is lost. Pushing the `real-v1` branch (not main) would keep a copy; I haven't, since pushing needs your go-ahead.
-- **Needs the user:** whether `real-v1` merges to main (nothing pushed). The demo video uses the scripted phone, disclosed on screen and in the voiceover (honesty rule 6; `docs/demo-video.md`).
+**Status (2026-10-20 02:44 UTC):** working to the user's final plan (`docs/handoff/box-*.txt`). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct (checklist in the log).
+- **BLOCKER, needs the user (since 23:17 UTC on 19 Oct):** AWS refuses to start the emulator box: `StartInstances` (us-west-2, account 695019458661) returns *"This account is currently blocked and not recognized as a valid account … account-verification"*. Read-only calls work. A retry runs every 45 minutes (`.box/aws-check.log`); still blocked at the last try. Until it clears, nothing can run on the emulator: the final clips, the video captures (E1–E3), R1/R2/R3/R5 and the final emulator check. The judge rounds use headless stand-in clips meanwhile (15 fps, the live page's held poses).
+- **Risk, needs the user:** the build box is on the same account and `real-v1` exists only here (nothing pushed; `origin` = github.com/codebreaker32/encore). Pushing the `real-v1` branch (not main) would keep a copy; that needs your go-ahead.
+- **Latest gated tree:** `93dc39e` (all gates pass). Candidate APKs: `~/apk-out/encore-candidate-ef12b38-{emu,arm}.apk`, with `93dc39e`'s pair building. `004e114` (no touch-to-face fidget) is gating now.
+- **Judge:** round 22 is the best so far: no glitch found in the club or open mic clips by any judge; overall 5 / 4 / 5 (club / theatre / open mic). Nothing passes the 7 bar: faces (an asset limit) and the laugh's size hold it down.
+- **Needs the user:** whether `real-v1` merges to main. The demo video uses the scripted phone, disclosed on screen and in the voiceover (honesty rule 6; `docs/demo-video.md`).
 
-**Updated:** 2026-10-19 22:45 UTC.
+**Updated:** 2026-10-20 02:44 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
