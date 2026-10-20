@@ -541,3 +541,15 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
 anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edges 0. After `97617d7`, `93dc39e` also eases gestures in over 0.5 s and out over 0.6 s and drops the cough fidget.
 
 Jump probe at 15 fps with live holds, turns over 15° (worst): club 29 (17.5°), open mic 54 (36°), theatre 33 (38°).
+
+### 2026-10-20 02:44 UTC: round 22 (seed 1022; stand-in clips of `93dc39e`, gated)
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 6 | 5 | 6 | 5 | 7 | 6 | 5 | 2 | no |
+| theatre | 5 | 5 | 4 | 4 | 6 | 3 | 4 | 1 | no |
+| openmic | 6 | 5 | 6 | 5 | 6 | 6 | 5 | 2 | no |
+
+- **Best round so far.** No judge found a glitch in the club or open mic clips (the animator: club posture, light and artefacts 7, overall 6; the DoP: open mic light and artefacts 7). VFX found no glitch in any clip.
+- **Theatre:** one confirmed arm snap, a front-row man's forearm out and back over frames 288–290 (my trace: 70° then 62°). Cause: a touch-to-face fidget where the elbow guard fired for one frame and every eased step broke the "elbow winged out" rule, so the solved flip showed. Fix (`004e114`): no touch-to-face fidget (judges also saw fingers sink into a jaw from it). The trace now shows 12–21° per frame there.
+- **Still below 7 everywhere:** faces (waxy, the Rocketbox asset limit), the laugh's size, and the theatre's low-detail second row.
+- **Probe on `004e114`**, 15 fps with live holds, turns over 15° (worst): club 29 (17.5°), open mic 41 (36°), theatre 32 (36°).
