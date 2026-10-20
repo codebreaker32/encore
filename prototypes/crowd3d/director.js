@@ -93,7 +93,9 @@ export function buildSetups(ctx) {
     fromPair(pair(front, 30, 1.7, 'stalls: the front from house left', -1), 'mid', { w: 0.9 });
     fromPair(pair(P0, 65, 1.1, 'stalls: two-shot, centre', 1), 'close', { w: 0.8 });
     // the high wide down the rake: the laugh travels back through the rows (spread 0.4 s front to back)
-    pose('high wide from the fly gallery: the ripple', 'wide', 'close', [-1.0, Q_LAUGH_OLD ? 3.4 : 1.95, 0.2], [0.2, Q_LAUGH_OLD ? 1.1 : 1.3, 4.6], 30, [], { w: 1.3, keyWiden: 2.8 });
+    // (laugh-v2: not any more either: from any height above the house the laugh read as a house bowing over its laps, rounds
+    // 16-21; the laugh cuts go to the stalls. &laugh=old keeps it)
+    if (Q_LAUGH_OLD) pose('high wide from the fly gallery: the ripple', 'wide', 'close', [-1.0, Q_LAUGH_OLD ? 3.4 : 1.95, 0.2], [0.2, Q_LAUGH_OLD ? 1.1 : 1.3, 4.6], 30, [], { w: 1.3, keyWiden: 2.8 });
     // from the stage box, house left, high: the stalls on the diagonal
     // (laugh-v2: not any more: from 3.6 m over the house-left rows its upper frame is the low-detail people close up,
     // faceted torsos that judges read as torn meshes, round 18; &laugh=old keeps it)

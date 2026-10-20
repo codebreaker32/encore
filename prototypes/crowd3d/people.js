@@ -1816,8 +1816,11 @@ export class Person {
     // drift or a track is not)
     let cut = false;
     if (SMOOTH && CAM) { const cp = (this._camP ||= new THREE.Vector3(1e9, 0, 0)); cut = cp.distanceToSquared(CAM.position) > 0.16; cp.copy(CAM.position); }
+    // (laugh-v2: and no holding of people in shot while the page draws under 20 fps (out of shot they are still held at 3 Hz): at the emulator's 15 fps even a 10 Hz hold
+    // showed as poses held two frames, then a step, round 21)
+    const slow = SMOOTH && now - (this._uT ?? now) > 0.05; this._uT = now;
     if (!STEPPED && !this.fresh && !woke && !cut && !(this.src && this.src._loco)) {
-      const hz = this._off ? 3 : this._calm ? (SMOOTH ? 10 : 5) : 0; // (laugh-v2: calm people in shot at 10 Hz, not 5: at the emulator's 15 fps the 5 Hz steps read as stop-motion, round 20)
+      const hz = this._off ? 3 : this._calm && !slow ? (SMOOTH ? 10 : 5) : 0; // (laugh-v2: calm people in shot at 10 Hz, not 5: at the emulator's 15 fps the 5 Hz steps read as stop-motion, round 20)
       if (hz) { const k = Math.floor(now * hz + (this._ph ??= hash(this.seed * 0.37 + 5))); if (k === this._slot) { this.faceTick(now); return; } this._slot = k; }
     }
     SEC && SEC.start();

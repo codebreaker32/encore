@@ -576,7 +576,7 @@ export class InstancedCrowd {
     for (let gi = 0; gi < this.groups.length; gi++) {
       const G = this.groups[gi];
       const st = G.st.array, po = G.po.array, xf = G.xf.array, sh = G.sh.array;
-      const rest = f > 3 && ((f + gi) & 1) === 1 && now - (G.lastT ?? -1e9) < 0.1 && now >= G.lastT;
+      const rest = f > 3 && ((f + gi) & 1) === 1 && now - (G.lastT ?? -1e9) < (LAUGH_OLD ? 0.1 : 0.05) && now >= G.lastT; // (laugh-v2: alternate frames only at 20 fps and up: at the emulator's 15 fps the rows moved at 7.5 Hz, in steps, round 21)
       if (!rest) G.lastT = now;
       let placed = false, touched = false;
       for (const P of G.people) {
