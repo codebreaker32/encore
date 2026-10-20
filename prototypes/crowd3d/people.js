@@ -1529,7 +1529,7 @@ export class Person {
     if (c.lb > 0.02 && c.L) {
       // this laugh's take: which capture (chuckle, laugh or big laugh, this gender's or the other's), from where in it,
       // at what speed and size, and mirrored or not
-      const Tk = c.L.take, w = (SMOOTH && !LV2_OFF.has('boost') && !(seated && this.o.table && this.o.neighbour) ? 1.15 : 1) * Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
+      const Tk = c.L.take, w = (SMOOTH && !LV2_OFF.has('boost') && !(seated && this.o.table && this.o.neighbour) ? 1.3 : 1) * Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
       let fadeIn = 1;
       if (SMOOTH && !LV2_OFF.has('xfade')) {
         // (laugh-v2: a new laugh's capture cross-fades from the one playing over 0.8 s, never a cut between two takes)
@@ -1786,7 +1786,7 @@ export class Person {
   envAt(c, ev, a) {
     if (c.together) return this.env0(c, ev, a);
     const T = c.T;
-    const at = this.kind === 'front' && !LIFE_OFF.onset ? (SMOOTH ? clamp(T.attack, 0.45, 0.7) : Math.min(T.attack, 0.35)) : T.attack; // (laugh-v2: never a snap into a laugh: 0.45-0.7 s, then the level's own easing)
+    const at = this.kind === 'front' && !LIFE_OFF.onset ? (SMOOTH ? clamp(T.attack, 0.3, 0.55) : Math.min(T.attack, 0.35)) : T.attack; // (laugh-v2: never a snap into a laugh: 0.45-0.7 s, then the level's own easing)
     return Math.max(this.env0(c, ev, a * T.warp) * smooth(a / at), T.keepAmp * this.env0(c, ev, (a - T.keepLag) * T.warp) * 0.7);
   }
 
@@ -1872,7 +1872,7 @@ export class Person {
     let lb = F.lb ?? (L ? L.body : 0);
     if (SMOOTH && F.lb === undefined && !LV2_OFF.has('lb')) { // (laugh-v2: the laugh's level eases, in over ~0.3 s a step and out over ~0.5 s: no snap into or out of it)
       const dt = now - (this._lbT ?? -1e9), s0 = this._lbS ?? 0;
-      this._lbT = now; this._lbS = dt > 0 && dt < 0.5 ? s0 + (lb - s0) * (1 - Math.exp(-dt / (lb > s0 ? 0.3 : 0.5))) : lb; lb = this._lbS;
+      this._lbT = now; this._lbS = dt > 0 && dt < 0.5 ? s0 + (lb - s0) * (1 - Math.exp(-dt / (lb > s0 ? 0.22 : 0.5))) : lb; lb = this._lbS;
     }
     const clapW = Math.max(gw('clap'), gw('clapHigh'), gw('clapLow'), gw('clapShort'));
     const upW = Math.max(gw('armsUp'), gw('oneArm'));
