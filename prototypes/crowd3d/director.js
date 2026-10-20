@@ -15,7 +15,7 @@
 // to the same top laugher). It changes the shot size from the last cut, and on a big laugh it leans to the wider
 // setups. A deterministic jitter breaks ties.
 import * as THREE from 'three';
-// (&laugh=old: the theatre's fly-gallery wide at its old height too; laugh-v2 lowered it 1.1 m: from 3.4 m the laugh
+// (&laugh=old: the theatre's fly-gallery wide at its old height too; laugh-v2 lowered it to 1.95 m, about the performer's eye line: from 3.4 m the laugh
 // read as the tops of bowed heads, rounds 16-17)
 const Q_LAUGH_OLD = typeof location !== 'undefined' && new URLSearchParams(location.search).get('laugh') === 'old';
 
@@ -93,7 +93,7 @@ export function buildSetups(ctx) {
     fromPair(pair(front, 30, 1.7, 'stalls: the front from house left', -1), 'mid', { w: 0.9 });
     fromPair(pair(P0, 65, 1.1, 'stalls: two-shot, centre', 1), 'close', { w: 0.8 });
     // the high wide down the rake: the laugh travels back through the rows (spread 0.4 s front to back)
-    pose('high wide from the fly gallery: the ripple', 'wide', 'close', [-1.0, Q_LAUGH_OLD ? 3.4 : 2.3, 0.2], [0.2, Q_LAUGH_OLD ? 1.1 : 1.25, 4.6], 30, [], { w: 1.3, keyWiden: 2.8 });
+    pose('high wide from the fly gallery: the ripple', 'wide', 'close', [-1.0, Q_LAUGH_OLD ? 3.4 : 1.95, 0.2], [0.2, Q_LAUGH_OLD ? 1.1 : 1.3, 4.6], 30, [], { w: 1.3, keyWiden: 2.8 });
     // from the stage box, house left, high: the stalls on the diagonal
     // (laugh-v2: not any more: from 3.6 m over the house-left rows its upper frame is the low-detail people close up,
     // faceted torsos that judges read as torn meshes, round 18; &laugh=old keeps it)

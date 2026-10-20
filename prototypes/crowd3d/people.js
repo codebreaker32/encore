@@ -2337,7 +2337,8 @@ export class Person {
       // to its last pose by one common fraction)
       const HW = (this._hw ||= new THREE.Quaternion()), hq = b.head.getWorldQuaternion(Person._hq ||= new THREE.Quaternion());
       if (ok && this._hwOk) {
-        const d = 2 * Math.acos(Math.min(1, Math.abs(HW.dot(hq)))), limH = 2.62 * dtT;
+        const d = 2 * Math.acos(Math.min(1, Math.abs(HW.dot(hq)))), limH = 2.62 * Math.min(dtT, 0.067); // (one 15 fps frame's worth even after a held pose: a cut woke a person held at 3 Hz and the head caught up a third of a second at once, round 19)
+        this._headLag = d > limH;
         if (d > limH) {
           for (let i = 0; i < TB.length; i++) { const bn = b[TB[i]]; if (bn) { bn.quaternion.copy(TP[i]).slerp(TQ[i], limH / d); TQ[i].copy(bn.quaternion); } }
           b.spine1.updateMatrixWorld(true); b.head.getWorldQuaternion(hq);
@@ -2943,7 +2944,7 @@ export class Person {
     const S = (this.state ||= {});
     SEC && SEC.mark('face'); this._off = !inShot(NV().setFromMatrixPosition(b.pelvis.matrixWorld));
     // (laugh-v2: not while the hands move to a new rest: held at 5 Hz, that move went in steps of up to 100 degrees)
-    this._calm = !(!ARMS_OLD && this._armLag) && !(SMOOTH && this._rso && this._rso.k > 0 && this._rso.k < 1) && !L && clapW < 0.03 && upW < 0.03 && lb < 0.05 && W.talk < 0.05 && (this._fidW || 0) < 0.05 && (this._lifeAct || 0) < 0.02 && !OV && !(T && !T.hidden) && (o.stand || stand < 0.05);
+    this._calm = !(!ARMS_OLD && this._armLag) && !this._headLag && !(SMOOTH && this._rso && this._rso.k > 0 && this._rso.k < 1) && !L && clapW < 0.03 && upW < 0.03 && lb < 0.05 && W.talk < 0.05 && (this._fidW || 0) < 0.05 && (this._lifeAct || 0) < 0.02 && !OV && !(T && !T.hidden) && (o.stand || stand < 0.05);
     S.lb = lb; S.ls = ls; S.clap = clapW; S.up = upW; S.vocal = vocal; S.idle = idle; S.busy = busy; S.style = st; S.take = L && L.take ? L.take.sig : null; S.gestures = L ? L.gestures : NONE;
     // this person's matrices, up to date for the renderer (three's traversal skips the seat: see the Rig). Everything
     // posed after the full pass above refreshed its own subtree (the IK, rolls, aims, clamps), except the eyes.
