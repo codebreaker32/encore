@@ -497,3 +497,21 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
   - the crowd rows' faces lift with the laugh (0.2 rad) and their baked laugh plays at 0.6 of its bend;
   - the theatre's laugh wide is at 1.95 m, about the performer's eye line (faces, not crowns).
 - Gates g10 on `0da0755` (frozen copy) running.
+
+### 2026-10-20 02:00 UTC: round 20 (seed 1020; stand-in clips of `8578cba`)
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 5 | 4 | 5 | 4 | 6 | 5 | 4 | 2 | no |
+| theatre | 3 | 3 | 2 | 3 | 5 | 2 | 2 | 1 | no |
+| openmic | 4 | 4 | 4 | 4 | 5 | 4 | 3 | 2 | no |
+
+- **Club:** the DoP and the animator found no glitch (DoP artefacts 7, overall 5). VFX confirmed one forearm pop in a crowd-row man (frames 171–172).
+- **Theatre:** front-row head snaps of 20–25° in one frame (my trace: about 10° a frame, within the 150°/s limit, which at 15 fps still reads as a snap); hand pops in the second row; the high laugh shot still bowing.
+- **Open mic:** a crowd-row arm pop; a back-row woman whose whole pose changes in one frame (a calm person re-posed at 5 Hz).
+- All three judges: the laugh is still small, and the crowd rows' heads sit low ("looking at their laps").
+- **Fixes** (`b0e7e14`):
+  - the head's whole-chain limit lowered to 100°/s;
+  - the crowd rows' clap and cheer weights eased (0.15 s);
+  - the crowd rows' faces lifted a little always (0.08 rad) besides the laugh lift;
+  - calm people in shot re-posed at 10 Hz instead of 5 (a CPU cost on the TV to check on the emulator once it's back).
+- Gates g12 on it running.
