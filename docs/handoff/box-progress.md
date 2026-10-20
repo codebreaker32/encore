@@ -536,3 +536,8 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
   - the crowd rows alternate frames only at 20 fps and up;
   - people in shot aren't held while the page draws under 20 fps (out of shot still 3 Hz);
   - the theatre's fly-gallery wide is dropped (`&laugh=old` keeps both high setups).
+
+### 2026-10-20 02:25 UTC: gates on `93dc39e` (frozen copy), all pass
+anatomy 0, handsweep 0, bindcheck clean, handocc 0 ×4, pack 20.2 MB, packcheck ready ×4, brightness pass ×4, edges 0. After `97617d7`, `93dc39e` also eases gestures in over 0.5 s and out over 0.6 s and drops the cough fidget.
+
+Jump probe at 15 fps with live holds, turns over 15° (worst): club 29 (17.5°), open mic 54 (36°), theatre 33 (38°).
