@@ -518,3 +518,21 @@ Frames are `6ed1a86`. The clips `round-18/clips/standin-<venue>.mp4` were render
 
 ### 2026-10-20 01:40 UTC: the cost of laugh-v2
 `tools/render/jsperf.mjs`, open mic listening, CPU throttled 16×, 90 frames: page JS p50 83.5 / p90 125.8 ms with laugh-v2, against 70.4 / 96.9 ms with `&laugh=old`; Person.update p50 46.1 against 36.4 ms. About 20% more page JS, roughly 0.8 ms per frame on an unthrottled core. On the Mali-G31 TV that may be 1–2 fps. To be measured on the emulator once the account block lifts (`&laugh=old` is the A/B).
+
+### 2026-10-20 01:52 UTC: round 21 (seed 1021; stand-in clips of `9a6cd3b`)
+| Venue | life | reactions | posture | faces | light | artefacts | overall | real footage | pass |
+|---|---|---|---|---|---|---|---|---|---|
+| club | 6 | 4 | 6 | 5 | 6 | 6 | 5 | 2 | no |
+| theatre | 5 | 2 | 4 | 4 | 5 | 2 | 3 | 1 | no |
+| openmic | 5 | 4 | 5 | 5 | 6 | 6 | 4 | 2 | no |
+
+- **Club and open mic:** no glitch from any of the three judges, the first round with both clips clean (club artefacts 6–7, overall 5).
+- **Theatre:**
+  - snaps in people my traces of the skinned people don't show: they are the crowd rows. Those rows update on alternate frames whenever the last update was under 0.1 s ago, which at the emulator's 15 fps means 7.5 Hz;
+  - one front-row forearm snap;
+  - the high laugh shot still reads as a house bowing.
+- All three judges: the laugh is small (reactions 2–4); stepped two-frame holds at 15 fps.
+- **Fixes** (`97617d7`):
+  - the crowd rows alternate frames only at 20 fps and up;
+  - people in shot aren't held while the page draws under 20 fps (out of shot still 3 Hz);
+  - the theatre's fly-gallery wide is dropped (`&laugh=old` keeps both high setups).
