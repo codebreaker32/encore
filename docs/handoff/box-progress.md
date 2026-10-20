@@ -1,13 +1,13 @@
 # Box session progress: extremely real people (open mic, club, theatre)
 
-**Status (2026-10-20 02:44 UTC):** working to the user's final plan (`docs/handoff/box-*.txt`). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC on 20 Oct (checklist in the log).
-- **BLOCKER, needs the user (since 23:17 UTC on 19 Oct):** AWS refuses to start the emulator box: `StartInstances` (us-west-2, account 695019458661) returns *"This account is currently blocked and not recognized as a valid account … account-verification"*. Read-only calls work. A retry runs every 45 minutes (`.box/aws-check.log`); still blocked at the last try. Until it clears, nothing can run on the emulator: the final clips, the video captures (E1–E3), R1/R2/R3/R5 and the final emulator check. The judge rounds use headless stand-in clips meanwhile (15 fps, the live page's held poses).
-- **Risk, needs the user:** the build box is on the same account and `real-v1` exists only here (nothing pushed; `origin` = github.com/codebreaker32/encore). Pushing the `real-v1` branch (not main) would keep a copy; that needs your go-ahead.
-- **Latest gated tree:** `93dc39e` (all gates pass). Candidate APKs: `~/apk-out/encore-candidate-ef12b38-{emu,arm}.apk`, with `93dc39e`'s pair building. `004e114` (no touch-to-face fidget) is gating now.
-- **Judge:** round 22 is the best so far: no glitch found in the club or open mic clips by any judge; overall 5 / 4 / 5 (club / theatre / open mic). Nothing passes the 7 bar: faces (an asset limit) and the laugh's size hold it down.
+**Status (2026-10-20 07:52 UTC):** working to the user's final plan (`docs/handoff/box-*.txt`) and the decisions of 20 Oct (`box-decisions-1020.txt`). Final deadline 18:29 UTC on 20 Oct; new work stops 16:30 UTC (checklist in the log).
+- **User decisions (20 Oct, ~08:00 UTC):** the Arena is cut from the demo video (E1 tours only the Open Mic, the Comedy Club and the Theatre; it stays in the app, no more arena work); the narration stays on the ElevenLabs free tier; the repo stays private (reviewers invited later); `real-v1` is already pushed to origin by the user, so the data-loss risk is closed and I don't push.
+- **BLOCKER (since 23:17 UTC on 19 Oct):** AWS refuses to start the emulator box (`StartInstances`: *"This account is currently blocked … account-verification"*). The user has submitted verification documents. The 45-minute retry keeps running (`.box/aws-check.log`; still blocked at 07:34 UTC). When it clears: the final takes, E2 first. If it hasn't cleared by 16:30 UTC, the gated tree and the final APKs are finished anyway and the summary says the takes are still to do.
+- **Latest gated tree:** `5d798b5` (all gates pass). Candidate APKs built: `~/apk-out/encore-candidate-5d798b5-{emu,arm}.apk` (and the older `ef12b38`, `93dc39e` pairs).
+- **Judge:** round 25 (stand-in clips): overall 4 / 3 / 4 (club / theatre / open mic), mostly glitch-free; the stop rule is met in every venue, so improvement rounds stopped at 04:25 UTC. The final round runs at 16:30 UTC.
 - **Needs the user:** whether `real-v1` merges to main. The demo video uses the scripted phone, disclosed on screen and in the voiceover (honesty rule 6; `docs/demo-video.md`).
 
-**Updated:** 2026-10-20 02:44 UTC.
+**Updated:** 2026-10-20 07:52 UTC.
 
 ## Decisions
 - Branch `real-v1` holds a baseline commit (`e0f6cf8`) of the tree as synced from the laptop (motion v2.1, shapes v1, the realism audit tools), so every later step diffs cleanly against it. `~/strumble-base` is a worktree of that commit, served at :8092, for "before" renders; the working tree is served at :8091.
