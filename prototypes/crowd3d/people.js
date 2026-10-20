@@ -1526,7 +1526,7 @@ export class Person {
     if (c.lb > 0.02 && c.L) {
       // this laugh's take: which capture (chuckle, laugh or big laugh, this gender's or the other's), from where in it,
       // at what speed and size, and mirrored or not
-      const Tk = c.L.take, w = (SMOOTH && !LV2_OFF.has('boost') && !(seated && this.o.table && this.o.neighbour) ? 1.35 : 1) * Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
+      const Tk = c.L.take, w = (SMOOTH && !LV2_OFF.has('boost') && !(seated && this.o.table && this.o.neighbour) ? 1.15 : 1) * Math.min(1, c.lb * 1.1) * (0.7 + 0.22 * clamp01((c.lb - 0.55) / 0.35)) * (Tk ? 0.6 + 0.5 * Tk.amp : 1) * (seated && this.o.table && this.o.neighbour && !RAW ? (LIFE_OFF.laugh ? 0.8 : 0.95) : 1); // (a big one rocks the body more; at a two-top, forearms on its top, less: the capture's rock back pulled the planted arms straight)
       let fadeIn = 1;
       if (SMOOTH && !LV2_OFF.has('xfade')) {
         // (laugh-v2: a new laugh's capture cross-fades from the one playing over 0.8 s, never a cut between two takes)
@@ -2109,6 +2109,7 @@ export class Person {
     if (st === 'giggle') { lean += 0.04 * lb; headRoll += 0.05 * lb; }
     if (st === 'turn') { turn += this.side * 0.06 * lb; headYaw += this.side * 0.3 * lb; side -= this.side * 0.02 * lb; } // (the head turns to the friend, the shoulders follow a little; the capture turns too)
     if (st === 'shake') lean += 0.04 * lb; // upright, the shoulders doing the laughing (below)
+    if (SMOOTH && st !== 'over') headPitch -= 0.16 * lb; // (laugh-v2: the face up towards the stage: the captures' laughs bend forward and down, and a laughing room read as a room bowing, round 18)
     if (st === 'nose') headPitch += 0.07 * lb * (0.5 + haB); // a breath out through the nose, the head dipping
     if (G.neighbour) { const w = G.neighbour.w; turn += this.side * 0.08 * w; headYaw += this.side * 0.35 * w; side -= this.side * 0.03 * w; }
     if (G.knee) lean += 0.12 * G.knee.w; // (the hand goes to the knee; the body bends a little for it)

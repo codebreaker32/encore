@@ -145,8 +145,9 @@ export function bakeType(gltfScene, { seatH = 0.45, stand = false, standHands = 
       // most of it)
       const TORSO = /Spine|Neck|Head|Clavicle/, HEAD = /Neck|Head/, qd = new THREE.Quaternion(), qm = new THREE.Quaternion(), qI = new THREE.Quaternion();
       // (laugh-v2: the laugh and the chuckle too: each baked at its furthest moment, the head down, and from the theatre's
-      // high setups a house laughing read as a house asleep, heads in laps, round 16)
-      const DAMP = LAUGH_OLD ? { gestic_laugh_extreme: { head: 0.5, spine: 0.85 } } : { gestic_laugh_extreme: { head: 0.4, spine: 0.85 }, gestic_laugh_loud: { head: 0.5, spine: 1 }, gestic_laugh_low: { head: 0.6, spine: 1 } };
+      // high setups a house laughing read as a house asleep, heads in laps, round 16; and less of the forward bend: a room
+      // bowing, round 18)
+      const DAMP = LAUGH_OLD ? { gestic_laugh_extreme: { head: 0.5, spine: 0.85 } } : { gestic_laugh_extreme: { head: 0.3, spine: 0.6 }, gestic_laugh_loud: { head: 0.35, spine: 0.7 }, gestic_laugh_low: { head: 0.45, spine: 0.8 } };
       for (const pre of ['gestic_laugh_low', 'gestic_laugh_loud', 'gestic_laugh_extreme']) {
         const c = clip(pre);
         if (!c) { frames.push(rest); continue; }

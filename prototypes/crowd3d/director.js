@@ -95,7 +95,9 @@ export function buildSetups(ctx) {
     // the high wide down the rake: the laugh travels back through the rows (spread 0.4 s front to back)
     pose('high wide from the fly gallery: the ripple', 'wide', 'close', [-1.0, Q_LAUGH_OLD ? 3.4 : 2.3, 0.2], [0.2, Q_LAUGH_OLD ? 1.1 : 1.25, 4.6], 30, [], { w: 1.3, keyWiden: 2.8 });
     // from the stage box, house left, high: the stalls on the diagonal
-    pose('high wide from the stage box', 'wide', 'close', [-6.0, 3.6, 0.8], [0.4, 1.15, 3.3], 55, [], { w: 1.2, keyWiden: 2.8 });
+    // (laugh-v2: not any more: from 3.6 m over the house-left rows its upper frame is the low-detail people close up,
+    // faceted torsos that judges read as torn meshes, round 18; &laugh=old keeps it)
+    if (Q_LAUGH_OLD) pose('high wide from the stage box', 'wide', 'close', [-6.0, 3.6, 0.8], [0.4, 1.15, 3.3], 55, [], { w: 1.2, keyWiden: 2.8 });
     // row-length side angles: from the apron's corners along the front rows
     pose('along the front row from house right', 'mid', 'close', [4.4, 2.15, 1.0], [-1.4, 1.1, 4.3], 38, front, { w: 1.1, keyWiden: 2.8 });
     pose('along the front row from house left', 'mid', 'close', [-4.2, 2.1, 1.0], [1.6, 1.1, 4.3], 38, front, { w: 1.1, keyWiden: 2.8 });
