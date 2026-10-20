@@ -1632,7 +1632,7 @@ export class Person {
       // (from this person's own repertoire of three to five takes, the room's character weighting them, never the style of
       // their previous laugh)
       const VL = VENUE_LAUGH[this._vplan] || VENUE_LAUGH.club, rep = this.repertoire();
-      const VS = (LIFE_OFF.laugh && VL.stylesOld) || VL.styles, opts = rep.map(([st, w]) => [st, w * (VS[st] ?? 1) * (prev && prev.style === st && rep.length > 1 ? 0 : 1)]);
+      const VS = (LIFE_OFF.laugh && VL.stylesOld) || VL.styles, opts = rep.map(([st, w]) => [st, w * (VS[st] ?? 1) * (SMOOTH && st === 'over' ? 0.25 : 1) * (prev && prev.style === st && rep.length > 1 ? 0 : 1)]); // (laugh-v2: fewer doubled-over takes: a room folding forward read as bowing, rounds 18-23)
       const style = pick(opts.some(([, w]) => w > 0) ? opts : rep, R());
       T = {
         id, style, band: R(), other: R() < 0.35, mirror: R() < 0.5, t0: R(), rate: 0.8 + 0.4 * R(), amp: 0.6 + 0.4 * R(),

@@ -65,7 +65,7 @@ export function buildSetups(ctx) {
     const tk = pair(front, 45, 1.5, 'track along the front tables', -1);
     fromPair(tk, 'mid', { track: new THREE.Vector3(-0.11, 0, 0), pos: tk.pos.clone().add(new THREE.Vector3(0.3, -0.25, 0)), look: tk.look.clone().add(new THREE.Vector3(0.3, -0.1, 0)) });
     // the high wide from the upstage corner
-    pose('high wide from the upstage corner', 'wide', 'close', [4.1, 3.0, -1.4], [-1.2, 0.85, 4.8], 35, [], { w: 0.9 });
+    pose('high wide from the upstage corner', 'wide', 'close', [4.1, Q_LAUGH_OLD ? 3.0 : 2.1, -1.4], [-1.2, Q_LAUGH_OLD ? 0.85 : 1.0, 4.8], 35, [], { w: 0.9 });
   } else if (venue === 'openmic') {
     // intimate: two-shots and singles on longer lenses, often one cluster of chairs; a breath of handheld, locked off
     const hand = (k) => ({ drift: 0.0006, roll: [0.016, -0.012, 0.02, -0.018, 0.01, -0.022, 0.014, -0.01, 0.012][k % 9] });
