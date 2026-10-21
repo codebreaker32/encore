@@ -60,6 +60,11 @@ export const BONES = {
   lTip: N('L_Finger2'), rTip: N('R_Finger2'),
   lThigh: N('L_Thigh'), lCalf: N('L_Calf'), lFoot: N('L_Foot'), rThigh: N('R_Thigh'), rCalf: N('R_Calf'), rFoot: N('R_Foot'),
 };
+// hands-v1: how far each finger's root turns in from the bind pose's fan towards the middle finger (0: as bound);
+// &ab=fingerfan keeps the fan (the before/after sheets)
+const FINGER_IN = typeof location !== 'undefined' && /[?&]fingerin=([0-9.]+)/.test(location.search) ? +location.search.match(/[?&]fingerin=([0-9.]+)/)[1] : 0.7;
+const THUMB_IN = typeof location !== 'undefined' && /[?&]thumbin=([0-9.]+)/.test(location.search) ? +location.search.match(/[?&]thumbin=([0-9.]+)/)[1] : 0.45;
+const FINGERS_FAN = typeof location !== 'undefined' && /[?&]ab=[^&]*fingerfan/.test(location.search);
 const FINGERS = ['Finger1', 'Finger11', 'Finger12', 'Finger2', 'Finger21', 'Finger22', 'Finger3', 'Finger31', 'Finger32', 'Finger4', 'Finger41', 'Finger42'];
 
 const _v = [...Array(8)].map(() => new THREE.Vector3());
@@ -119,6 +124,26 @@ export class Rig {
       lLeg: bendLocal(this.b.lThigh, this.b.lCalf, Z.clone().negate()), rLeg: bendLocal(this.b.rThigh, this.b.rCalf, Z.clone().negate()),
     };
     // relaxed fingers, set once (never touched again)
+    // (hands-v1: the Rocketbox bind hands are fanned wide open, so a resting hand laid out as a splayed claw. Each
+    // finger's root is first turned most of the way in towards the middle finger, in the seat frame at rest, and the
+    // curls are applied on top of that: the fingers together, as a relaxed hand holds them)
+    this.fingerIn = new Map();
+    if (!FINGERS_FAN) for (const side of ['L', 'R']) {
+      const mid = model.getObjectByName(`Bip01_${side}_Finger2`), midC = mid && mid.children.find((c) => c.isBone);
+      if (!midC) continue;
+      const dM = at(midC).sub(at(mid)).normalize();
+      const dI = (() => { const i0 = model.getObjectByName(`Bip01_${side}_Finger1`), i1 = i0 && i0.children.find((o) => o.isBone); return i1 ? at(i1).sub(at(i0)).normalize() : null; })();
+      for (const f of ['Finger1', 'Finger3', 'Finger4', 'Finger0']) {
+        const bone = model.getObjectByName(`Bip01_${side}_${f}`), c = bone && bone.children.find((o) => o.isBone);
+        if (!c) continue;
+        const dF = at(c).sub(at(bone)).normalize(), dT = f === 'Finger0' ? dI : dM; // (the thumb in towards the index finger, part of the way: a thumb stuck out square read as a claw)
+        if (!dT) continue;
+        const ang = Math.acos(Math.min(1, Math.max(-1, dF.dot(dT))));
+        if (ang < 0.02) continue;
+        this.fingerIn.set(bone, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3().crossVectors(dF, dT).normalize(), ang * (f === 'Finger0' ? THUMB_IN : FINGER_IN)));
+      }
+    }
+    for (const side of ['L', 'R']) { const th = model.getObjectByName(`Bip01_${side}_Finger0`); if (th && this.fingerIn.has(th)) { capture(th); this.setRot(th, this.fingerQ(th, _q[0].identity())); } }
     for (const side of ['L', 'R']) {
       const sgn = side === 'L' ? -1 : 1;
       for (const f of FINGERS) {
@@ -126,7 +151,7 @@ export class Rig {
         if (!bone) continue;
         capture(bone);
         const curl = f.length === 7 ? 0.25 : 0.45;
-        this.setRot(bone, _q[0].setFromAxisAngle(Z, sgn * curl));
+        this.setRot(bone, this.fingerQ(bone, _q[0].setFromAxisAngle(Z, sgn * curl)));
       }
     }
     this.armRestQ = { l: this.b.lHand.quaternion.clone(), r: this.b.rHand.quaternion.clone() };
@@ -171,6 +196,9 @@ export class Rig {
       this.skeletons.push(sk);
     });
   }
+
+  /** A finger's curl q (seat frame) with its root's turn in towards the middle finger under it (hands-v1). */
+  fingerQ(bone, q) { const a = this.fingerIn && this.fingerIn.get(bone); return a ? q.multiply(a) : q; }
 
   /** Rotate a bone by q expressed in the seat frame, relative to its parent's rest orientation. */
   setRot(bone, q) {
@@ -906,14 +934,14 @@ export class Person {
     this.breathAmp = 0.8 + 0.45 * r3();
     this.whisperU = r3();
     this.restVar.edgeL = r3() < 0.5; this.restVar.edgeR = r3() < 0.5; // (a resting hand on its little finger's edge, the palm in, not flat)
-    { const c1 = 0.12 + 0.22 * r3(), c2 = 0.3 + 0.3 * r3(), spread = 0.05 * r3();
+    { const c1 = (FINGERS_FAN ? 0.12 : 0.24) + (FINGERS_FAN ? 0.22 : 0.2) * r3(), c2 = (FINGERS_FAN ? 0.3 : 0.42) + (FINGERS_FAN ? 0.3 : 0.26) * r3(), spread = 0.05 * r3(); // (hands-v1: a little more curl, the fingers no longer lie straight and stiff)
       if (rig && !LIFE_OFF.hands && !LIFE_OFF.fingers && !opts.noParty) for (const side of ['L', 'R']) { // (relaxed fingers, each person's own curl: the Rig's one curl made every hand alike)
         const sgn = side === 'L' ? -1 : 1;
         FINGERS.forEach((f, i) => {
           const bone = rig.model.getObjectByName(`Bip01_${side}_${f}`), r = bone && rig.rest.get(bone);
           if (!r) return;
           const fi = Math.floor(i / 3); // (index finger 0 … little finger 3: the little finger curls a little more)
-          rig.setRot(bone, _q[0].setFromAxisAngle(Z, sgn * ((f.length === 7 ? c1 : c2) + fi * spread)));
+          rig.setRot(bone, rig.fingerQ(bone, _q[0].setFromAxisAngle(Z, sgn * ((f.length === 7 ? c1 : c2) + fi * spread))));
           if (!bone.matrixAutoUpdate) bone.updateMatrix();
         });
       } }
