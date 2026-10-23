@@ -1,0 +1,10 @@
+Encore
+Copyright (c) 2026 Encore contributors
+Licensed under the MIT License (see LICENSE).
+
+Portions of apps/vega, apps/tv-expo and packages/shared-ui are derived from
+AmazonAppDev/react-native-multi-tv-app-sample, Copyright Amazon.com, Inc. or its
+affiliates, licensed under MIT No Attribution (see
+apps/vega/LICENSE-MIT-0-AmazonAppDev-sample).
+
+Third-party assets (avatars, motion capture, photos, sounds) are credited with their licences in the CREDITS.md files next to them, under packages/shared-ui/src/assets/ and prototypes/crowd3d/.
