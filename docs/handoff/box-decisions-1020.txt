@@ -1,5 +1,0 @@
-Decisions from the user (20 Oct, about 08:00 UTC):
-1. **The arena is cut from the demo video.** It stays in the app for now. When you record E1 (the bill and venue tour), tour only the Open Mic, the Comedy Club and the Theatre, never the Arena. Don't spend any more time on the arena.
-2. **The narration stays on the ElevenLabs free tier.**
-3. **The repo stays private;** the reviewers are invited later. Note: the real-v1 branch is now pushed to origin (the user approved), so you don't need to push it.
-4. **AWS:** the user has submitted verification documents to AWS for the account block. Keep your 45-minute StartInstances retry. When it clears, do the final emulator takes (E2 first) per docs/handoff/box-video-capture.txt and docs/demo-video.md. If it hasn't cleared by 16:30 UTC, finish the gated tree and the final APKs anyway, and say clearly in the summary that the takes are still to do.

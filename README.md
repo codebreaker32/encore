@@ -1,28 +1,34 @@
 # Encore
 
-**A real audience, honestly scored.** Put your phone on the table, stand up, and your TV becomes the room: an open mic, a comedy club, a theatre, an arena. A live 3D audience reacts to your timing (and, if you allow it, to your words). It laughs on the beat you leave, gets restless in dead air and heckles you in a tough club. Afterwards, the cut sheet shows your set as an edit timeline with the measured numbers beneath it, and an MC you chose debriefs you out loud.
+**A mirror can't laugh. Encore can.** Put your phone on the table, stand up, and your TV becomes the room: a virtual 3D audience at an open mic, a comedy club or a theatre. It reacts only to what you actually do: the beat you leave after a line, a short punch after a longer setup, a clean line without fillers, and, if you allow it, your words. It laughs when your timing earns it and goes quiet when it doesn't. Afterwards, the cut sheet shows your set as an edit timeline with the measured numbers beneath it, and an AI MC you chose debriefs you out loud.
 
 Built for the [Build, Ship, Shape: Amazon Developer Hackathon](https://amazonappdev2026.devpost.com): the Fire TV track, plus the AWS Builder and Open Source mini challenges.
 
-> **Status (2026-10-12).**
-> - **Runs end to end:** on an Android TV (a 32-bit Mali-G31 Google TV, release APK), on the Android TV emulator, and in a desktop browser preview.
-> - **The Vega build** (React Native for Vega, SDK 0.24) runs on the Vega Virtual Device with the MC's voice and packaged media. The 3D room doesn't run there: the Linux simulator has no WebView, so Vega shows licensed video plates instead.
-> - **Untested on Fire TV hardware.**
-> - **Known limit:** the 3D room runs at about 20–24 fps on the Mali-G31 TV against a 30 fps target (`docs/tv-test-log.md`).
+## Status
 
-## Screenshots
+- **Runs end to end** on the Android TV emulator (the Fire OS / Android build), in a desktop browser preview, and on an Android TV (a 32-bit Mali-G31 Google TV, the GPU class of the Fire TV Stick Lite).
+- **The Vega build** (React Native for Vega, SDK 0.24) runs on the Vega Virtual Device with the MC's voice and packaged media. The Linux simulator has no WebView, so the 3D room can't run there; Vega shows licensed video plates instead.
+- **Not yet tested on Fire TV hardware.** We have no Fire TV device.
+- **Measured limits:** on the Mali-G31 TV the 3D room runs at about 20–24 fps against a 30 fps target (`docs/tv-test-log.md`). On the 720p Android TV emulator the demo take held a 26 fps average, never below 18.
+- **The MC's AgentCore Runtime deployment** is packaged but not created: our account's runtime quota is 0 (support case open; `docs/friction-log.md`). The MC runs the same code on EC2.
 
-From the Android TV emulator, driven by the engine on a set from the scripted test phone (`fake-phone`); every caption and number is the engine's own output.
+## The demo video
 
-| Tonight's bill (720p) | A laugh, with the director's reason | The heckle after two dead bits |
+The video was filmed on the Android TV emulator at 720p (the hackathon FAQ allows an emulator); the short Vega clip is the Vega Virtual Device.
+
+- **The act is a scripted test set.** No person speaks: a test script (`services/relay/scripts/standup-demo.json`, run by `fake-phone`) sends the set's words and timing through the same phone-to-relay path a phone uses, and the comic's voice in the video is an AI voice (ElevenLabs) placed inside each line's recorded window.
+- **Everything else is the app, live.** Every laugh, silence, camera cut, caption, score and MC line was computed by Encore from those events. No laugh was added, moved or boosted, and the MC's voice is Amazon Polly exactly as the app played it.
+- **The video is highlights** of one 3:39 set, recorded in one take and cut only between lines.
+
+| The bill: pick the act, the room and the MC | A laugh, with the director's measured reason | A flat line gets silence, scored as a miss |
 |---|---|---|
-| ![The bill](docs/android-emu/720p-test/01-bill.jpg) | ![Club laugh](docs/android-emu/2026-10-12-night/03-standup-laugh-list-of-three.jpg) | ![Heckle](docs/android-emu/2026-10-12-night/04-standup-heckle.jpg) |
+| ![The bill](docs/demo/01-bill.jpg) | ![A laugh](docs/demo/02-laugh.jpg) | ![A miss](docs/demo/03-miss.jpg) |
 
-| Words on: "the punch turns 'winter'" (720p) | The cut sheet and the MC's note (720p) | The same app on the Vega Virtual Device |
+| The cut sheet and the MC's debrief | How it's built | The joke judge, chosen by measurement |
 |---|---|---|
-| ![Club laugh, 720p](docs/android-emu/720p-test/03-laugh.jpg) | ![Cut sheet](docs/android-emu/720p-test/05-cutsheet.jpg) | ![Vega](docs/vega/vvd-02-live.jpg) |
+| ![Cut sheet](docs/demo/04-cut-sheet.jpg) | ![Architecture](docs/demo/05-architecture.jpg) | ![Joke judge](docs/demo/06-joke-judge.jpg) |
 
-More captures: `docs/android-emu/` (emulator takes with their raw logs in `stats.txt`), `docs/vega/` (the Vega simulator), `docs/mockups/` (renders and design comps). The submission gallery plan is `docs/submission/gallery.md`.
+More captures: `docs/android-emu/` (emulator takes with their raw logs), `docs/vega/` (the Vega simulator), `docs/mockups/` (design comps and renders).
 
 ## What it does
 
@@ -30,7 +36,7 @@ More captures: `docs/android-emu/` (emulator takes with their raw logs in `stats
   - **Acts:** stand-up (the room laughs), poetry (it snaps), speeches (it applauds), singing (it cheers).
   - **Venues:** Open Mic, Comedy Club, Theatre and Arena. A tougher venue raises the bar before the room reacts, shortens its patience with dead air and brings hecklers, but the scorecard counts against one house standard everywhere.
 - **A room that hears timing first.** It listens for the beat you leave after a line, a short punch after a longer setup, emphasis at the end of the line, a clean line without fillers, and a note held in tune. With words on, it also counts devices (a callback, wordplay, a list of three, a rhyme, a contrast, a call to action) and asks a content judge on Amazon Bedrock for one estimate per line, labelled as an estimate.
-- **A live 3D audience.** Three.js in the TV's WebView, driven only by the engine's measurements. Microsoft Rocketbox people with motion-captured movement, and each laugh a fresh mix of real CC0 recordings.
+- **A virtual 3D audience.** Three.js in the TV's WebView, driven only by the engine's measurements. Microsoft Rocketbox people with motion-captured movement, and each laugh a fresh mix of real CC0 recordings.
 - **An MC, not a chatbot.** Four personas (warm, sarcastic, strict, deadpan) introduce you, heckle you, debrief you out loud, remember your last six sets and answer you in the green room. Every word comes from the model, and is checked by a guard. When the model can't answer, the MC is silent and the screen says why.
 
 The honesty rules every screen follows (full text in `docs/concept-encore.md`):
@@ -40,7 +46,7 @@ The honesty rules every screen follows (full text in `docs/concept-encore.md`):
 3. "Unsure" is grey and never counts against the performer. With words off, pace and fillers read "not measured", never zero.
 4. The app never sends audio anywhere. Words leave the phone only when you switch them on, and the TV shows how they're recognised.
 5. The MC is the model or it is silent. There are no template lines.
-6. Nothing is faked for the demo.
+6. Nothing is faked for the demo. The demo set is a scripted test set, and the video says so on screen; every reaction to it is the app's own.
 
 ## Architecture
 
@@ -53,7 +59,7 @@ flowchart LR
   subgraph TV["TV: React Native for Vega · Android TV"]
     engine["crowd engine<br/>packages/crowd (pure, tested)"]
     screens["bill · live · cut sheet · green room"]
-    stage["live 3D audience<br/>Three.js in the system WebView"]
+    stage["3D audience<br/>Three.js in the system WebView"]
   end
   subgraph AWS["AWS"]
     mc["MC service<br/>Strands agent · BedrockAgentCoreApp"]
@@ -132,7 +138,7 @@ adb reverse tcp:8787 tcp:8787 && adb reverse tcp:18080 tcp:8080                 
 ```
 
 - **Toolchain:** JDK 17 with a compiler, plus the Android SDK (platform 36, build-tools 36, NDK 27.1.12297006).
-- **Release build details:** memory caps and the two-step bundle are in `docs/dev-setup.md`, "Building the TV app for the Google TV". **[verify]** that the three commands above reproduce the box's `~/build-apk.sh`, which isn't in the repo.
+- **Release build details:** memory caps and the two-step bundle are in `docs/dev-setup.md`, "Building the TV app for the Google TV".
 - **Cleartext:** the release APK allows plain HTTP and WS to localhost only, since every service reaches it through `adb reverse`.
 - **The 3D room** is on by default on Android. `com.strumble.tv://stage?crowd=off` turns it off.
 - **The 720p Android TV emulator** we film on is `system-images;android-34;android-tv;x86` with the `tv_720p` device, started with `-gpu host`. The scripts are `docs/android-emu/720p-test/emu720.sh` and `set720.sh`.
@@ -201,7 +207,7 @@ The answer is `{note}`, `{reply}`, `{line}` or `{verdict}`, or `{unavailable: {r
 | `apps/companion` | The performer's phone page (Vite + React). |
 | `services/relay` | The couch-link relay (Node, `ws`), plus the scripted test phone and its scripts. |
 | `services/mc-agent` | The MC: Strands agent, honesty guard, Polly voice, content judge, AgentCore deploy and calibration scripts. |
-| `prototypes/crowd3d` | The live 3D audience: the Rocketbox people and motion, the four venues, the anatomy validator, the laugh mixer, the render and check tools, and `tools/pack.mjs`. |
+| `prototypes/crowd3d` | The 3D audience: the Rocketbox people and motion, the four venues, the anatomy validator, the laugh mixer, the render and check tools, and `tools/pack.mjs`. |
 | `docs/` | The spec (`concept-encore.md`), test logs, judge calibration, friction log, product feedback, captures and the submission docs. |
 
 ## Tests
