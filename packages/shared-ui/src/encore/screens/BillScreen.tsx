@@ -121,7 +121,7 @@ export function BillScreen({
           tier={venue.name}
           clock={mmss(pack.defaultDurationSec)}
           note={`${pack.unit} · ${tough ? 'a tough room, hecklers possible' : 'an easy room, nobody heckles'}`}
-          bottom={sp(200)}
+          bottom={sp(236)}
         />
         <Text style={styles.note}>
           This is the room you'll face. It {REACTS[pack.reaction.kind]} only when your timing earns it; the scorecard
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   note: {
     position: 'absolute',
     left: edge.x,
-    bottom: sp(84),
+    bottom: sp(154), // (above the credits' three lines; the lower-third moved up with it)
     maxWidth: sp(820),
     fontFamily: text.regular,
     fontSize: sp(24),
@@ -291,10 +291,13 @@ const styles = StyleSheet.create({
   credits: {
     position: 'absolute',
     left: edge.x,
-    right: edge.x, // (wraps inside the screen: without it the line ran off the right edge on the TV)
-    bottom: sp(24),
+    // (wraps inside the room's column, left of the running order: across the whole width its second line ran under
+    // the remote hints at the bottom right, at 720p as at 1080p; three lines here, the hints alone on the right)
+    width: sp(1180 - 90 - 30),
+    bottom: sp(54), // (title-safe: 5% of the height)
     fontFamily: text.regular,
     fontSize: sp(24),
+    lineHeight: sp(30),
     color: colors.goldDim,
     opacity: 0.8,
     ...textShadow,

@@ -65,6 +65,9 @@ export const BONES = {
 const FINGER_IN = typeof location !== 'undefined' && /[?&]fingerin=([0-9.]+)/.test(location.search) ? +location.search.match(/[?&]fingerin=([0-9.]+)/)[1] : 0.7;
 const THUMB_IN = typeof location !== 'undefined' && /[?&]thumbin=([0-9.]+)/.test(location.search) ? +location.search.match(/[?&]thumbin=([0-9.]+)/)[1] : 0.45;
 const FINGERS_FAN = typeof location !== 'undefined' && /[?&]ab=[^&]*fingerfan/.test(location.search);
+// bill-v1: the bill's room (preview) sits quietly: chat without the standing talker's side bends or a hand to the hair
+// on top of it; &ab=billold keeps the old preview (the before/after sheets)
+const BILL_OLD = typeof location !== 'undefined' && /[?&]ab=[^&]*billold/.test(location.search);
 const FINGERS = ['Finger1', 'Finger11', 'Finger12', 'Finger2', 'Finger21', 'Finger22', 'Finger3', 'Finger31', 'Finger32', 'Finger4', 'Finger41', 'Finger42'];
 
 const _v = [...Array(8)].map(() => new THREE.Vector3());
@@ -586,6 +589,9 @@ const FIDGETS = {
   listenLife: [['sit_chair_gestic_thoughtful', 0.35], ['sit_chair_idle_cough', 0.25], ['sit_chair_idle_look_around', 0.12], ['sit_chair_idle_touch_face', 0.1], ['sit_chair_idle_touch_hair', 0.09], ['sit_chair_idle_scratch_head', 0.08]],
   dead: [['sit_chair_idle_look_around', 3], ['sit_chair_idle_yawn', 1.2], ['sit_chair_idle_roll_head', 1.4], ['sit_chair_idle_cough', 0.8], ['sit_chair_idle_touch_hair', 0.5], ['sit_chair_gestic_thoughtful', 0.6]],
   social: [['sit_chair_idle_look_around', 2], ['sit_chair_idle_touch_hair', 0.8], ['sit_chair_idle_roll_head', 1], ['sit_chair_idle_cough', 0.4]],
+  // (bill-v1: before the set, a look round the room now and then; the hand to the hair and the head roll held still
+  // read as people bent sideways clutching their heads on the bill, E2 take 2026-10-22)
+  bill: [['sit_chair_idle_look_around', 1]],
 };
 const TEMPER_FIDGET = { shy: { sit_chair_idle_touch_hair: 2, sit_chair_idle_touch_face: 1.6 }, sceptic: { sit_chair_gestic_thoughtful: 2.5, sit_chair_gestic_shrug: 2, sit_chair_idle_look_around: 1.3 }, talker: { sit_chair_idle_look_around: 1.6 }, laugher: {}, plain: {} };
 // where the captures' chair is, relative to ours: the seat frame's origin is on the floor under the seat
@@ -1444,13 +1450,13 @@ export class Person {
       if (ev.t > now) continue;
       let d = this._fdec.get(j);
       if (d === undefined) {
-        const dead = room.murmur > 0.5 || (room.deadBits || 0) >= 2, social = room.mode === 'preview' || room.mode === 'after';
-        let lam = social ? 0.06 : (LIFE_OFF.fidget ? 0.012 : 0.02) + 0.08 * clamp01(room.murmur) + 0.015 * Math.min(room.deadBits || 0, 3) + 0.03 * (1 - (room.attention ?? 0.6)); // (listening: hands mostly at rest)
+        const dead = room.murmur > 0.5 || (room.deadBits || 0) >= 2, social = room.mode === 'preview' || room.mode === 'after', bill = room.mode === 'preview' && !BILL_OLD;
+        let lam = bill ? 0.03 : social ? 0.06 : (LIFE_OFF.fidget ? 0.012 : 0.02) + 0.08 * clamp01(room.murmur) + 0.015 * Math.min(room.deadBits || 0, 3) + 0.03 * (1 - (room.attention ?? 0.6)); // (listening: hands mostly at rest)
         lam *= this.temper === 'shy' ? 1.3 : this.temper === 'talker' ? 1.15 : 1;
         d = null;
         if (ev.u < lam / 0.22) {
           const tw = TEMPER_FIDGET[this.temper] || {};
-          const list = (dead ? FIDGETS.dead : social ? FIDGETS.social : LIFE_OFF.fidget ? FIDGETS.listen : FIDGETS.listenLife).map(([n, w]) => [n, w * (tw[n] || 1)]);
+          const list = (dead ? FIDGETS.dead : bill ? FIDGETS.bill : social ? FIDGETS.social : LIFE_OFF.fidget ? FIDGETS.listen : FIDGETS.listenLife).map(([n, w]) => [n, w * (tw[n] || 1)]);
           const names = family(pick(list, ev.k), C.g);
           const nm = names.length ? names[Math.floor(hash(this.seed + j) * names.length)] : null;
           d = nm ? ANIM.clips[nm] : null;
@@ -1529,6 +1535,7 @@ export class Person {
       // (not while a neighbour within reach is up and about: the hands stay in)
       const passing = !!(this.near && this.near.some((q) => q.src && q.src._loco && !q.src._loco.hidden));
       let free = (1 - clamp01(c.lb * 3 + c.clapW * 3 + c.upW * 3 + c.busyW * 1.5)) * (passing ? 0 : 1);
+      if (room.mode === 'preview' && !BILL_OLD) free *= 1 - clamp01((c.W ? c.W.talk : 0) * 2); // (bill-v1: someone in a chat isn't also fidgeting)
       if (!ARMS_OLD) { // (arms-v3: a laugh or a clap coming in took a fidget's arms in two frames: its hands let go over 0.35 s, as they take hold)
         const dtF = now - (this._frT ?? -1e9), fo = this._frE;
         this._frT = now;
@@ -1550,7 +1557,8 @@ export class Person {
     const tk = c.talk;
     if (tk && c.W.talk > 0.01 && C.talk) {
       // (a standing capture's beats on a seated body: half strength, or its side bends become a hard lean over the chair)
-      if (tk.speaking) { sample(C.talk, t * 1.1, A); addLayer(pose, A, C.talkRef, c.W.talk * (walking ? 0.4 : seated ? 0.5 : 1), pose, seated && this.o.table && this.o.neighbour && !RAW ? MASK.head : MASK.talk); } // (at a two-top the talk is the head's and the beat gesture's: the capture's arms pulled the hands off the top, one arm straight, the other's elbow behind)
+      const billT = room.mode === 'preview' && !BILL_OLD && seated; // (bill-v1: before the set the talk is the head's: the capture's side bends leaned people over the chair)
+      if (tk.speaking) { sample(C.talk, t * 1.1, A); addLayer(pose, A, C.talkRef, c.W.talk * (walking ? 0.4 : billT ? 0.4 : seated ? 0.5 : 1), pose, (seated && this.o.table && this.o.neighbour && !RAW) || billT ? MASK.head : MASK.talk); } // (at a two-top the talk is the head's and the beat gesture's: the capture's arms pulled the hands off the top, one arm straight, the other's elbow behind)
       else if (tk.nod > 0 && C.nod) { sample(C.nod, tk.nod * Math.min(2, C.nod.dur), A); addLayer(pose, A, C.nodRef, c.W.talk * Math.sin(Math.PI * tk.nod), pose, MASK.head); }
     }
     // a laugh's torso and head (the hands keep the gesture vocabulary, driven by the room's envelope)
@@ -2094,7 +2102,8 @@ export class Person {
       let sideT = this.side;
       if (tk && tk.speaker && tk.speaker !== this && tk.speaker.rig) { const sp = toL(tk.speaker.rig.seat.getWorldPosition(_v[6])); sideT = sp.x >= 0 ? 1 : -1; }
       const away = tk && tk.speaking ? clamp01((noise(sd + 41, now * 0.35) + 0.2) * 3) : 0;
-      turn += sideT * 0.35 * W.talk; headYaw += sideT * 0.8 * W.talk * (1 - 0.6 * away); lean += 0.04 * W.talk;
+      const bk = room.mode === 'preview' && !BILL_OLD ? 1 : 0; // (bill-v1: before the set, less of a turn to the friend: the full one, with the head's, twisted the front row in pairs)
+      turn += sideT * (bk ? 0.26 : 0.35) * W.talk; headYaw += sideT * (bk ? 0.5 : 0.8) * W.talk * (1 - 0.6 * away); lean += (bk ? 0.02 : 0.04) * W.talk;
       if (tk && tk.speaking) headPitch += 0.05 * W.talk * noise(sd + 43, now * 1.7); // beats
       if (tk && tk.laugh) headPitch -= 0.1 * tk.laugh * W.talk; // a listener's laugh: the head goes back a little
     }
